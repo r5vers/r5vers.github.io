@@ -3,12 +3,12 @@
 // straight into IndexedDB. A pack fetches only the years it lacks or that
 // changed, so pressing the button again tops it up, and a download cut short
 // (the page was closed) carries on where it stopped.
-import { emptyCols, parseFile } from './rtc.js';
-import { aggregated, manifestOf, putPart, replaceSeries } from './series.js';
-import { parseTf } from '../core/timeframes.js';
-import { createDataset, datasetJson, listDatasets } from './server.js';
-import { storageEstimate } from './db.js';
-import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js';
+import { emptyCols, parseFile } from './rtc.js?v=3bd48c7187';
+import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=3bd48c7187';
+import { parseTf } from '../core/timeframes.js?v=3bd48c7187';
+import { createDataset, datasetJson, listDatasets } from './server.js?v=3bd48c7187';
+import { storageEstimate } from './db.js?v=3bd48c7187';
+import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=3bd48c7187';
 
 export { DATA_URL, getManifest };
 export const YEARS = 15;
@@ -35,13 +35,17 @@ function estimateBytes(pack, tf) {
   return Math.floor((minutes / (tf === '1m' ? 1 : 5)) * 24 * 1.03);
 }
 
-/** Every pack as a dataset at 1m, read from the site until it is downloaded
- *  (series.js, StreamRows): nothing to download before the first chart.
- *  Gives up after `wait` ms (offline): the datasets come next time. */
+/** Packs read straight from the site, without a download: EURUSD first;
+ *  the others join once it has proved itself on every device. */
+export const STREAMED = ['EURUSD'];
+
+/** The STREAMED packs as datasets at 1m, read from the site until they are
+ *  downloaded (series.js, StreamRows): nothing to download before the first
+ *  chart. Gives up after `wait` ms (offline): the datasets come next time. */
 export async function ensureStreams(db, wait = 0) {
   const work = (async () => {
     const m = await manifestOf(db);
-    for (const pack of PACKS) {
+    for (const pack of PACKS.filter((p) => STREAMED.includes(p.id))) {
       const entry = m.packs?.[pack.id]?.tfs?.['1m'];
       if (!entry?.files?.length) continue;
       let ds = await packDataset(db, pack.id, '1m');
@@ -318,6 +322,6 @@ export async function status(db) {
 
 /** CSV upload, parsed on the device. */
 export async function importCsv(db, query, body) {
-  const { importCsvFile } = await import('./csvimport.js');
+  const { importCsvFile } = await import('./csvimport.js?v=3bd48c7187');
   return importCsvFile(db, query, body);
 }

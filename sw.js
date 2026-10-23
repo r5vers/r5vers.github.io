@@ -4,8 +4,10 @@
 // answers. Candles and profiles are not here - they live in IndexedDB, and
 // the data files (/data/) pass straight through: keeping a second copy of
 // hundreds of megabytes here filled phones (iPhone) before IndexedDB could
-// hold the candles. A new name clears the old cache, data files and all.
-const CACHE = 'rv-app-v2';
+// hold the candles. Each release has its own cache (tools/build_site.py
+// writes BUILD), and the old one goes when the new worker takes over.
+const BUILD = '3bd48c7187';
+const CACHE = `rv-app-${BUILD}`;
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
@@ -22,7 +24,9 @@ self.addEventListener('fetch', (event) => {
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     try {
-      const res = await fetch(req);
+      // pages always come fresh (they name this release's scripts); scripts
+      // and styles carry the release in their address, so a kept copy is right
+      const res = req.mode === 'navigate' ? await fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }) : await fetch(req);
       if (res.ok) cache.put(req, res.clone());
       return res;
     } catch (err) {

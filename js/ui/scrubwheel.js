@@ -4,7 +4,7 @@
 // little less. Each mark that passes the top moves the replay one candle, and
 // the lit marks give a small lift and flare as it does. Roll fast to run,
 // slow down near what matters, lift the finger to stop at once (no coasting).
-import { h } from './dom.js';
+import { h } from './dom.js?v=3bd48c7187';
 
 const GAP = 17;           // px along the arc between marks = one candle
 const HEIGHT = 54;

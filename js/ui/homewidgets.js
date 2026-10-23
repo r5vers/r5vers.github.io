@@ -1,6 +1,6 @@
-import { h, icon, storage, store, modal } from './dom.js';
-import { SESSION_SETS } from '../chart/sessions.js';
-import * as F from '../format.js';
+import { h, icon, storage, store, modal } from './dom.js?v=3bd48c7187';
+import { SESSION_SETS } from '../chart/sessions.js?v=3bd48c7187';
+import * as F from '../format.js?v=3bd48c7187';
 
 export const EXTRA_WIDGETS = [
   ['notes', 'İşlem notları', 'Kendi analizini ve günün planını yaz.'],

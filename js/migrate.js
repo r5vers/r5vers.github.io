@@ -12,7 +12,7 @@
 // When the old server no longer answers (stopped, 404), what this browser
 // kept of it is moved instead: every setting, look and drawing the site
 // wrote here (it keeps them as "rt:p<id>:..." in localStorage).
-import { pushExport } from './local/sync.js';
+import { pushExport } from './local/sync.js?v=3bd48c7187';
 
 const NEW_SITE = 'https://r5vers.github.io';
 
