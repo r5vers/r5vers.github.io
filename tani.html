@@ -48,7 +48,7 @@
     const mb = (b) => `${(b / 1e6).toFixed(1)} MB`;
 
     await check('Tarayıcı', async () => navigator.userAgent.replace(/^Mozilla\/5\.0 /, ''));
-    const BUILD = '9692cc795b';
+    const BUILD = 'eb96803c93';
     await check('Sürüm', async () => BUILD);
     await check('Gerekli özellikler', async () => {
       const miss = [['IndexedDB', 'indexedDB' in window], ['structuredClone', 'structuredClone' in window], ['Array.at', !![].at], ['crypto.subtle', !!crypto?.subtle], ['DecompressionStream', 'DecompressionStream' in window]].filter(([, ok]) => !ok).map(([n]) => n);
@@ -80,7 +80,7 @@
       return `${f.tag}: ${mb(b.byteLength)} indi`;
     });
     let api = null;
-    const okApi = await check('Sitenin kodu', async () => { api = (await import('./js/api.js?v=9692cc795b')).api; return 'yüklendi'; });
+    const okApi = await check('Sitenin kodu', async () => { api = (await import('./js/api.js?v=eb96803c93')).api; return 'yüklendi'; });
     if (okApi) {
       let list = [];
       await check('Veri setleri', async () => {

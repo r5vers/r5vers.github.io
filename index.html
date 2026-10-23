@@ -14,7 +14,7 @@
       if (shown) return; shown = true;
       var d = document.createElement('div');
       d.setAttribute('style', 'position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;padding:14px 16px;border-radius:16px;background:#16171d;color:#eef0f4;font:14px/1.45 -apple-system,system-ui,sans-serif;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 20px 50px rgba(0,0,0,.6)');
-      d.innerHTML = '<b style="display:block;margin-bottom:4px">Site açılamadı</b><span style="display:block;color:#9aa0b4;font-size:12px;word-break:break-word"></span><button style="margin-top:10px;padding:10px 14px;border:0;border-radius:10px;background:#9fa8ff;color:#0b0c10;font:600 14px -apple-system,system-ui,sans-serif">Onar ve yenile</button> <a href="/tani.html" style="margin-left:10px;color:#9fa8ff;font-size:13px">Teşhis</a>';
+      d.innerHTML = '<b style="display:block;margin-bottom:4px">Site açılamadı</b><span style="display:block;color:#9aa0b4;font-size:12px;word-break:break-word"></span><button style="margin-top:10px;padding:10px 14px;border:0;border-radius:10px;background:#9fa8ff;color:#0b0c10;font:600 14px -apple-system,system-ui,sans-serif">Onar ve yenile</button> <a href="/sifirla.html" style="margin-left:10px;color:#9fa8ff;font-size:13px">Cihazı sıfırla</a> <a href="/tani.html" style="margin-left:10px;color:#9fa8ff;font-size:13px">Teşhis</a>';
       d.querySelector('span').textContent = String(msg || '').slice(0, 300);
       d.querySelector('button').onclick = function () {
         var jobs = [];
@@ -34,13 +34,14 @@
       if (/SyntaxError|Importing|module|dynamically imported/i.test(m)) show(m);
     });
     setTimeout(function () { if (!window.__rvBooted) show('Sayfanın kodu 15 saniyede başlamadı.'); }, 15000);
+    window.__rvShowFail = show;
   })();
   </script>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/fonts.css?v=9692cc795b">
-  <link rel="stylesheet" href="css/app.css?v=9692cc795b">
+  <link rel="stylesheet" href="css/fonts.css?v=eb96803c93">
+  <link rel="stylesheet" href="css/app.css?v=eb96803c93">
 </head>
 <body class="page-profiles">
   <main class="profiles" id="profiles">
@@ -55,6 +56,6 @@
   </main>
   <div id="modal-root"></div>
   <div id="toasts" aria-live="polite"></div>
-  <script type="module" src="js/profiles.js?v=9692cc795b"></script>
+  <script type="module" src="js/profiles.js?v=eb96803c93"></script>
 </body>
 </html>

@@ -55,7 +55,8 @@ const lost = (e) => e && (e.name === 'InvalidStateError' || e.name === 'UnknownE
 export class IdbDb {
   static async open() {
     const db = new IdbDb();
-    await db._open();
+    // a device whose storage does not answer says so instead of a page that waits for good
+    await Promise.race([db._open(), new Promise((_, no) => setTimeout(() => no(new Error('cihaz depolaması açılmadı (10 sn)')), 10000))]);
     return db;
   }
   async _open() {

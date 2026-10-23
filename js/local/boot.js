@@ -3,9 +3,9 @@
 // files (Vercel, the installed app) the site has no server: requests to
 // /api/... are answered here, on the device, from IndexedDB - so the rest of
 // the app works the same in both.
-import { IdbDb, persistStorage } from './db.js?v=9692cc795b';
-import { handle } from './server.js?v=9692cc795b';
-import { flush, sync } from './sync.js?v=9692cc795b';
+import { IdbDb, persistStorage } from './db.js?v=eb96803c93';
+import { handle } from './server.js?v=eb96803c93';
+import { flush, sync } from './sync.js?v=eb96803c93';
 
 export const LOCAL = typeof window !== 'undefined' && !window.RV_SERVER;
 // the page's scripts loaded and linked: the safety net in the page stands down
@@ -75,10 +75,17 @@ async function answer(url, init) {
   };
   let res;
   try {
-    res = await handle(await localDb(), req);
+    // an answer that never comes (this device's storage stuck) ends in an
+    // error and an offer to start the device clean, never a page that waits
+    res = await Promise.race([
+      (async () => handle(await localDb(), req))(),
+      // (reads are quick; joining the group or a CSV import may take a while)
+      new Promise((_, no) => setTimeout(() => no(new Error('cihaz depolaması yanıt vermiyor')), req.method === 'GET' ? 20000 : 180000)),
+    ]);
   } catch (e) {
-    // no IndexedDB (a private window on an old browser) and the like
-    res = { status: 500, json: { detail: `cihaz depolaması açılamadı: ${e.message || e}` } };
+    // no IndexedDB (a private window on an old browser), storage stuck, and the like
+    res = { status: 503, json: { detail: `${e.message || e}: “Cihazı sıfırla” ile temiz başla (bulut verisi silinmez)` } };
+    globalThis.__rvShowFail?.(res.json.detail);
   }
   if (res.status >= 409) logError(`${req.method} /api${req.path} ${res.status}`, res.json?.detail);
   if (res.bytes) return new Response(res.bytes, { status: res.status, headers: res.headers });

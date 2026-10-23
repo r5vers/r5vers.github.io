@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>RV · Bu cihazı sıfırla</title>
+  <style>
+    body { margin: 0; padding: 20px 16px; background: #0b0c10; color: #e8eaf2; font: 15px/1.5 -apple-system, system-ui, sans-serif; }
+    .box { max-width: 460px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 6px 0 8px; }
+    p { color: #9aa0b4; margin: 8px 0; }
+    p b { color: #e8eaf2; }
+    button, a.btn { display: block; width: 100%; box-sizing: border-box; margin-top: 14px; padding: 14px; border: 0; border-radius: 13px; background: #9fa8ff; color: #0b0c10; font: 600 16px -apple-system, system-ui, sans-serif; text-align: center; text-decoration: none; }
+    button[disabled] { opacity: .5; }
+    #log { margin-top: 14px; font-size: 13px; color: #b8bdd0; }
+    #log div::before { content: '• '; color: #9fa8ff; }
+    .ok { color: #30d158; } .err { color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Bu cihazı sıfırla</h1>
+    <p>Site bu cihazda takılıyorsa (açılmıyor, profiller görünmüyor) buradan temiz bir başlangıç yap.</p>
+    <p><b>Hiçbir şey kaybolmaz:</b> profiller, temalar, ayarlar, replay oturumları, çizimler ve stratejiler bulutta duruyor. Silinen yalnızca bu cihazdaki önbellek ve indirilmiş mum verisi.</p>
+    <p>Sonra açılan ekranda grup şifresini girip <b>“Bağlan”</b> de: her şey geri gelir.</p>
+    <button id="go">Sıfırla</button>
+    <div id="log"></div>
+  </div>
+  <script>
+    // Plain script, nothing from the site itself: it must work when the site's
+    // own code or storage does not.
+    var log = document.getElementById('log');
+    function say(text, cls) { var d = document.createElement('div'); d.textContent = text; if (cls) d.className = cls; log.appendChild(d); }
+    function step(name, fn) {
+      return Promise.race([
+        Promise.resolve().then(fn).then(function (r) { say(name + (typeof r === 'string' && r ? ': ' + r : ''), 'ok'); }, function (e) { say(name + ': ' + ((e && e.message) || e), 'err'); }),
+        new Promise(function (res) { setTimeout(function () { say(name + ': 10 sn içinde bitmedi, devam ediliyor', 'err'); res(); }, 10000); })
+      ]);
+    }
+    document.getElementById('go').onclick = function () {
+      var btn = this; btn.disabled = true; btn.textContent = 'Sıfırlanıyor…';
+      step('Arka plan çalışanı kaldırıldı', function () {
+        if (!navigator.serviceWorker) return 'yok';
+        return navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); });
+      }).then(function () {
+        return step('Önbellek silindi', function () {
+          if (!window.caches) return 'yok';
+          return caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); });
+        });
+      }).then(function () {
+        return step('Cihaz veritabanı silindi', function () {
+          return new Promise(function (ok, no) {
+            var r = indexedDB.deleteDatabase('rv-local');
+            r.onsuccess = function () { ok(); };
+            r.onerror = function () { no(r.error); };
+            r.onblocked = function () { say('Sitenin açık olduğu başka sekmeler varsa kapat; bekleniyor…'); };
+          });
+        });
+      }).then(function () {
+        return step('Tarayıcı kayıtları temizlendi', function () {
+          var keys = [];
+          for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^(rt|rv)/.test(k)) keys.push(k); }
+          keys.forEach(function (k) { localStorage.removeItem(k); });
+          try { sessionStorage.clear(); } catch (e) {}
+          return keys.length + ' kayıt';
+        });
+      }).then(function () {
+        say('Tamam. Şimdi siteyi aç, grup şifresini girip “Bağlan” de.', 'ok');
+        btn.style.display = 'none';
+        var a = document.createElement('a'); a.className = 'btn'; a.href = '/profiles.html?r=' + Date.now(); a.textContent = 'Siteyi aç';
+        log.appendChild(a);
+      });
+    };
+  </script>
+</body>
+</html>
