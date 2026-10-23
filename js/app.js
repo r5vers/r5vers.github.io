@@ -346,7 +346,6 @@ class App {
   /** Icons in the static markup, the brand mark. */
   _paintStatic() {
     for (const el of $$('[data-icon]')) el.replaceChildren(icon(el.dataset.icon, el.dataset.icon === 'chevron' ? 14 : 18));
-    $('#brand-tile').replaceChildren(brandMark(24));
   }
 
   _wirePointerLight() { wirePointerLight(); }

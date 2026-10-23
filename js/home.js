@@ -116,7 +116,7 @@ async function boot() {
 // ── shell: top bar ─────────────────────────────────────────────────────────
 function renderShell() {
   const p = state.me.profile;
-  document.getElementById('brand-tile').replaceChildren(brandMark(24));
+  document.getElementById('brand-tile').replaceChildren(brandMark(26));
   const chip = document.getElementById('home-profile');
   chip.replaceChildren(avatar({ ...p, locked: false }, 'sm'), h('span.pname', {}, p.name));
   chip.onclick = () => openProfileMenu(chip);
