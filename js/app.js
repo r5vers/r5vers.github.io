@@ -1317,7 +1317,9 @@ class App {
       paint(); body.append(h('strong', {}, 'Fibonacci seviyeleri'), rows,
         h('button.btn', { onclick: () => { draft.levels.push({ value: 1.618, color: draft.color || '#9598a1', visible: true }); paint(); } }, '+ Seviye ekle'));
     }
-    const priceField = (label, get, put) => field(label, h('input.ctl', { type: 'number', step: 'any', value: get(), onchange: e => {
+    // prices as the market quotes them (a dragged point sits between ticks)
+    const dec = this.ds?.decimals ?? 5;
+    const priceField = (label, get, put) => field(label, h('input.ctl', { type: 'number', step: 'any', value: Number(get().toFixed(dec)), onchange: e => {
       if (e.target.value !== '' && Number.isFinite(Number(e.target.value))) put(Number(e.target.value));
       else e.target.value = get();
     } }));
@@ -1526,6 +1528,11 @@ class App {
     if (param && param.time != null) bar = param.seriesData?.get(this.chart.candles) || null;
     if (!bar) bar = bars[bars.length - 1];
     const dec = this.ds.decimals;
+    const values = this.chart.indicatorValues(param);
+    // the crosshair moves many times within one bar: redraw only when what it shows changes
+    const sig = JSON.stringify([this.ds.id, this.tfId, this.mode, this._liveError, bar && [bar.time, bar.open, bar.high, bar.low, bar.close], values.map(({ ind, vals }) => [ind.id, ind.params, ind.colors, vals])]);
+    if (sig === this._legendSig && el.firstChild) return;
+    this._legendSig = sig;
     const row = [h('span.sym', {}, this.ds.symbol), h('span.tag', {}, `${this.tfId} · ${this.ds.source}`)];
     if (this.mode === 'replay') row.push(h('span.badge.replay', {}, 'REPLAY'));
     if (this.mode === 'live') row.push(h(`span.badge.live${this._liveError ? '.error' : ''}`, {}, this._liveError ? 'BAĞLANTI YOK' : 'CANLI'));
@@ -1539,7 +1546,7 @@ class App {
         h('span', {}, 'K ', h(`span.${c}`, {}, F.price(bar.close, dec))),
         h(`span.${c}`, {}, `${ch >= 0 ? '+' : ''}${F.price(ch, dec)} (${F.pct(ch / bar.open, 2)})`));
     }
-    const inds = this.chart.indicatorValues(param).map(({ ind, vals }) => {
+    const inds = values.map(({ ind, vals }) => {
       const def = INDICATORS[ind.type];
       return h('div.ind', {},
         h('button', { style: { color: 'var(--text)' }, title: 'Ayarlar', onclick: () => D.indicatorParamsDialog(this, ind) }, def.label(ind.params)),

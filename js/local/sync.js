@@ -17,6 +17,11 @@ export const GROUP = 'RV Grup';
 const FLUSH_DELAY = 1500;
 const BIG = 200_000;            // values above this many characters are gzipped
 const MAX_DOC = 900_000;        // Firestore keeps up to 1 MiB per document
+// A replay saves itself every few seconds while it plays; the cloud gets it
+// at most this often (and whenever the page is left), so a group of devices
+// stays well inside Firebase's free daily writes and reads.
+export const SESSION_EVERY = 120_000;
+const sentAt = new Map();       // outbox key -> when it last went up (this page)
 
 const ok = (gid, kind, key) => `${gid}|${kind}|${key}`;
 
@@ -127,11 +132,13 @@ async function itemOf(db, gid, kind, key, stamp) {
   return { kind, gid, key, value: await pack(value), deleted: false, updated_at: stamp };
 }
 
-/** Send what changed on this device. */
-export async function flush(db) {
+/** Send what changed on this device; a replay that went up a moment ago
+ *  waits for its turn unless `force` (leaving the page, an explicit sync). */
+export async function flush(db, { force = false } = {}) {
   const cloud = await cloudOf(db);
   if (!cloud) return 0;
-  const pending = await db.all('outbox');
+  const now = Date.now();
+  const pending = (await db.all('outbox')).filter(([k]) => force || k.split('|')[1] !== 'session' || now - (sentAt.get(k) || 0) >= SESSION_EVERY);
   if (!pending.length) return 0;
   const items = [], tooBig = [];
   for (const [k, stamp] of pending) {
@@ -142,7 +149,10 @@ export async function flush(db) {
   }
   if (items.length) await cloud.putItems(items);
   // sent: off the list, unless it changed again meanwhile
-  for (const [k, stamp] of pending) if ((await db.get('outbox', k)) === stamp) await db.del('outbox', k);
+  for (const [k, stamp] of pending) {
+    sentAt.set(k, now);
+    if ((await db.get('outbox', k)) === stamp) await db.del('outbox', k);
+  }
   await saveGroup(db, { error: tooBig.length ? `buluta sığmadı: ${tooBig.join(', ')}` : null });
   return items.length;
 }
@@ -200,26 +210,24 @@ export async function pull(db, { full = false } = {}) {
   const cloud = await cloudOf(db);
   if (!cloud) return [];
   const g = await group(db);
-  const items = await cloud.itemsSince(full ? null : g.cursor);
+  const { items, last } = await cloud.itemsSince(full ? null : g.cursor);
   // profiles first: the rest of a batch may belong to a profile new here
   items.sort((a, b) => (a.kind === 'profile' ? 0 : 1) - (b.kind === 'profile' ? 0 : 1));
   const changed = [];
-  let cursor = full ? null : g.cursor;
   for (const it of items) {
     if (await apply(db, it)) changed.push({ kind: it.kind, key: it.key, gid: it.gid });
-    if (!cursor || it.sv > cursor) cursor = it.sv;
   }
-  await saveGroup(db, { cursor, last_sync: Date.now(), error: null });
+  await saveGroup(db, { cursor: last || (full ? null : g.cursor), last_sync: Date.now(), error: null });
   return changed;
 }
 
 let running = null;
 /** Send, then bring; one at a time. */
-export function sync(db, opts) {
+export function sync(db, opts = {}) {
   if (running) return running;
   running = (async () => {
     try {
-      await flush(db);
+      await flush(db, { force: !!opts.force });
       const changed = await pull(db, opts);
       // pages that are open hear about it
       if (changed.length) globalThis.dispatchEvent?.(new CustomEvent('rv-synced', { detail: { changed } }));

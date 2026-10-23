@@ -159,14 +159,19 @@ export class Cloud {
     await send();
   }
 
-  /** Items written at or after `since` (an RFC 3339 server time), oldest
-   *  first. At, not after: items of one commit share a time, and applying an
-   *  item twice changes nothing. Pages go by (sv, name), so none is skipped. */
+  /** Items written after the last one seen, oldest first, and the new
+   *  position: { items, last }. A position is the (sv, document name) of
+   *  the last item seen, so every item is read once: reading from its time
+   *  alone would read a whole commit (up to 400 items share one time) again
+   *  on every poll. `since` may also be a bare time (older devices): from
+   *  that time on. */
   async itemsSince(since, page = PAGE) {
     const uid = this.session.uid;
     const out = [];
-    const from = since || '1970-01-01T00:00:00Z';
-    let after = null;                     // [sv, document name] of the last row
+    const pos = since && typeof since === 'object' ? since : null;
+    const from = pos ? pos.sv : since || '1970-01-01T00:00:00Z';
+    let after = pos ? [pos.sv, pos.name] : null;     // [sv, document name] of the last row
+    let last = pos;
     for (;;) {
       const query = {
         structuredQuery: {
@@ -179,11 +184,14 @@ export class Cloud {
       };
       const rows = ((await this._fs('POST', `/users/${uid}:runQuery`, query)) || []).filter((r) => r.document);
       for (const r of rows) out.push(fromFields(r.document.fields));
+      if (rows.length) {
+        const doc = rows[rows.length - 1].document;
+        after = [fromFields(doc.fields).sv, doc.name];
+        last = { sv: after[0], name: after[1] };
+      }
       if (rows.length < page) break;
-      const last = rows[rows.length - 1].document;
-      after = [fromFields(last.fields).sv, last.name];
     }
-    return out;
+    return { items: out, last };
   }
 
   async deleteAccount() {

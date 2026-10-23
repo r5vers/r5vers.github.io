@@ -405,16 +405,17 @@ export function wirePointerLight() {
   let lit = new Set();
   const update = () => {
     frame = 0;
-    const near = new Set();
+    const near = new Map();
     if (root.dataset.pointer !== 'off' && x > -1000) {
+      // all the reads first, then the writes: one layout per frame at most
       for (const el of document.querySelectorAll('.glass, .glass-pop')) {
         const r = el.getBoundingClientRect();
-        if (x > r.left - REACH && x < r.right + REACH && y > r.top - REACH && y < r.bottom + REACH) near.add(el);
+        if (x > r.left - REACH && x < r.right + REACH && y > r.top - REACH && y < r.bottom + REACH) near.set(el, r);
       }
     }
     for (const el of lit) if (!near.has(el)) { el.style.removeProperty('--mx'); el.style.removeProperty('--my'); }
-    for (const el of near) { el.style.setProperty('--mx', `${x}px`); el.style.setProperty('--my', `${y}px`); }
-    lit = near;
+    for (const [el, r] of near) { el.style.setProperty('--mx', `${Math.round(x - r.left)}px`); el.style.setProperty('--my', `${Math.round(y - r.top)}px`); }
+    lit = new Set(near.keys());
   };
   window.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse') return;
@@ -423,6 +424,8 @@ export function wirePointerLight() {
     if (!frame) frame = requestAnimationFrame(update);
   }, { passive: true });
   document.addEventListener('pointerleave', () => { x = -1000; y = -1000; if (!frame) frame = requestAnimationFrame(update); });
+  // the panels move under a still pointer while the page scrolls
+  window.addEventListener('scroll', () => { if (lit.size && !frame) frame = requestAnimationFrame(update); }, { passive: true, capture: true });
 }
 
 /** A small line chart (SVG) of `values`, coloured by `color`. */

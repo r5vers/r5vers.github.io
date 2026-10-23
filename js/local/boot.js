@@ -37,7 +37,7 @@ function keepInSync(db) {
   setInterval(tick, SYNC_EVERY);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') tick();
-    else flush(db).catch(() => {});
+    else flush(db, { force: true }).catch(() => {});
   });
 }
 

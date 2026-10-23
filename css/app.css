@@ -147,11 +147,11 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 }
 .glass-pop { background: radial-gradient(140% 90% at 50% -12%, rgba(var(--light), calc(0.04 * var(--sheen))), transparent 56%), var(--surface-strong); }
 /* the rim: a hairline, a touch brighter along the top, lit where the
-   pointer is (fixed to the viewport, so one light runs across all panes) */
+   pointer is (--mx / --my: the pointer in the panel's own coordinates) */
 .glass::before, .glass-pop::before {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; padding: 1px;
   background:
-    radial-gradient(220px circle at var(--mx, -1000px) var(--my, -1000px), rgba(var(--light), calc(0.3 * var(--sheen))), transparent 70%) fixed,
+    radial-gradient(220px circle at var(--mx, -1000px) var(--my, -1000px), rgba(var(--light), calc(0.3 * var(--sheen))), transparent 70%),
     linear-gradient(180deg, rgba(var(--light), calc(0.05 + 0.09 * var(--sheen))), rgba(var(--light), 0.05) 36%, rgba(var(--light), 0.035));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
@@ -160,15 +160,15 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 /* the same light, much fainter, inside the glass */
 .glass::after, .glass-pop::after {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
-  background: radial-gradient(520px circle at var(--mx, -1000px) var(--my, -1000px), rgba(var(--light), calc(0.03 * var(--sheen))), transparent 65%) fixed;
+  background: radial-gradient(520px circle at var(--mx, -1000px) var(--my, -1000px), rgba(var(--light), calc(0.03 * var(--sheen))), transparent 65%);
 }
 :root[data-theme="light"] .glass::before, :root[data-theme="light"] .glass-pop::before {
   background:
-    radial-gradient(220px circle at var(--mx, -1000px) var(--my, -1000px), rgba(255, 255, 255, calc(0.6 * var(--sheen))), transparent 70%) fixed,
+    radial-gradient(220px circle at var(--mx, -1000px) var(--my, -1000px), rgba(255, 255, 255, calc(0.6 * var(--sheen))), transparent 70%),
     linear-gradient(180deg, rgba(255, 255, 255, calc(0.5 + 0.4 * var(--sheen))), rgba(0, 0, 0, 0.04) 40%, rgba(0, 0, 0, 0.06));
 }
 :root[data-theme="light"] .glass::after, :root[data-theme="light"] .glass-pop::after {
-  background: radial-gradient(520px circle at var(--mx, -1000px) var(--my, -1000px), rgba(255, 255, 255, calc(0.18 * var(--sheen))), transparent 65%) fixed;
+  background: radial-gradient(520px circle at var(--mx, -1000px) var(--my, -1000px), rgba(255, 255, 255, calc(0.18 * var(--sheen))), transparent 65%);
 }
 :root[data-pointer="off"] { --mx: -1000px; --my: -1000px; }
 
@@ -1325,6 +1325,8 @@ body.leaving { opacity: 0; transition: opacity 0.16s ease; }
 .drawing-settings { display: grid; gap: 18px; }
 .drawing-settings label { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; }
 .drawing-settings input[type=number] { width: 110px; }
+.drawing-settings label > select.ctl { flex: 0 1 250px; min-width: 0; }
+.drawing-settings label:has(> select.ctl) { white-space: nowrap; }
 .fib-level-row { display: grid; grid-template-columns: 24px minmax(65px,1fr) 40px 65px 75px 30px; gap: 6px; align-items: center; }
 .fib-level-row input[type=number] { width: 100%; min-width: 0; }
 .fib-level-row input[type=color] { width: 34px; }
@@ -1602,3 +1604,8 @@ a.wordmark-brand:hover .tile { background: none; }
   .home-bar .btn { min-width: 36px; padding-left: 8px; padding-right: 8px; }
   .home-bar .profile-chip { margin-left: 0; flex: none; }
 }
+
+/* Performance: the home screen's boards sit on a still background; frosting
+   each of them again on every frame of a scroll costs more than it shows.
+   The bars and menus that float over moving content keep their frost. */
+.page-home .home .glass { -webkit-backdrop-filter: none; backdrop-filter: none; }

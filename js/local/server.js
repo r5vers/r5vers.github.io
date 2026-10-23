@@ -454,7 +454,7 @@ route('POST', '/cloud/connect', async (db, { body }) => {
   return ok({ ...(await sync.status(db)), changed: changed.length });
 });
 route('POST', '/cloud/sync', async (db) => {
-  const changed = await sync.sync(db);
+  const changed = await sync.sync(db, { force: true });
   return ok({ ...(await sync.status(db)), changed: changed.length });
 });
 route('POST', '/cloud/disconnect', async (db) => { await sync.disconnect(db); return ok(await sync.status(db)); });

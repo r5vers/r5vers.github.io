@@ -28,6 +28,8 @@ function rgba(hex, a) {
   return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 }
 
+const DTF = new Map();
+
 export class TradingChart {
   constructor(el, { tz = 'UTC', decimals = 5, theme = 'dark', look = DEFAULT_LOOK, onCrosshair, onNeedOlder, onNeedNewer, onScaleChange } = {}) {
     this.el = el;
@@ -130,8 +132,13 @@ export class TradingChart {
     return { type: 'price', precision: this.decimals, minMove: 10 ** -this.decimals };
   }
 
+  // making a formatter is far slower than using one, and the axis asks for
+  // labels on every frame: one per (options, zone)
   _dtf(opts, tz) {
-    return new Intl.DateTimeFormat('tr-TR', { timeZone: tz, hourCycle: 'h23', ...opts });
+    const key = `${tz}|${JSON.stringify(opts)}`;
+    let f = DTF.get(key);
+    if (!f) { f = new Intl.DateTimeFormat('tr-TR', { timeZone: tz, hourCycle: 'h23', ...opts }); DTF.set(key, f); }
+    return f;
   }
 
   /** Daily and slower bars are labelled with dates (00:00 UTC): show them in UTC. */
