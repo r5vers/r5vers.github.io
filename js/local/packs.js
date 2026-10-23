@@ -45,49 +45,58 @@ export function providers() {
 
 // ── the data repository ───────────────────────────────────────────────────
 let manifest = null, manifestAt = 0;
-export async function getManifest(fetchFn = fetch, force = false) {
+export async function getManifest(fetchFn = null, force = false) {
   if (!force && manifest && Date.now() - manifestAt < MANIFEST_TTL) return manifest;
-  const r = await fetchFn(`${DATA_URL}manifest.json`, { cache: 'no-cache' });
-  if (!r.ok) throw Object.assign(new Error(`veri deposuna ulaşılamadı (HTTP ${r.status})`), { status: 502 });
-  manifest = await r.json();
+  let buf;
+  try { buf = await getBytes(`${DATA_URL}manifest.json`, { fetchFn, fresh: true }); } catch (e) {
+    throw Object.assign(new Error(`veri deposuna ulaşılamadı (${e.message})`), { status: 502, retry: e.status !== 404 });
+  }
+  manifest = JSON.parse(new TextDecoder().decode(buf));
   manifestAt = Date.now();
   return manifest;
 }
 
-async function gunzip(response) {
-  if (typeof DecompressionStream !== 'undefined' && response.body) {
-    return new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+const STALL_MS = 25_000;
+const sleep = (ms) => new Promise((r) => { const t = setTimeout(r, ms); t?.unref?.(); });
+
+/** The bytes at `url`. In the browser over XMLHttpRequest, not fetch's
+ *  streams: Safari 26 can hold back the last piece of a streamed body until
+ *  more arrives (WebKit bug 322545), and for a file that piece never comes,
+ *  so the download sat at 0%. XHR also says how far it got, and a transfer
+ *  that goes quiet for STALL_MS (a phone that slept, a lost network) is
+ *  dropped, to be tried again. `fetchFn` (tests) takes fetch's place. */
+function getBytes(url, { fetchFn = null, fresh = false, onProgress = null } = {}) {
+  if (fetchFn || typeof XMLHttpRequest === 'undefined') {
+    return (fetchFn || fetch)(url, fresh ? { cache: 'no-cache' } : undefined).then((r) => {
+      if (!r.ok) throw Object.assign(new Error(`HTTP ${r.status}`), { status: r.status });
+      return r.arrayBuffer();
+    });
   }
-  // Safari before 16.4: unpacked in JavaScript
-  const { gunzipSync } = await import('../../vendor/fflate.js');
-  const out = gunzipSync(new Uint8Array(await response.arrayBuffer()));
-  return out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    let last = Date.now(), over = false;
+    const end = (fn, v) => { if (over) return; over = true; clearInterval(watch); fn(v); };
+    const watch = setInterval(() => {
+      if (Date.now() - last > STALL_MS) { end(reject, Object.assign(new Error('bağlantı durdu'), { retry: true })); x.abort(); }
+    }, 2000);
+    x.open('GET', url);
+    x.responseType = 'arraybuffer';
+    if (fresh) x.setRequestHeader('Cache-Control', 'no-cache');
+    x.onprogress = (e) => { last = Date.now(); onProgress?.(e.loaded); };
+    x.onload = () => (x.status >= 200 && x.status < 300 ? end(resolve, x.response) : end(reject, Object.assign(new Error(`HTTP ${x.status}`), { status: x.status, retry: x.status >= 500 })));
+    x.onerror = () => end(reject, Object.assign(new Error('bağlantı koptu'), { retry: true }));
+    x.onabort = () => end(reject, Object.assign(new Error('bağlantı durdu'), { retry: true }));
+    x.send();
+  });
 }
 
-/** One data file, tried again after a dropped connection (a phone switching
- *  networks or waking up); a missing file is not tried again. */
-async function fetchFile(fetchFn, url, tries = 4) {
-  for (let i = 1; ; i++) {
-    try {
-      const r = await fetchFn(url);
-      if (r.ok) return { raw: await gunzip(r) };
-      if (r.status === 404 || i >= tries) throw Object.assign(new Error(`indirilemedi (HTTP ${r.status})`), { final: true });
-    } catch (e) {
-      if (e.final || i >= tries) throw e;
-    }
-    await new Promise((res) => setTimeout(res, 1500 * i));
-  }
-}
-
-/** What went wrong, said for the person in front of the screen. */
-async function explain(e) {
-  if (e?.name === 'QuotaExceededError' || /quota/i.test(e?.message || '')) {
-    const est = await storageEstimate();
-    const free = est.quota ? Math.max(0, (est.quota - (est.usage || 0)) / 1e6) : null;
-    return `cihazda yer kalmadı${free != null ? ` (siteye ayrılan boş alan ~${Math.round(free)} MB)` : ''}: daha az paket ya da 5m indirin, telefonda boş alan açın`;
-  }
-  if (e instanceof TypeError && /network|load failed|fetch/i.test(e?.message || '')) return 'bağlantı koptu: sayfa açıkken kaldığı yerden devam eder';
-  return e?.message || String(e);
+/** gzip, unpacked in JavaScript (fflate): the same on every browser, with no
+ *  stream in between that a browser could stall. */
+let fflate = null;
+async function gunzip(buf) {
+  fflate ||= await import('../../vendor/fflate.js');
+  const out = fflate.gunzipSync(new Uint8Array(buf));
+  return out.byteOffset === 0 && out.byteLength === out.buffer.byteLength ? out.buffer : out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
 }
 
 async function sha256(buf) {
@@ -98,6 +107,36 @@ async function sha256(buf) {
 /** The pack's dataset for `tf` on this device (or none yet). */
 export async function packDataset(db, id, tf) {
   return (await listDatasets(db)).find((d) => d.meta?.pack === id && d.base_tf === tf) || null;
+}
+
+/** One data file, tried again after a dropped or stalled connection; a
+ *  missing file is not tried again. */
+async function fetchFile(url, opts, tries = 4) {
+  for (let i = 1; ; i++) {
+    try {
+      return await gunzip(await getBytes(url, opts));
+    } catch (e) {
+      if (e.status === 404 || i >= tries) throw Object.assign(e, { message: `indirilemedi (${e.message})` });
+    }
+    await sleep(1500 * i);
+  }
+}
+
+/** `p`, or an error once `ms` pass without it (storage that stopped answering). */
+function within(p, ms, message) {
+  let t;
+  return Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(Object.assign(new Error(message), { retry: true })), ms); t?.unref?.(); })]).finally(() => clearTimeout(t));
+}
+
+/** What went wrong, said for the person in front of the screen. */
+async function explain(e) {
+  if (e?.name === 'QuotaExceededError' || /quota/i.test(e?.message || '')) {
+    const est = await storageEstimate();
+    const free = est.quota ? Math.max(0, (est.quota - (est.usage || 0)) / 1e6) : null;
+    return `cihazda yer kalmadı${free != null ? ` (siteye ayrılan boş alan ~${Math.round(free)} MB)` : ''}: daha az paket ya da 5m indirin, telefonda boş alan açın`;
+  }
+  if (e?.retry || (e instanceof TypeError && /network|load failed|fetch/i.test(e?.message || ''))) return `${e.message}: birazdan kendiliğinden devam eder`;
+  return e?.message || String(e);
 }
 
 // ── jobs (one queue per page's worker) ────────────────────────────────────
@@ -128,7 +167,7 @@ function newJob(pack, tf) {
 }
 
 /** Queue downloads of `ids` at `tf`; returns the jobs started. */
-export async function download(db, ids, tf, { fetchFn = fetch } = {}) {
+export async function download(db, ids, tf, { fetchFn = null, attempt = 0 } = {}) {
   if (!RESOLUTIONS.includes(tf)) throw Object.assign(new Error(`çözünürlük ${RESOLUTIONS.join(', ')} olmalı`), { status: 400 });
   const unknown = ids.filter((i) => !BY_ID[i]);
   if (unknown.length || !ids.length) throw Object.assign(new Error(`bilinmeyen paket: ${unknown.join(', ') || '-'}`), { status: 400 });
@@ -137,6 +176,7 @@ export async function download(db, ids, tf, { fetchFn = fetch } = {}) {
   for (const id of ids) {
     if (active.has(`${id}:${tf}`)) continue;
     const j = newJob(BY_ID[id], tf);
+    j.attempt = attempt;
     queue.push({ db, j, fetchFn });
     started.push({ ...j });
   }
@@ -149,7 +189,7 @@ export async function download(db, ids, tf, { fetchFn = fetch } = {}) {
 }
 
 /** Called when the worker starts: unfinished downloads continue. */
-export async function resume(db, { fetchFn = fetch } = {}) {
+export async function resume(db, { fetchFn = null } = {}) {
   const pending = (await db.get('downloads', 'pending')) || [];
   // a full device does not get fuller by itself: those wait for a click
   const full = new Set([...jobList.values()].filter((j) => j.full).map((j) => `${j.pack}:${j.tf}`));
@@ -160,14 +200,48 @@ export async function resume(db, { fetchFn = fetch } = {}) {
   }
 }
 
+// Only one page downloads at a time. Not with a Web Lock: a tab Safari froze
+// in the background keeps its lock, and the download here waited behind it
+// for good. The page downloading writes a heartbeat; one that stopped beating
+// for OWNER_FRESH has gone, and its place is taken.
+const PAGE = Math.random().toString(36).slice(2);
+const OWNER_FRESH = 15_000;
+
+async function claim(db, j) {
+  for (;;) {
+    if (j.cancelled) return false;
+    const o = await db.get('downloads', 'owner');
+    if (!o || o.id === PAGE || Date.now() - o.at > OWNER_FRESH) {
+      await db.put('downloads', 'owner', { id: PAGE, at: Date.now() });
+      await sleep(40);
+      if ((await db.get('downloads', 'owner'))?.id === PAGE) return true;
+    }
+    j.message = 'başka bir sekmede iniyor, o bitince başlar';
+    await sleep(3000);
+  }
+}
+
 function pump() {
   if (running || !queue.length) return;
   running = queue.shift();
   const { db, j, fetchFn } = running;
-  const work = () => runJob(db, j, fetchFn);
-  // only one page downloads at a time; the others see its progress in the data
-  const locked = globalThis.navigator?.locks ? navigator.locks.request('rv-pack-download', work) : work();
-  Promise.resolve(locked).finally(() => { running = null; pump(); });
+  (async () => {
+    if (!(await claim(db, j))) { j.status = 'cancelled'; return; }
+    const beat = setInterval(() => db.put('downloads', 'owner', { id: PAGE, at: Date.now() }).catch(() => {}), 4000);
+    beat.unref?.();
+    try { await runJob(db, j, fetchFn); } finally {
+      clearInterval(beat);
+      if ((await db.get('downloads', 'owner').catch(() => null))?.id === PAGE) await db.del('downloads', 'owner').catch(() => {});
+    }
+  })().catch(() => {}).finally(() => {
+    running = null;
+    // a dropped connection or storage that stalled: again in a moment, a few times
+    if (j.status === 'error' && j.retry && j.attempt < 5) {
+      const t = setTimeout(() => download(db, [j.pack], j.tf, { fetchFn, attempt: j.attempt + 1 }).catch(() => {}), 2500 * (j.attempt + 1));
+      t.unref?.();
+    }
+    pump();
+  });
 }
 
 async function runJob(db, j, fetchFn) {
@@ -208,13 +282,19 @@ async function runJob(db, j, fetchFn) {
     }
     for (const f of todo) {
       if (j.cancelled) { j.status = 'cancelled'; return; }
-      const { raw } = await fetchFile(fetchFn, `${DATA_URL}${f.path}`).catch((e) => { throw Object.assign(e, { message: `${f.path}: ${e.message}` }); });
-      if (f.sha256 && (await sha256(raw)) !== f.sha256) throw new Error(`${f.path} bozuk indi, tekrar deneyin`);
+      j.message = `${f.tag} iniyor`;
+      // progress moves while a year comes in, not only when it is stored
+      const onProgress = (loaded) => {
+        j.progress = Math.min(0.999, (done + Math.min(loaded, f.gz_bytes || loaded)) / total);
+      };
+      const raw = await fetchFile(`${DATA_URL}${f.path}`, { fetchFn, onProgress }).catch((e) => { throw Object.assign(e, { message: `${f.tag}: ${e.message}` }); });
+      if (f.sha256 && (await sha256(raw)) !== f.sha256) throw Object.assign(new Error(`${f.path} bozuk indi, tekrar deneyin`), { retry: !fetchFn });
+      j.message = `${f.tag} kaydediliyor`;
       const { scale, cols } = parseFile(raw);
-      ds = await putPart(db, ds, f.tag, cols, scale);
+      ds = await within(putPart(db, ds, f.tag, cols, scale), 90_000, 'cihaz depolaması yanıt vermedi');
       have[f.tag] = f.sha256;
       ds = { ...ds, meta: { ...ds.meta, pack: j.pack, files: { ...have } } };
-      await db.put('datasets', String(ds.id), ds);
+      await within(db.put('datasets', String(ds.id), ds), 30_000, 'cihaz depolaması yanıt vermedi');
       j.bars += cols.t.length;
       done += f.gz_bytes || 1;
       j.progress = Math.min(1, done / total);
@@ -235,6 +315,7 @@ async function runJob(db, j, fetchFn) {
     // carries on from there when the page is back (resume)
     j.message = await explain(e);
     j.full = /yer kalmadı/.test(j.message);
+    j.retry = !j.full && !!e?.retry;
   } finally {
     j.finished_at = Date.now() / 1000;
     j.eta = null;
