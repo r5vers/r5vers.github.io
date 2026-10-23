@@ -3,12 +3,12 @@
 //
 // handle(db, { method, path, query, body }) -> { status, json } | { status, bytes, headers }
 // `body` is the request body as an ArrayBuffer (or undefined).
-import { canAggregate, parseTf, CHART_TFS } from '../core/timeframes.js?v=4a4bde5db4';
-import { aggregateCols, barRows } from './query.js?v=4a4bde5db4';
-import { colsToRecords, toJsonColumns } from './rtc.js?v=4a4bde5db4';
-import { ChunkRows, deleteSeries, deviceSource, readAll, replaceSeries } from './series.js?v=4a4bde5db4';
-import * as packs from './packs.js?v=4a4bde5db4';
-import * as sync from './sync.js?v=4a4bde5db4';
+import { canAggregate, parseTf, CHART_TFS } from '../core/timeframes.js?v=64b6fa7342';
+import { aggregateCols, barRows } from './query.js?v=64b6fa7342';
+import { colsToRecords, toJsonColumns } from './rtc.js?v=64b6fa7342';
+import { ChunkRows, deleteSeries, deviceSource, readAll, replaceSeries } from './series.js?v=64b6fa7342';
+import * as packs from './packs.js?v=64b6fa7342';
+import * as sync from './sync.js?v=64b6fa7342';
 
 const MAX_BARS = 200_000;
 const MAX_BIN_BARS = 6_000_000;
@@ -335,7 +335,8 @@ route('POST', '/datasets/import', async (db, { query, body }) => ok(await packs.
 route('POST', '/datasets/download', () => { throw new HttpError(501, 'bu sürümde veri paketleri ve CSV kullanılır'); });
 
 route('GET', '/packs', async (db) => { await packs.ensureStreams(db, 4000); return ok(await packs.status(db)); });
-route('POST', '/packs/download', async (db, { body }) => { const b = json(body); return ok({ jobs: await packs.download(db, b.ids || [], b.tf || '1m'), ...(await packs.status(db)) }); });
+route('POST', '/packs/download', async (db, { body }) => {
+  if (db.light) throw new HttpError(400, 'bu cihaz hafif modda: veriler siteden okunur, indirme gerekmez'); const b = json(body); return ok({ jobs: await packs.download(db, b.ids || [], b.tf || '1m'), ...(await packs.status(db)) }); });
 route('GET', '/mirror', () => ok({ enabled: false }));
 route('POST', '/mirror/restore', () => ok({ enabled: false }));
 route('GET', '/jobs', () => ok(packs.jobs()));

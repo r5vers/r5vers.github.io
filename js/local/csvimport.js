@@ -1,11 +1,11 @@
 // CSV upload on the device: the server's POST /api/datasets/import, with
 // the file parsed in the browser (csv.js mirrors csv_import.py).
-import { parseTf } from '../core/timeframes.js?v=4a4bde5db4';
-import { aggregate, normalize, parseCsv, tfFromSeconds } from './csv.js?v=4a4bde5db4';
-import { defaults } from './instruments.js?v=4a4bde5db4';
-import { chooseScale, encode } from './rtc.js?v=4a4bde5db4';
-import { mergeCols, readAll, replaceSeries } from './series.js?v=4a4bde5db4';
-import { createDataset, datasetJson, HttpError } from './server.js?v=4a4bde5db4';
+import { parseTf } from '../core/timeframes.js?v=64b6fa7342';
+import { aggregate, normalize, parseCsv, tfFromSeconds } from './csv.js?v=64b6fa7342';
+import { defaults } from './instruments.js?v=64b6fa7342';
+import { chooseScale, encode } from './rtc.js?v=64b6fa7342';
+import { mergeCols, readAll, replaceSeries } from './series.js?v=64b6fa7342';
+import { createDataset, datasetJson, HttpError } from './server.js?v=64b6fa7342';
 
 const MAX_UPLOAD = 300 * 1024 * 1024;
 const UNIT_MAX = 2 ** 31 - 1;

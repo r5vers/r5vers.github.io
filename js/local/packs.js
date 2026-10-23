@@ -3,12 +3,12 @@
 // straight into IndexedDB. A pack fetches only the years it lacks or that
 // changed, so pressing the button again tops it up, and a download cut short
 // (the page was closed) carries on where it stopped.
-import { emptyCols, parseFile } from './rtc.js?v=4a4bde5db4';
-import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=4a4bde5db4';
-import { parseTf } from '../core/timeframes.js?v=4a4bde5db4';
-import { createDataset, datasetJson, listDatasets } from './server.js?v=4a4bde5db4';
-import { storageEstimate } from './db.js?v=4a4bde5db4';
-import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=4a4bde5db4';
+import { emptyCols, parseFile } from './rtc.js?v=64b6fa7342';
+import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=64b6fa7342';
+import { parseTf } from '../core/timeframes.js?v=64b6fa7342';
+import { createDataset, datasetJson, listDatasets } from './server.js?v=64b6fa7342';
+import { storageEstimate } from './db.js?v=64b6fa7342';
+import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=64b6fa7342';
 
 export { DATA_URL, getManifest };
 export const YEARS = 15;
@@ -327,13 +327,13 @@ export async function status(db) {
   return {
     years: YEARS, start, packs: out,
     disk: { total, used, free: Math.max(0, total - used), railway: false, persistent: persisted, device: true },
-    mirror: { enabled: false }, provider: 'github', local: true,
+    mirror: { enabled: false }, provider: 'github', local: true, light: !!db.light,
     recommended: total - used - MARGIN > need1m ? '1m' : '5m',
   };
 }
 
 /** CSV upload, parsed on the device. */
 export async function importCsv(db, query, body) {
-  const { importCsvFile } = await import('./csvimport.js?v=4a4bde5db4');
+  const { importCsvFile } = await import('./csvimport.js?v=64b6fa7342');
   return importCsvFile(db, query, body);
 }

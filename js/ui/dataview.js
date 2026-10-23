@@ -1,8 +1,8 @@
 // Data tab: the 15-year data packs up top, then the user's datasets and
 // (folded away) CSV import and custom downloads.
-import { api } from '../api.js?v=4a4bde5db4';
-import * as F from '../format.js?v=4a4bde5db4';
-import { confirmBox, field, h, icon, modal, toast } from './dom.js?v=4a4bde5db4';
+import { api } from '../api.js?v=64b6fa7342';
+import * as F from '../format.js?v=64b6fa7342';
+import { confirmBox, field, h, icon, modal, toast } from './dom.js?v=64b6fa7342';
 
 const DAY = 86400;
 const PACK_COLORS = { EURUSD: '#5b8cff', NAS100: '#c6ff3d', XAUUSD: '#ffd23f', GBPUSD: '#c77dff', USDCAD: '#ff6b6b', SPX500: '#4fd1c5' };
@@ -192,11 +192,13 @@ export class DataView {
             h('i', { style: { width: pct(Math.min(need, disk.free)), background: 'repeating-linear-gradient(-45deg, var(--accent) 0 3px, transparent 3px 6px)', opacity: 0.6 } })),
           h('div.legend-row', {}, h('span', {}, 'veri ', h('b', {}, bytes(dataBytes))), h('span', {}, 'boş ', h('b', {}, bytes(disk.free))),
             need > 0 ? h('span', {}, 'gerekli ', h('b', {}, bytes(need))) : null)),
-        h('button.btn.primary', { disabled: allDone || anyRunning, onclick: () => this.downloadPacks(st.packs.map((p) => p.id)) },
+        st.light ? null : h('button.btn.primary', { disabled: allDone || anyRunning, onclick: () => this.downloadPacks(st.packs.map((p) => p.id)) },
           anyRunning ? 'İniyor…' : allDone ? [icon('check', 15), 'Hepsi güncel'] : [icon('download', 15), 'Hepsini indir'])));
     const warns = [];
     const mirrorOn = !!st.mirror?.enabled;
-    if (st.local) {
+    if (st.light) {
+      warns.push(h('div.warn-box', {}, h('b', {}, 'Hafif mod: '), 'Bu cihaz veriyi indirmeden, siteden okur; açtığın yıllar tarayıcının önbelleğinde kalır. Profiller, ayarlar ve oturumlar bulutta.'));
+    } else if (st.local) {
       if (!disk.persistent) warns.push(h('div.warn-box', {}, h('b', {}, 'Veriler kalıcı değil: '), 'Tarayıcı yer daralınca bu sitenin verisini silebilir. Siteyi uygulama olarak yükle (telefonda Paylaş → Ana Ekrana Ekle, bilgisayarda adres çubuğundaki “Yükle”); yüklü uygulamanın verisi korunur.'));
       if (tf === '1m' && need + 25 * MB > disk.free) warns.push(h('div.warn-box', {}, h('b', {}, 'Cihazda yer yetmeyebilir: '), `1 dakikalık 15 yıl için ~${bytes(need)} gerekli, ${bytes(disk.free)} boş. 5 dakikalık çözünürlük ~5 kat az yer tutar.`));
     } else {
@@ -224,7 +226,8 @@ export class DataView {
         ? [h('button.btn.small.outline', { onclick: async () => { await api.cancelJob(job.id); await this.refreshJobs(); await this.refreshPacks(); this.renderLive(); } }, 'Durdur')]
         : [
           ds && ds.bar_count ? h('button.btn.small.outline', { onclick: () => this.app.selectDataset(ds.id) }, 'Grafikte aç') : null,
-          ds?.stream ? h('button.btn.small', { title: 'İnternetsiz kullanmak için 15 yılın hepsini cihaza indir (isteğe bağlı)', onclick: () => this.downloadPacks([p.id]) }, icon('download', 14), 'Cihaza indir')
+          st.light ? null
+            : ds?.stream ? h('button.btn.small', { title: 'İnternetsiz kullanmak için 15 yılın hepsini cihaza indir (isteğe bağlı)', onclick: () => this.downloadPacks([p.id]) }, icon('download', 14), 'Cihaza indir')
             : cov > 0.985 ? h('button.btn.small', { title: 'Son günleri ekle', onclick: () => this.downloadPacks([p.id]) }, icon('refresh', 14), 'Güncelle')
             : h('button.btn.small.primary', { onclick: () => this.downloadPacks([p.id]) }, icon('download', 14), ds ? 'Tamamla' : 'İndir'),
           other && !ds ? h('span.muted', { style: { fontSize: '11px' } }, `${other.tf} hazır`) : null,

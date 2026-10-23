@@ -10,10 +10,10 @@
 // first (StreamRows): a query fetches the years it touches, keeps them here
 // when the device has room, and works on without when it has not. That is
 // how every pack is ready at once on every device, phones included.
-import { parseTf, HOUR } from '../core/timeframes.js?v=4a4bde5db4';
-import { colsToRecords, concatCols, emptyCols, parseFile, recordsToCols, sliceCols } from './rtc.js?v=4a4bde5db4';
-import { MemRows, aggregateAll, lowerBound, rollUp, upperBound } from './query.js?v=4a4bde5db4';
-import { DATA_URL, fetchFile, getManifest, sha256, within } from './net.js?v=4a4bde5db4';
+import { parseTf, HOUR } from '../core/timeframes.js?v=64b6fa7342';
+import { colsToRecords, concatCols, emptyCols, parseFile, recordsToCols, sliceCols } from './rtc.js?v=64b6fa7342';
+import { MemRows, aggregateAll, lowerBound, rollUp, upperBound } from './query.js?v=64b6fa7342';
+import { DATA_URL, fetchFile, fetchFileCached, getManifest, sha256, within } from './net.js?v=64b6fa7342';
 
 export const CHUNK = 1 << 16;
 const FIELDS = ['t', 'o', 'h', 'l', 'c', 'v'];
@@ -227,11 +227,12 @@ async function loadFile(db, f, ds) {
       if (bufs.every(Boolean)) cols = concatCols(bufs.map((b) => recordsToCols(b)));
     }
     if (!cols) {
-      const raw = await fetchFile(`${DATA_URL}${f.path}`, {});
+      // light mode keeps the file in the browser's file cache, not the database
+      const raw = db.light ? await fetchFileCached(`${DATA_URL}${f.path}`, f.sha256) : await fetchFile(`${DATA_URL}${f.path}`, {});
       if (f.sha256 && (await sha256(raw)) !== f.sha256) throw Object.assign(new Error(`${f.tag} bozuk indi, tekrar deneyin`), { status: 502 });
       cols = parseFile(raw).cols;
       // kept for next time if there is room; reading does not wait for it
-      within(db.put('chunks', key, colsToRecords(cols)), 60_000, 'kaydedilemedi').catch(() => {});
+      if (!db.light) within(db.put('chunks', key, colsToRecords(cols)), 60_000, 'kaydedilemedi').catch(() => {});
     }
     if (cols.t.length !== f.bars) throw Object.assign(new Error(`${f.tag}: beklenmeyen bar sayısı`), { status: 502 });
     remember(ck, cols);
@@ -286,7 +287,7 @@ async function streamAggregated(db, ds, tf) {
     const viaHour = tf.id !== '1h' && base.kind === 'intraday' && HOUR % base.seconds === 0 && base.seconds < HOUR
       && (tf.kind !== 'intraday' || tf.seconds % HOUR === 0);
     if (tf.id === '1h' && hourFile && ds.align === packAlign) {
-      const raw = await fetchFile(`${DATA_URL}${hourFile.path}`, {});
+      const raw = db.light ? await fetchFileCached(`${DATA_URL}${hourFile.path}`, hourFile.sha256) : await fetchFile(`${DATA_URL}${hourFile.path}`, {});
       if (hourFile.sha256 && (await sha256(raw)) !== hourFile.sha256) throw Object.assign(new Error('saatlik veri bozuk indi, tekrar deneyin'), { status: 502 });
       agg = decodeAgg(raw);
     } else if (viaHour) {
@@ -296,7 +297,7 @@ async function streamAggregated(db, ds, tf) {
       agg = await aggregateAll(new StreamRows(db, entry, ds), tf, ds.align);
     }
     stored = { records: colsToRecords(agg.cols), starts: agg.starts };
-    within(db.put('aggs', key, stored), 60_000, '').catch(() => {});
+    if (!db.light) within(db.put('aggs', key, stored), 60_000, '').catch(() => {});
   }
   const out = { rows: new MemRows(recordsToCols(stored.records), entry.scale), starts: stored.starts };
   aggMemo.set(key, out);

@@ -63,7 +63,7 @@ export function getBytes(url, { fetchFn = null, fresh = false, onProgress = null
  *  stream in between that a browser could stall. */
 let fflate = null;
 export async function gunzip(buf) {
-  fflate ||= await import('../../vendor/fflate.js?v=4a4bde5db4');
+  fflate ||= await import('../../vendor/fflate.js?v=64b6fa7342');
   const out = fflate.gunzipSync(new Uint8Array(buf));
   return out.byteOffset === 0 && out.byteLength === out.buffer.byteLength ? out.buffer : out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
 }
@@ -73,17 +73,45 @@ export async function sha256(buf) {
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** One data file, tried again after a dropped or stalled connection; a
- *  missing file is not tried again. */
-export async function fetchFile(url, opts, tries = 4) {
+/** One data file, as sent (gzip), tried again after a dropped or stalled
+ *  connection; a missing file is not tried again. */
+async function fetchGz(url, opts, tries = 4) {
   for (let i = 1; ; i++) {
     try {
-      return await gunzip(await getBytes(url, opts));
+      return await getBytes(url, opts);
     } catch (e) {
       if (e.status === 404 || i >= tries) throw Object.assign(e, { message: `indirilemedi (${e.message})` });
     }
     await sleep(1500 * i);
   }
+}
+
+/** One data file, unpacked. */
+export async function fetchFile(url, opts, tries = 4) {
+  return gunzip(await fetchGz(url, opts, tries));
+}
+
+/** One data file, unpacked, kept in the browser's file cache (Cache API)
+ *  for the next visit: light mode's store of candles. A kept copy that no
+ *  longer matches `sha` (the year was updated) is fetched again. */
+const DATA_CACHE = 'rv-data-1';
+export async function fetchFileCached(url, sha, opts = {}) {
+  let cache = null;
+  try { if (typeof caches !== 'undefined') cache = await within(caches.open(DATA_CACHE), 5000, ''); } catch { cache = null; }
+  if (cache) {
+    try {
+      const hit = await within(cache.match(url), 5000, '');
+      if (hit) {
+        const raw = await gunzip(await hit.arrayBuffer());
+        if (!sha || (await sha256(raw)) === sha) return raw;
+        cache.delete(url).catch(() => {});
+      }
+    } catch { /* a cache that does not answer: the network */ }
+  }
+  const gz = await fetchGz(url, opts);
+  const raw = await gunzip(gz);
+  if (cache) within(cache.put(url, new Response(gz)), 30_000, '').catch(() => {});
+  return raw;
 }
 
 /** `p`, or an error once `ms` pass without it (storage that stopped answering). */

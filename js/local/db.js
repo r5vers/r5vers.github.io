@@ -38,6 +38,56 @@ export class MemoryDb {
   async tx(fn) { return fn(this); }
 }
 
+// ── light mode (iPhone): no IndexedDB ───────────────────────────────────
+// Safari's IndexedDB on iPhone hung, half-wrote and broke the site for good.
+// In light mode the device keeps its small things (profiles, looks,
+// sessions, the group link) in localStorage - plain, synchronous, and kept
+// in step with the cloud - and candles only in memory (and the browser's
+// file cache, net.js). Nothing here can hang.
+const LIGHT_KEY = 'rv-light-db';
+const PERSIST = ['meta', 'datasets', 'profiles', 'photos', 'sessions', 'kv', 'strategies', 'settings', 'downloads', 'outbox', 'stamps'];
+
+export class LightDb extends MemoryDb {
+  constructor(storage = globalThis.localStorage) {
+    super();
+    this.light = true;
+    this.storage = storage;
+    this._timer = 0;
+    try {
+      const snap = JSON.parse(storage?.getItem(LIGHT_KEY) || 'null');
+      if (snap?.v === 1) for (const s of PERSIST) for (const [k, v] of snap.data?.[s] || []) this.data[s].set(k, v);
+    } catch { /* nothing kept, or unreadable: start empty, the cloud refills it */ }
+  }
+  _changed(store) {
+    if (!PERSIST.includes(store)) return;
+    clearTimeout(this._timer);
+    this._timer = setTimeout(() => this.save(), 250);
+    this._timer?.unref?.();
+  }
+  async put(store, key, value) { await super.put(store, key, value); this._changed(store); }
+  async del(store, key) { await super.del(store, key); this._changed(store); }
+  async delPrefix(store, prefix) { await super.delPrefix(store, prefix); this._changed(store); }
+
+  /** Write the snapshot now. Too big for localStorage: the photos stay out,
+   *  then everything but the group link and the profiles; what stays out
+   *  comes from the cloud on the next visit (its cursor starts over). */
+  save() {
+    clearTimeout(this._timer);
+    this._timer = 0;
+    if (!this.storage) return false;
+    const snapshot = (keep, refetch) => {
+      const data = Object.fromEntries(keep.map((s) => [s, [...this.data[s]]]));
+      if (refetch && data.meta) data.meta = data.meta.map(([k, v]) => (k === 'group' && v ? [k, { ...v, cursor: null }] : [k, v]));
+      return JSON.stringify({ v: 1, data });
+    };
+    const tries = [[PERSIST, false], [PERSIST.filter((s) => s !== 'photos'), true], [['meta', 'datasets', 'profiles', 'outbox', 'stamps'], true]];
+    for (const [keep, refetch] of tries) {
+      try { this.storage.setItem(LIGHT_KEY, snapshot(keep, refetch)); return true; } catch { /* too big: keep less */ }
+    }
+    return false;
+  }
+}
+
 const req = (r) => new Promise((resolve, reject) => { r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
 
 /** A write is kept only once its transaction commits: a full disk shows up

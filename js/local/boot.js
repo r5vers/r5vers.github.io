@@ -3,9 +3,9 @@
 // files (Vercel, the installed app) the site has no server: requests to
 // /api/... are answered here, on the device, from IndexedDB - so the rest of
 // the app works the same in both.
-import { IdbDb, persistStorage } from './db.js?v=4a4bde5db4';
-import { handle } from './server.js?v=4a4bde5db4';
-import { flush, sync } from './sync.js?v=4a4bde5db4';
+import { IdbDb, LightDb, persistStorage } from './db.js?v=64b6fa7342';
+import { handle } from './server.js?v=64b6fa7342';
+import { flush, sync } from './sync.js?v=64b6fa7342';
 
 export const LOCAL = typeof window !== 'undefined' && !window.RV_SERVER;
 // the page's scripts loaded and linked: the safety net in the page stands down
@@ -24,11 +24,38 @@ if (typeof window !== 'undefined') {
   window.addEventListener('unhandledrejection', (e) => logError('promise', e.reason));
 }
 
+/** Light mode (db.js LightDb): iPhones and iPads, a device whose database
+ *  does not open, or by choice (?mode=light / ?mode=full, remembered). */
+function wantLight() {
+  try {
+    const asked = new URLSearchParams(location.search).get('mode');
+    if (asked === 'light' || asked === 'full') localStorage.setItem('rv-mode', asked);
+    const kept = localStorage.getItem('rv-mode');
+    if (kept) return kept === 'light';
+  } catch { /* storage blocked */ }
+  const ua = navigator.userAgent || '';
+  return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+function lightDb() {
+  const db = new LightDb();
+  // what changed goes into localStorage before the page goes away
+  addEventListener('pagehide', () => db.save());
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') db.save(); });
+  return db;
+}
+
 let dbPromise = null;
 export function localDb() {
   if (!dbPromise) {
-    dbPromise = IdbDb.open().then((db) => {
-      persistStorage();
+    const opened = LOCAL && wantLight()
+      ? Promise.resolve(lightDb())
+      : IdbDb.open().then((db) => { persistStorage(); return db; }, (e) => {
+        // the database will not open here: light mode instead of a dead site
+        logError('database', e);
+        return lightDb();
+      });
+    dbPromise = opened.then((db) => {
       // (no download carries on by itself: packs are read from the site, a
       // full download is only for using them offline, and starts on a click)
       keepInSync(db);
