@@ -42,7 +42,9 @@ export function datasetJson(ds) {
   const { series, ...d } = ds;
   const base = parseTf(ds.base_tf);
   d.timeframes = CHART_TFS.filter((tf) => canAggregate(base, parseTf(tf)));
-  d.bytes = (ds.bar_count || 0) * 24;
+  // read from the site: nothing of it is counted as on the device
+  d.stream = !!ds.meta?.stream && !ds.meta?.complete;
+  d.bytes = d.stream ? 0 : (ds.bar_count || 0) * 24;
   return d;
 }
 
@@ -109,7 +111,7 @@ async function bars(db, id, q) {
 
 async function replay(db, id, q) {
   const ds = await getDs(db, id);
-  const base = new ChunkRows(db, ds);
+  const base = await deviceSource(db).base(ds);
   if (!base.n) throw bad('veri seti boş');
   const to = int(q.to);
   const i = Math.max((await base.search(to, 'right')) - 1, 0);
@@ -316,7 +318,11 @@ route('DELETE', '/settings/oanda', async (db) => { await db.del('settings', 'oan
 route('GET', '/live/timeframes', () => { throw new HttpError(501, 'canlı grafik bu sürümde henüz yok'); });
 route('GET', '/live', () => { throw new HttpError(501, 'canlı grafik bu sürümde henüz yok'); });
 
-route('GET', '/datasets', async (db) => ok((await listDatasets(db)).map(datasetJson)));
+route('GET', '/datasets', async (db) => {
+  // every pack is there at once, read from the site until downloaded
+  await packs.ensureStreams(db, 4000);
+  return ok((await listDatasets(db)).map(datasetJson));
+});
 route('GET', '/datasets/{id}', async (db, { p }) => ok(datasetJson(await getDs(db, p.id))));
 route('PATCH', '/datasets/{id}', async (db, { p, body }) => ok(datasetJson(await patchDataset(db, Number(p.id), json(body)))));
 route('DELETE', '/datasets/{id}', async (db, { p }) => { await deleteDataset(db, Number(p.id)); return ok({ ok: true }); });
@@ -325,7 +331,7 @@ route('GET', '/datasets/{id}/replay', (db, { p, query }) => replay(db, Number(p.
 route('POST', '/datasets/import', async (db, { query, body }) => ok(await packs.importCsv(db, query, body)));
 route('POST', '/datasets/download', () => { throw new HttpError(501, 'bu sürümde veri paketleri ve CSV kullanılır'); });
 
-route('GET', '/packs', async (db) => ok(await packs.status(db)));
+route('GET', '/packs', async (db) => { await packs.ensureStreams(db, 4000); return ok(await packs.status(db)); });
 route('POST', '/packs/download', async (db, { body }) => { const b = json(body); return ok({ jobs: await packs.download(db, b.ids || [], b.tf || '1m'), ...(await packs.status(db)) }); });
 route('GET', '/mirror', () => ok({ enabled: false }));
 route('POST', '/mirror/restore', () => ok({ enabled: false }));

@@ -5,7 +5,6 @@
 // the app works the same in both.
 import { IdbDb, persistStorage } from './db.js';
 import { handle } from './server.js';
-import { resume } from './packs.js';
 import { flush, sync } from './sync.js';
 
 export const LOCAL = typeof window !== 'undefined' && !window.RV_SERVER;
@@ -15,8 +14,8 @@ export function localDb() {
   if (!dbPromise) {
     dbPromise = IdbDb.open().then((db) => {
       persistStorage();
-      // downloads a closed page left unfinished carry on, once the page is up
-      setTimeout(() => resume(db).catch(() => {}), 1500);
+      // (no download carries on by itself: packs are read from the site, a
+      // full download is only for using them offline, and starts on a click)
       keepInSync(db);
       return db;
     });
@@ -38,8 +37,6 @@ function keepInSync(db) {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
       tick();
-      // a phone that slept stopped its download: carry on with it
-      resume(db).catch(() => {});
     } else flush(db, { force: true }).catch(() => {});
   });
 }

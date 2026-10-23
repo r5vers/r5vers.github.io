@@ -217,13 +217,15 @@ export class DataView {
       let status = '';
       if (running) status = `${job.status === 'queued' ? 'sırada' : `%${Math.round(job.progress * 100)} · ${job.message}`}${job.eta ? ` · kalan ~${duration(job.eta)}` : ''} · ${job.provider}`;
       else if (job && job.status === 'error') status = `Hata: ${job.message}`;
+      else if (ds?.stream) status = 'Hazır · siteden okunur, indirmen gerekmez (açtığın yıllar cihazda saklanır)';
       else if (ds) status = cov > 0.985 ? 'Güncel' : `%${Math.round(cov * 100)} dolu`;
       else status = `İndirilmedi · ~${bytes(p.estimate[tf])}`;
       const actions = running
         ? [h('button.btn.small.outline', { onclick: async () => { await api.cancelJob(job.id); await this.refreshJobs(); await this.refreshPacks(); this.renderLive(); } }, 'Durdur')]
         : [
           ds && ds.bar_count ? h('button.btn.small.outline', { onclick: () => this.app.selectDataset(ds.id) }, 'Grafikte aç') : null,
-          cov > 0.985 ? h('button.btn.small', { title: 'Son günleri ekle', onclick: () => this.downloadPacks([p.id]) }, icon('refresh', 14), 'Güncelle')
+          ds?.stream ? h('button.btn.small', { title: 'İnternetsiz kullanmak için 15 yılın hepsini cihaza indir (isteğe bağlı)', onclick: () => this.downloadPacks([p.id]) }, icon('download', 14), 'Cihaza indir')
+            : cov > 0.985 ? h('button.btn.small', { title: 'Son günleri ekle', onclick: () => this.downloadPacks([p.id]) }, icon('refresh', 14), 'Güncelle')
             : h('button.btn.small.primary', { onclick: () => this.downloadPacks([p.id]) }, icon('download', 14), ds ? 'Tamamla' : 'İndir'),
           other && !ds ? h('span.muted', { style: { fontSize: '11px' } }, `${other.tf} hazır`) : null,
         ];
@@ -233,7 +235,7 @@ export class DataView {
         h('div.timeline-labels', {}, h('span', {}, startYear), h('span', {}, endYear)),
         h('div.meta', {},
           h('span', {}, ds?.bar_count ? `${ds.bar_count.toLocaleString('tr-TR')} bar` : `${tf} · ${st.years} yıl`),
-          h('span', {}, ds?.bar_count ? bytes(ds.bytes) : `~${bytes(p.estimate[tf])}`),
+          h('span', {}, ds?.stream ? 'internetten' : ds?.bar_count ? bytes(ds.bytes) : `~${bytes(p.estimate[tf])}`),
           ds?.first_ts ? h('span', {}, `${F.dateOnly(ds.first_ts, tz)} → ${F.dateOnly(ds.last_ts, tz)}`) : null,
           ds ? h('span', {}, ds.source) : null),
         h('div.status', {}, status),

@@ -5,10 +5,10 @@
   "EURUSD": {
    "fields": {
     "align": "fx",
-    "contract_size": 100000.0,
+    "contract_size": 100000,
     "currency": "USD",
     "decimals": 5,
-    "name": "EUR/USD \u00b7 15 y\u0131l \u00b7 1m",
+    "name": "EUR/USD · 15 yıl · 1m",
     "pip_size": 0.0001,
     "price_type": "bid",
     "quote_conv": "none",
@@ -168,7 +168,15 @@
      "first_ts": 1319155200,
      "gz_bytes": 54984758,
      "last_ts": 1792590360,
-     "scale": 5
+     "scale": 5,
+     "agg": {
+      "1h": {
+       "path": "EURUSD/1m/agg-1h.bin.gz",
+       "sha256": "27e20d6ee9070455df805f1043833758e8e113341db8eff88f76b34bbcb53611",
+       "gz_bytes": 1690536,
+       "bars": 93612
+      }
+     }
     },
     "5m": {
      "bars": 1119184,
@@ -322,17 +330,25 @@
      "first_ts": 1319155200,
      "gz_bytes": 13797933,
      "last_ts": 1792590300,
-     "scale": 5
+     "scale": 5,
+     "agg": {
+      "1h": {
+       "path": "EURUSD/5m/agg-1h.bin.gz",
+       "sha256": "0f9e534dbfc5c4a260020bd8b6cc561f431354cd21eaf7b25c08bd6a524b5ffe",
+       "gz_bytes": 1670992,
+       "bars": 93612
+      }
+     }
     }
    }
   },
   "GBPUSD": {
    "fields": {
     "align": "fx",
-    "contract_size": 100000.0,
+    "contract_size": 100000,
     "currency": "USD",
     "decimals": 5,
-    "name": "GBP/USD \u00b7 15 y\u0131l \u00b7 1m",
+    "name": "GBP/USD · 15 yıl · 1m",
     "pip_size": 0.0001,
     "price_type": "bid",
     "quote_conv": "none",
@@ -492,7 +508,15 @@
      "first_ts": 1319155200,
      "gz_bytes": 55121824,
      "last_ts": 1792590840,
-     "scale": 5
+     "scale": 5,
+     "agg": {
+      "1h": {
+       "path": "GBPUSD/1m/agg-1h.bin.gz",
+       "sha256": "473b1a2b45dd46c0784d920ef983b39068fc56a7ddd8115373cab2270fd66809",
+       "gz_bytes": 1717938,
+       "bars": 93570
+      }
+     }
     },
     "5m": {
      "bars": 1117207,
@@ -646,18 +670,26 @@
      "first_ts": 1319155200,
      "gz_bytes": 13989692,
      "last_ts": 1792590600,
-     "scale": 5
+     "scale": 5,
+     "agg": {
+      "1h": {
+       "path": "GBPUSD/5m/agg-1h.bin.gz",
+       "sha256": "d79aaab4568ed645c40c1419e8d5f7725f563e669b4fc86d6f92657b9de3cde2",
+       "gz_bytes": 1698819,
+       "bars": 93570
+      }
+     }
     }
    }
   },
   "NAS100": {
    "fields": {
     "align": "fx",
-    "contract_size": 1.0,
+    "contract_size": 1,
     "currency": "USD",
     "decimals": 2,
-    "name": "NASDAQ 100 \u00b7 15 y\u0131l \u00b7 1m",
-    "pip_size": 1.0,
+    "name": "NASDAQ 100 · 15 yıl · 1m",
+    "pip_size": 1,
     "price_type": "bid",
     "quote_conv": "none",
     "source": "oanda",
@@ -816,7 +848,15 @@
      "first_ts": 1319155200,
      "gz_bytes": 53968468,
      "last_ts": 1792590360,
-     "scale": 2
+     "scale": 2,
+     "agg": {
+      "1h": {
+       "path": "NAS100/1m/agg-1h.bin.gz",
+       "sha256": "181b54a07283d68ff1c085077d9736f20ef90165b4b48064611989107e3140d4",
+       "gz_bytes": 1730607,
+       "bars": 89246
+      }
+     }
     },
     "5m": {
      "bars": 1047610,
@@ -970,18 +1010,26 @@
      "first_ts": 1319155200,
      "gz_bytes": 13902484,
      "last_ts": 1792590300,
-     "scale": 2
+     "scale": 2,
+     "agg": {
+      "1h": {
+       "path": "NAS100/5m/agg-1h.bin.gz",
+       "sha256": "db4f522da35392981d4e0b39da1a094a93398059c9417a1fcc01eddfc10cd0e1",
+       "gz_bytes": 1712095,
+       "bars": 89246
+      }
+     }
     }
    }
   },
   "SPX500": {
    "fields": {
     "align": "fx",
-    "contract_size": 1.0,
+    "contract_size": 1,
     "currency": "USD",
     "decimals": 2,
-    "name": "S&P 500 \u00b7 15 y\u0131l \u00b7 1m",
-    "pip_size": 1.0,
+    "name": "S&P 500 · 15 yıl · 1m",
+    "pip_size": 1,
     "price_type": "bid",
     "quote_conv": "none",
     "source": "oanda",
@@ -1140,7 +1188,15 @@
      "first_ts": 1319155200,
      "gz_bytes": 38148945,
      "last_ts": 1792591440,
-     "scale": 2
+     "scale": 2,
+     "agg": {
+      "1h": {
+       "path": "SPX500/1m/agg-1h.bin.gz",
+       "sha256": "31112802500cc5a98701250b9e1ca034b4eb4cd3c2b379dca768638b5a1797ee",
+       "gz_bytes": 1551607,
+       "bars": 89242
+      }
+     }
     },
     "5m": {
      "bars": 1016438,
@@ -1294,17 +1350,25 @@
      "first_ts": 1319155200,
      "gz_bytes": 11297544,
      "last_ts": 1792591200,
-     "scale": 2
+     "scale": 2,
+     "agg": {
+      "1h": {
+       "path": "SPX500/5m/agg-1h.bin.gz",
+       "sha256": "3efca585c632f2ebe22b9230c11b425a8673d9442b8442ea841465883ff91ed7",
+       "gz_bytes": 1534583,
+       "bars": 89242
+      }
+     }
     }
    }
   },
   "USDCAD": {
    "fields": {
     "align": "fx",
-    "contract_size": 100000.0,
+    "contract_size": 100000,
     "currency": "USD",
     "decimals": 5,
-    "name": "USD/CAD \u00b7 15 y\u0131l \u00b7 1m",
+    "name": "USD/CAD · 15 yıl · 1m",
     "pip_size": 0.0001,
     "price_type": "bid",
     "quote_conv": "divide",
@@ -1464,7 +1528,15 @@
      "first_ts": 1319155200,
      "gz_bytes": 54092123,
      "last_ts": 1792591320,
-     "scale": 5
+     "scale": 5,
+     "agg": {
+      "1h": {
+       "path": "USDCAD/1m/agg-1h.bin.gz",
+       "sha256": "5a7a3a6563ed4ece89e8b323e38961f501bc3cd60f0cc04e58364021d7c781e8",
+       "gz_bytes": 1682786,
+       "bars": 93583
+      }
+     }
     },
     "5m": {
      "bars": 1116972,
@@ -1618,17 +1690,25 @@
      "first_ts": 1319155200,
      "gz_bytes": 13695397,
      "last_ts": 1792591200,
-     "scale": 5
+     "scale": 5,
+     "agg": {
+      "1h": {
+       "path": "USDCAD/5m/agg-1h.bin.gz",
+       "sha256": "ff468b841382336405cd27f697a43f0410e87590848feb34a2dd6539529a2b0f",
+       "gz_bytes": 1663167,
+       "bars": 93583
+      }
+     }
     }
    }
   },
   "XAUUSD": {
    "fields": {
     "align": "fx",
-    "contract_size": 100.0,
+    "contract_size": 100,
     "currency": "USD",
     "decimals": 3,
-    "name": "XAU/USD \u00b7 15 y\u0131l \u00b7 1m",
+    "name": "XAU/USD · 15 yıl · 1m",
     "pip_size": 0.1,
     "price_type": "bid",
     "quote_conv": "none",
@@ -1788,7 +1868,15 @@
      "first_ts": 1319155200,
      "gz_bytes": 67214279,
      "last_ts": 1792590780,
-     "scale": 3
+     "scale": 3,
+     "agg": {
+      "1h": {
+       "path": "XAUUSD/1m/agg-1h.bin.gz",
+       "sha256": "602b18b833dbb17cd1154f528f7972c6e3dab259240e022c41c159a25727cac3",
+       "gz_bytes": 1901651,
+       "bars": 89597
+      }
+     }
     },
     "5m": {
      "bars": 1065089,
@@ -1942,7 +2030,15 @@
      "first_ts": 1319155200,
      "gz_bytes": 16236330,
      "last_ts": 1792590600,
-     "scale": 3
+     "scale": 3,
+     "agg": {
+      "1h": {
+       "path": "XAUUSD/5m/agg-1h.bin.gz",
+       "sha256": "1bb439ebf334cbe2f8878a22be9fe5b6c05e0b14fef745a62d666bf6260b33af",
+       "gz_bytes": 1882227,
+       "bars": 89597
+      }
+     }
     }
    }
   }

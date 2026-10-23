@@ -4,18 +4,16 @@
 // changed, so pressing the button again tops it up, and a download cut short
 // (the page was closed) carries on where it stopped.
 import { emptyCols, parseFile } from './rtc.js';
-import { aggregated, putPart, replaceSeries } from './series.js';
+import { aggregated, manifestOf, putPart, replaceSeries } from './series.js';
 import { parseTf } from '../core/timeframes.js';
 import { createDataset, datasetJson, listDatasets } from './server.js';
 import { storageEstimate } from './db.js';
+import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js';
 
-// next to the site itself (GitHub Pages: r5vers.github.io/data/, laid out
-// by tools/publish_data.py); same address, so no cross-site rules apply
-export const DATA_URL = '/data/';
+export { DATA_URL, getManifest };
 export const YEARS = 15;
 export const RESOLUTIONS = ['1m', '5m'];
 const MARGIN = 200 * 2 ** 20;           // leave the device this much
-const MANIFEST_TTL = 10 * 60 * 1000;
 
 export const PACKS = [
   { id: 'EURUSD', name: 'EUR/USD', title: 'Euro / Dolar', kind: 'Forex', session: 'fx' },
@@ -37,95 +35,46 @@ function estimateBytes(pack, tf) {
   return Math.floor((minutes / (tf === '1m' ? 1 : 5)) * 24 * 1.03);
 }
 
+/** Every pack as a dataset at 1m, read from the site until it is downloaded
+ *  (series.js, StreamRows): nothing to download before the first chart.
+ *  Gives up after `wait` ms (offline): the datasets come next time. */
+export async function ensureStreams(db, wait = 0) {
+  const work = (async () => {
+    const m = await manifestOf(db);
+    for (const pack of PACKS) {
+      const entry = m.packs?.[pack.id]?.tfs?.['1m'];
+      if (!entry?.files?.length) continue;
+      let ds = await packDataset(db, pack.id, '1m');
+      if (!ds) {
+        const { symbol, name, source, align, decimals, pip_size, contract_size, quote_conv, price_type, currency } = m.packs[pack.id].fields || {};
+        ds = await createDataset(db, {
+          symbol: symbol || pack.id, name: name || pack.name, source: source || 'github', base_tf: '1m', meta: { pack: pack.id, files: {} },
+          ...Object.fromEntries(Object.entries({ align, decimals, pip_size, contract_size, quote_conv, price_type, currency }).filter(([, v]) => v !== undefined)),
+        });
+      }
+      const complete = entry.files.every((f) => ds.meta?.files?.[f.tag] === f.sha256) && ds.series?.scale === entry.scale;
+      const next = { ...ds, meta: { ...ds.meta, stream: true, complete } };
+      if (!complete) Object.assign(next, { bar_count: entry.bars, first_ts: entry.files[0].first_ts, last_ts: entry.files[entry.files.length - 1].last_ts });
+      if (JSON.stringify([ds.meta, ds.bar_count, ds.first_ts, ds.last_ts]) !== JSON.stringify([next.meta, next.bar_count, next.first_ts, next.last_ts])) {
+        // a download running now writes this record too: never over its newer files list
+        const now = await db.get('datasets', String(ds.id));
+        await db.put('datasets', String(ds.id), { ...now, ...next, meta: { ...now.meta, stream: true, complete }, series: now.series });
+      }
+    }
+  })();
+  if (!wait) return work;
+  return within(work, wait, '').catch(() => {});
+}
+
 /** Download sources for the "other symbols" form: none without a server
  *  (OANDA, Dukascopy & co. do not answer browsers); packs and CSV remain. */
 export function providers() {
   return [];
 }
 
-// ── the data repository ───────────────────────────────────────────────────
-let manifest = null, manifestAt = 0;
-export async function getManifest(fetchFn = null, force = false) {
-  if (!force && manifest && Date.now() - manifestAt < MANIFEST_TTL) return manifest;
-  let buf;
-  try { buf = await getBytes(`${DATA_URL}manifest.json`, { fetchFn, fresh: true }); } catch (e) {
-    throw Object.assign(new Error(`veri deposuna ulaşılamadı (${e.message})`), { status: 502, retry: e.status !== 404 });
-  }
-  manifest = JSON.parse(new TextDecoder().decode(buf));
-  manifestAt = Date.now();
-  return manifest;
-}
-
-const STALL_MS = 25_000;
-const sleep = (ms) => new Promise((r) => { const t = setTimeout(r, ms); t?.unref?.(); });
-
-/** The bytes at `url`. In the browser over XMLHttpRequest, not fetch's
- *  streams: Safari 26 can hold back the last piece of a streamed body until
- *  more arrives (WebKit bug 322545), and for a file that piece never comes,
- *  so the download sat at 0%. XHR also says how far it got, and a transfer
- *  that goes quiet for STALL_MS (a phone that slept, a lost network) is
- *  dropped, to be tried again. `fetchFn` (tests) takes fetch's place. */
-function getBytes(url, { fetchFn = null, fresh = false, onProgress = null } = {}) {
-  if (fetchFn || typeof XMLHttpRequest === 'undefined') {
-    return (fetchFn || fetch)(url, fresh ? { cache: 'no-cache' } : undefined).then((r) => {
-      if (!r.ok) throw Object.assign(new Error(`HTTP ${r.status}`), { status: r.status });
-      return r.arrayBuffer();
-    });
-  }
-  return new Promise((resolve, reject) => {
-    const x = new XMLHttpRequest();
-    let last = Date.now(), over = false;
-    const end = (fn, v) => { if (over) return; over = true; clearInterval(watch); fn(v); };
-    const watch = setInterval(() => {
-      if (Date.now() - last > STALL_MS) { end(reject, Object.assign(new Error('bağlantı durdu'), { retry: true })); x.abort(); }
-    }, 2000);
-    x.open('GET', url);
-    x.responseType = 'arraybuffer';
-    if (fresh) x.setRequestHeader('Cache-Control', 'no-cache');
-    x.onprogress = (e) => { last = Date.now(); onProgress?.(e.loaded); };
-    x.onload = () => (x.status >= 200 && x.status < 300 ? end(resolve, x.response) : end(reject, Object.assign(new Error(`HTTP ${x.status}`), { status: x.status, retry: x.status >= 500 })));
-    x.onerror = () => end(reject, Object.assign(new Error('bağlantı koptu'), { retry: true }));
-    x.onabort = () => end(reject, Object.assign(new Error('bağlantı durdu'), { retry: true }));
-    x.send();
-  });
-}
-
-/** gzip, unpacked in JavaScript (fflate): the same on every browser, with no
- *  stream in between that a browser could stall. */
-let fflate = null;
-async function gunzip(buf) {
-  fflate ||= await import('../../vendor/fflate.js');
-  const out = fflate.gunzipSync(new Uint8Array(buf));
-  return out.byteOffset === 0 && out.byteLength === out.buffer.byteLength ? out.buffer : out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
-}
-
-async function sha256(buf) {
-  const d = await crypto.subtle.digest('SHA-256', buf);
-  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
 /** The pack's dataset for `tf` on this device (or none yet). */
 export async function packDataset(db, id, tf) {
   return (await listDatasets(db)).find((d) => d.meta?.pack === id && d.base_tf === tf) || null;
-}
-
-/** One data file, tried again after a dropped or stalled connection; a
- *  missing file is not tried again. */
-async function fetchFile(url, opts, tries = 4) {
-  for (let i = 1; ; i++) {
-    try {
-      return await gunzip(await getBytes(url, opts));
-    } catch (e) {
-      if (e.status === 404 || i >= tries) throw Object.assign(e, { message: `indirilemedi (${e.message})` });
-    }
-    await sleep(1500 * i);
-  }
-}
-
-/** `p`, or an error once `ms` pass without it (storage that stopped answering). */
-function within(p, ms, message) {
-  let t;
-  return Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(Object.assign(new Error(message), { retry: true })), ms); t?.unref?.(); })]).finally(() => clearTimeout(t));
 }
 
 /** What went wrong, said for the person in front of the screen. */
@@ -301,6 +250,9 @@ async function runJob(db, j, fetchFn) {
       const rate = done / Math.max(1, Date.now() - t0);
       j.eta = rate > 0 ? Math.round((total - done) / rate / 1000) : null;
     }
+    // all of it on the device now: read from here from now on
+    ds = { ...ds, meta: { ...ds.meta, complete: entry.files.every((f) => have[f.tag] === f.sha256) } };
+    await db.put('datasets', String(ds.id), ds);
     // build the hour bars now, so opening 1h / 4h / 1D later is instant
     if (todo.length) await aggregated(db, ds, parseTf('1h')).catch(() => {});
     j.status = 'done';
@@ -344,7 +296,10 @@ export async function status(db) {
       if (!ds) continue;
       let covered = 0;
       if (ds.first_ts != null) covered = Math.max(0, Math.min(1, (Math.min(ds.last_ts, t) - Math.max(ds.first_ts, start)) / span));
-      item.datasets.push({ id: ds.id, tf, source: ds.source, first_ts: ds.first_ts, last_ts: ds.last_ts, bar_count: ds.bar_count, bytes: datasetJson(ds).bytes, coverage: Math.round(covered * 1e4) / 1e4 });
+      const stream = !!ds.meta?.stream && !ds.meta?.complete;
+      // read from the site: usable, but none of it on the device yet
+      if (stream) covered = 0;
+      item.datasets.push({ id: ds.id, tf, source: ds.source, first_ts: ds.first_ts, last_ts: ds.last_ts, bar_count: ds.bar_count, bytes: datasetJson(ds).bytes, coverage: Math.round(covered * 1e4) / 1e4, stream });
     }
     item.estimate = Object.fromEntries(RESOLUTIONS.map((tf) => [tf, m?.packs?.[pack.id]?.tfs?.[tf]?.bytes ?? estimateBytes(pack, tf)]));
     const have1m = item.datasets.find((d) => d.tf === '1m');

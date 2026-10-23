@@ -5,9 +5,15 @@
 // The dataset record keeps the chunk list: { key, n, t0, t1, tag }, in time
 // order. `tag` groups the chunks of one downloaded file (a pack's year), so
 // a newer copy of that file replaces exactly them.
+//
+// A pack can also be read straight from the site, without downloading it
+// first (StreamRows): a query fetches the years it touches, keeps them here
+// when the device has room, and works on without when it has not. That is
+// how every pack is ready at once on every device, phones included.
 import { parseTf, HOUR } from '../core/timeframes.js';
-import { colsToRecords, concatCols, emptyCols, recordsToCols, sliceCols } from './rtc.js';
+import { colsToRecords, concatCols, emptyCols, parseFile, recordsToCols, sliceCols } from './rtc.js';
 import { MemRows, aggregateAll, lowerBound, rollUp, upperBound } from './query.js';
+import { DATA_URL, fetchFile, getManifest, sha256, within } from './net.js';
 
 export const CHUNK = 1 << 16;
 const FIELDS = ['t', 'o', 'h', 'l', 'c', 'v'];
@@ -136,7 +142,7 @@ export async function putPart(db, ds, tag, cols, scale) {
 
 /** All candles of a dataset as one set of columns (small datasets: CSV). */
 export async function readAll(db, ds) {
-  const rows = new ChunkRows(db, ds);
+  const rows = await deviceSource(db).base(ds);
   return { cols: await rows.slice(0, rows.n), scale: rows.scale };
 }
 
@@ -176,11 +182,133 @@ export async function aggregated(db, ds, tf) {
   return out;
 }
 
-/** query.js source over the device storage. */
+// ── packs read from the site ──────────────────────────────────────────────
+/** A pack dataset not (fully) on the device: read from the site. */
+export const isStream = (ds) => !!ds?.meta?.stream && !ds?.meta?.complete;
+
+let savedBuilt = null;
+/** The site's manifest; the last one seen is kept, so what was read before
+ *  still opens offline. */
+export async function manifestOf(db) {
+  try {
+    const m = await getManifest();
+    if (m.built_at !== savedBuilt) { savedBuilt = m.built_at; db.put('meta', 'manifest', m).catch(() => {}); }
+    return m;
+  } catch (e) {
+    const m = await db.get('meta', 'manifest').catch(() => null);
+    if (m) return m;
+    throw Object.assign(new Error('veri için internet gerekli (bu piyasa cihaza indirilmedi)'), { status: 503 });
+  }
+}
+
+async function streamEntry(db, ds) {
+  const entry = (await manifestOf(db)).packs?.[ds.meta.pack]?.tfs?.[ds.base_tf];
+  if (!entry) throw Object.assign(new Error(`${ds.meta.pack} ${ds.base_tf} sitede yok`), { status: 404 });
+  return entry;
+}
+
+const loading = new Map();
+
+/** One year of a pack: from memory, from the device (read before, or part
+ *  of a download that did not finish), or from the site. */
+async function loadFile(db, f, ds) {
+  const key = `file:${f.sha256}`;
+  const ck = cacheKey(db, key);
+  const hit = cache.get(ck);
+  if (hit) { cache.delete(ck); cache.set(ck, hit); return hit.cols; }
+  if (loading.has(ck)) return loading.get(ck);
+  const p = (async () => {
+    const kept = await within(db.get('chunks', key), 15_000, 'cihaz depolaması yanıt vermedi').catch(() => null);
+    const part = ds?.meta?.files?.[f.tag] === f.sha256 ? (ds.series?.chunks || []).filter((c) => c.tag === f.tag) : [];
+    let cols = null;
+    if (kept) cols = recordsToCols(kept);
+    else if (part.length) {
+      const bufs = await Promise.all(part.map((c) => within(db.get('chunks', c.key), 15_000, '').catch(() => null)));
+      if (bufs.every(Boolean)) cols = concatCols(bufs.map((b) => recordsToCols(b)));
+    }
+    if (!cols) {
+      const raw = await fetchFile(`${DATA_URL}${f.path}`, {});
+      if (f.sha256 && (await sha256(raw)) !== f.sha256) throw Object.assign(new Error(`${f.tag} bozuk indi, tekrar deneyin`), { status: 502 });
+      cols = parseFile(raw).cols;
+      // kept for next time if there is room; reading does not wait for it
+      within(db.put('chunks', key, colsToRecords(cols)), 60_000, 'kaydedilemedi').catch(() => {});
+    }
+    if (cols.t.length !== f.bars) throw Object.assign(new Error(`${f.tag}: beklenmeyen bar sayısı`), { status: 502 });
+    remember(ck, cols);
+    return cols;
+  })().finally(() => loading.delete(ck));
+  loading.set(ck, p);
+  return p;
+}
+
+/** A pack's base series over its year files (manifest order), as query.js rows. */
+export class StreamRows extends ChunkRows {
+  constructor(db, entry, ds = null) {
+    super(db, { series: { scale: entry.scale, chunks: entry.files.map((f) => ({ key: `file:${f.sha256}`, n: f.bars, t0: f.first_ts, t1: f.last_ts })) } });
+    this.files = entry.files;
+    this.ds = ds;
+  }
+  async _chunk(k) { return loadFile(this.db, this.files[k], this.ds); }
+  // the first and last times are in the manifest: no year fetched for them
+  async tAt(i) {
+    if (i === 0 && this.files.length) return this.files[0].first_ts;
+    if (i === this.n - 1 && this.files.length) return this.files[this.files.length - 1].last_ts;
+    return super.tAt(i);
+  }
+}
+
+/** "RVA1" (tools/publish_agg.mjs): hour bars and where each starts in the base. */
+export function decodeAgg(buf) {
+  const u8 = new Uint8Array(buf);
+  if (u8[0] !== 0x52 || u8[1] !== 0x56 || u8[2] !== 0x41 || u8[3] !== 0x31) throw new Error('saatlik veri dosyası tanınmadı');
+  const dv = new DataView(buf);
+  const scale = dv.getInt32(8, true), n = dv.getUint32(12, true);
+  const cols = recordsToCols(buf, 16, n * 24);
+  const starts = new Float64Array(n);
+  for (let k = 0; k < n; k++) starts[k] = dv.getUint32(16 + n * 24 + k * 4, true);
+  return { cols, starts, scale };
+}
+
+/** Cached timeframes of a pack read from the site: the hour bars come ready
+ *  made from the site (one small file), longer ones roll up from them. */
+async function streamAggregated(db, ds, tf) {
+  const m = await manifestOf(db);
+  const entry = m.packs?.[ds.meta.pack]?.tfs?.[ds.base_tf];
+  if (!entry) throw Object.assign(new Error(`${ds.meta.pack} ${ds.base_tf} sitede yok`), { status: 404 });
+  const hourFile = entry.agg?.['1h'];
+  const packAlign = m.packs[ds.meta.pack].fields?.align || 'utc';
+  const key = `s:${ds.meta.pack}:${ds.base_tf}:${hourFile?.sha256 || m.built_at}:${ds.align}:${tf.id}`;
+  if (aggMemo.has(key)) return aggMemo.get(key);
+  let stored = await within(db.get('aggs', key), 15_000, '').catch(() => null);
+  if (!stored) {
+    let agg;
+    const base = parseTf(ds.base_tf);
+    const viaHour = tf.id !== '1h' && base.kind === 'intraday' && HOUR % base.seconds === 0 && base.seconds < HOUR
+      && (tf.kind !== 'intraday' || tf.seconds % HOUR === 0);
+    if (tf.id === '1h' && hourFile && ds.align === packAlign) {
+      const raw = await fetchFile(`${DATA_URL}${hourFile.path}`, {});
+      if (hourFile.sha256 && (await sha256(raw)) !== hourFile.sha256) throw Object.assign(new Error('saatlik veri bozuk indi, tekrar deneyin'), { status: 502 });
+      agg = decodeAgg(raw);
+    } else if (viaHour) {
+      const hour = await streamAggregated(db, ds, parseTf('1h'));
+      agg = rollUp(hour.rows.cols, hour.starts, tf, ds.align);
+    } else {
+      agg = await aggregateAll(new StreamRows(db, entry, ds), tf, ds.align);
+    }
+    stored = { records: colsToRecords(agg.cols), starts: agg.starts };
+    within(db.put('aggs', key, stored), 60_000, '').catch(() => {});
+  }
+  const out = { rows: new MemRows(recordsToCols(stored.records), entry.scale), starts: stored.starts };
+  aggMemo.set(key, out);
+  if (aggMemo.size > 24) aggMemo.delete(aggMemo.keys().next().value);
+  return out;
+}
+
+/** query.js source over the device storage (and the site, for packs read from it). */
 export function deviceSource(db) {
   return {
-    base: async (ds) => new ChunkRows(db, ds),
-    aggregated: (ds, tf) => aggregated(db, ds, tf),
+    base: async (ds) => (isStream(ds) ? new StreamRows(db, await streamEntry(db, ds), ds) : new ChunkRows(db, ds)),
+    aggregated: (ds, tf) => (isStream(ds) ? streamAggregated(db, ds, tf) : aggregated(db, ds, tf)),
   };
 }
 
