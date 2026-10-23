@@ -3,12 +3,12 @@
 // straight into IndexedDB. A pack fetches only the years it lacks or that
 // changed, so pressing the button again tops it up, and a download cut short
 // (the page was closed) carries on where it stopped.
-import { emptyCols, parseFile } from './rtc.js?v=3bd48c7187';
-import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=3bd48c7187';
-import { parseTf } from '../core/timeframes.js?v=3bd48c7187';
-import { createDataset, datasetJson, listDatasets } from './server.js?v=3bd48c7187';
-import { storageEstimate } from './db.js?v=3bd48c7187';
-import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=3bd48c7187';
+import { emptyCols, parseFile } from './rtc.js?v=1f79c2a121';
+import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=1f79c2a121';
+import { parseTf } from '../core/timeframes.js?v=1f79c2a121';
+import { createDataset, datasetJson, listDatasets } from './server.js?v=1f79c2a121';
+import { storageEstimate } from './db.js?v=1f79c2a121';
+import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=1f79c2a121';
 
 export { DATA_URL, getManifest };
 export const YEARS = 15;
@@ -45,6 +45,14 @@ export const STREAMED = ['EURUSD'];
 export async function ensureStreams(db, wait = 0) {
   const work = (async () => {
     const m = await manifestOf(db);
+    // downloads that stopped half way (any pack, any resolution) are marked:
+    // the chart opens the same market from the site instead
+    for (const ds of await listDatasets(db)) {
+      const entry = ds.meta?.pack && !ds.meta.stream ? m.packs?.[ds.meta.pack]?.tfs?.[ds.base_tf] : null;
+      if (!entry) continue;
+      const partial = !entry.files.every((f) => ds.meta?.files?.[f.tag] === f.sha256);
+      if (!!ds.meta.partial !== partial) await db.put('datasets', String(ds.id), { ...ds, meta: { ...ds.meta, partial } });
+    }
     for (const pack of PACKS.filter((p) => STREAMED.includes(p.id))) {
       const entry = m.packs?.[pack.id]?.tfs?.['1m'];
       if (!entry?.files?.length) continue;
@@ -255,7 +263,8 @@ async function runJob(db, j, fetchFn) {
       j.eta = rate > 0 ? Math.round((total - done) / rate / 1000) : null;
     }
     // all of it on the device now: read from here from now on
-    ds = { ...ds, meta: { ...ds.meta, complete: entry.files.every((f) => have[f.tag] === f.sha256) } };
+    const whole = entry.files.every((f) => have[f.tag] === f.sha256);
+    ds = { ...ds, meta: { ...ds.meta, complete: whole, partial: !whole } };
     await db.put('datasets', String(ds.id), ds);
     // build the hour bars now, so opening 1h / 4h / 1D later is instant
     if (todo.length) await aggregated(db, ds, parseTf('1h')).catch(() => {});
@@ -322,6 +331,6 @@ export async function status(db) {
 
 /** CSV upload, parsed on the device. */
 export async function importCsv(db, query, body) {
-  const { importCsvFile } = await import('./csvimport.js?v=3bd48c7187');
+  const { importCsvFile } = await import('./csvimport.js?v=1f79c2a121');
   return importCsvFile(db, query, body);
 }

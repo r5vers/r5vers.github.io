@@ -1,7 +1,7 @@
 // Session / ICT kill-zone bands, defined in New York time (DST aware). Each
 // band is tinted in its colour, has a thin line along the top and its name
 // written faintly inside it, so the zone is readable at a glance.
-import { nyOffset } from '../core/timeframes.js?v=3bd48c7187';
+import { nyOffset } from '../core/timeframes.js?v=1f79c2a121';
 
 const m = (hh, mm = 0) => hh * 60 + mm;
 

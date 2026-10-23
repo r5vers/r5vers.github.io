@@ -3,13 +3,26 @@
 // files (Vercel, the installed app) the site has no server: requests to
 // /api/... are answered here, on the device, from IndexedDB - so the rest of
 // the app works the same in both.
-import { IdbDb, persistStorage } from './db.js?v=3bd48c7187';
-import { handle } from './server.js?v=3bd48c7187';
-import { flush, sync } from './sync.js?v=3bd48c7187';
+import { IdbDb, persistStorage } from './db.js?v=1f79c2a121';
+import { handle } from './server.js?v=1f79c2a121';
+import { flush, sync } from './sync.js?v=1f79c2a121';
 
 export const LOCAL = typeof window !== 'undefined' && !window.RV_SERVER;
 // the page's scripts loaded and linked: the safety net in the page stands down
 if (typeof window !== 'undefined') window.__rvBooted = true;
+
+/** The last errors on this device, for the check-up page (tani.html). */
+export function logError(where, err) {
+  try {
+    const list = JSON.parse(localStorage.getItem('rv-errors') || '[]');
+    list.push({ at: new Date().toISOString(), page: location.pathname, where, msg: String(err?.message || err).slice(0, 400), stack: String(err?.stack || '').slice(0, 600) });
+    localStorage.setItem('rv-errors', JSON.stringify(list.slice(-20)));
+  } catch { /* storage blocked */ }
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (e) => logError('error', e.error || e.message));
+  window.addEventListener('unhandledrejection', (e) => logError('promise', e.reason));
+}
 
 let dbPromise = null;
 export function localDb() {
@@ -67,6 +80,7 @@ async function answer(url, init) {
     // no IndexedDB (a private window on an old browser) and the like
     res = { status: 500, json: { detail: `cihaz depolaması açılamadı: ${e.message || e}` } };
   }
+  if (res.status >= 409) logError(`${req.method} /api${req.path} ${res.status}`, res.json?.detail);
   if (res.bytes) return new Response(res.bytes, { status: res.status, headers: res.headers });
   return new Response(JSON.stringify(res.json), { status: res.status, headers: { 'Content-Type': 'application/json' } });
 }

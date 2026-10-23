@@ -1,27 +1,27 @@
 // Replay Terminal - application controller.
-import { api } from './api.js?v=3bd48c7187';
-import { columnsToBars } from './core/aggregate.js?v=3bd48c7187';
-import { Broker } from './core/broker.js?v=3bd48c7187';
-import { computeStats } from './core/stats.js?v=3bd48c7187';
-import { bucket, parseTf } from './core/timeframes.js?v=3bd48c7187';
-import { TradingChart } from './chart/chart.js?v=3bd48c7187';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=3bd48c7187';
-import { configureICT } from './chart/sessions.js?v=3bd48c7187';
-import { INDICATORS } from './chart/indicators.js?v=3bd48c7187';
-import { TradeLines } from './chart/tradelines.js?v=3bd48c7187';
-import * as F from './format.js?v=3bd48c7187';
-import { ReplayEngine } from './replay.js?v=3bd48c7187';
-import * as D from './ui/dialogs.js?v=3bd48c7187';
-import { DataView } from './ui/dataview.js?v=3bd48c7187';
-import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=3bd48c7187';
-import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=3bd48c7187';
-import { openPalette, wirePalette } from './ui/palette.js?v=3bd48c7187';
-import { wireTooltips } from './ui/tooltip.js?v=3bd48c7187';
-import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=3bd48c7187';
-import { scrubWheel } from './ui/scrubwheel.js?v=3bd48c7187';
-import { StatsView } from './ui/statsview.js?v=3bd48c7187';
-import { StrategyView } from './ui/strategyview.js?v=3bd48c7187';
-import { Ticket } from './ui/ticket.js?v=3bd48c7187';
+import { api } from './api.js?v=1f79c2a121';
+import { columnsToBars } from './core/aggregate.js?v=1f79c2a121';
+import { Broker } from './core/broker.js?v=1f79c2a121';
+import { computeStats } from './core/stats.js?v=1f79c2a121';
+import { bucket, parseTf } from './core/timeframes.js?v=1f79c2a121';
+import { TradingChart } from './chart/chart.js?v=1f79c2a121';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=1f79c2a121';
+import { configureICT } from './chart/sessions.js?v=1f79c2a121';
+import { INDICATORS } from './chart/indicators.js?v=1f79c2a121';
+import { TradeLines } from './chart/tradelines.js?v=1f79c2a121';
+import * as F from './format.js?v=1f79c2a121';
+import { ReplayEngine } from './replay.js?v=1f79c2a121';
+import * as D from './ui/dialogs.js?v=1f79c2a121';
+import { DataView } from './ui/dataview.js?v=1f79c2a121';
+import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=1f79c2a121';
+import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=1f79c2a121';
+import { openPalette, wirePalette } from './ui/palette.js?v=1f79c2a121';
+import { wireTooltips } from './ui/tooltip.js?v=1f79c2a121';
+import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=1f79c2a121';
+import { scrubWheel } from './ui/scrubwheel.js?v=1f79c2a121';
+import { StatsView } from './ui/statsview.js?v=1f79c2a121';
+import { StrategyView } from './ui/strategyview.js?v=1f79c2a121';
+import { Ticket } from './ui/ticket.js?v=1f79c2a121';
 
 const LW = window.LightweightCharts;
 const SPEEDS = [[1, '1x'], [2, '2x'], [4, '4x'], [8, '8x'], [16, '16x'], [40, '40x'], [0, 'Maks']];
@@ -194,13 +194,19 @@ class App {
     this._wireContextMenu();
     this.applyBottomSize();
 
-    await Promise.all([this.strategyView.init(), this.dataView.init()]);
+    // a side panel that cannot start must not keep the chart from opening
+    await Promise.allSettled([this.strategyView.init(), this.dataView.init()]);
     // links from the home screen: /chart.html?ds=..&tf=.., ?session=.., ?backtest=.., ?tab=.., ?new=replay
     const q = new URLSearchParams(location.search);
     if (q.toString()) history.replaceState(null, '', location.pathname);
     if (q.get('tf')) this.settings.tf = q.get('tf');
-    await this.loadDatasets(Number(q.get('ds')) || this.settings.datasetId);
-    await this._openFromLink(q);
+    try {
+      await this.loadDatasets(Number(q.get('ds')) || this.settings.datasetId);
+      await this._openFromLink(q);
+    } catch (err) {
+      console.error(err);
+      this.showMessage(`Grafik açılamadı: ${err.message || err}`);
+    }
 
     // a cloud profile changed on another device: a replay open here is left
     // alone (the page reload brings the other device's state)
@@ -257,9 +263,13 @@ class App {
       if (this.bottomTab === 'data') this.renderTab();
       return;
     }
-    // a 15-year pack first, then whatever was used last
-    const packs = this.datasets.filter((d) => d.meta?.pack && d.bar_count);
-    const id = this.datasets.some((d) => d.id === selectId) ? selectId : (packs[0] || this.datasets[0])?.id;
+    // a 15-year pack first, then whatever was used last; a download that
+    // stopped half way is passed over for the same market read from the site
+    const usable = (d) => !d.meta?.partial;
+    const packs = this.datasets.filter((d) => d.meta?.pack && d.bar_count && usable(d));
+    const last = this.datasets.find((d) => d.id === selectId);
+    const id = last && usable(last) ? last.id
+      : (packs.find((d) => d.symbol === last?.symbol && d.stream) || packs.find((d) => d.stream) || packs[0] || this.datasets.find(usable) || this.datasets[0])?.id;
     if (id == null) {
       this.ds = null;
       this.chart.setBars([]);
@@ -438,7 +448,15 @@ class App {
     this.renderTfButtons();
     this.renderReplayControls();
     this.ticket.render();
-    await this.loadBrowse();
+    try {
+      await this.loadBrowse();
+    } catch (err) {
+      // this copy cannot be read (a download cut short): the same market
+      // read from the site, if there is one
+      const alt = !this.ds.stream && this.datasets.find((d) => d.stream && d.symbol === this.ds.symbol);
+      if (alt) { toast(`${this.ds.symbol}: indirilen kopya okunamadı, siteden açılıyor`, 'warn', 6000); await this.selectDataset(alt.id); return; }
+      this.showMessage(`Veri açılamadı: ${err.message || err}`);
+    }
     this.renderTab();
   }
 

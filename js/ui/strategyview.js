@@ -1,12 +1,12 @@
 // Strategy tester tab: code editor, templates, run in a worker, results.
-import { api } from '../api.js?v=3bd48c7187';
-import { backtestRecord, resultFromRecord } from '../core/backtests.js?v=3bd48c7187';
-import { autoFill, fillChoices } from '../core/fill.js?v=3bd48c7187';
-import { parseTf } from '../core/timeframes.js?v=3bd48c7187';
-import * as F from '../format.js?v=3bd48c7187';
-import { confirmBox, h, icon, toast } from './dom.js?v=3bd48c7187';
-import { renderHistory } from './panels.js?v=3bd48c7187';
-import { StatsView } from './statsview.js?v=3bd48c7187';
+import { api } from '../api.js?v=1f79c2a121';
+import { backtestRecord, resultFromRecord } from '../core/backtests.js?v=1f79c2a121';
+import { autoFill, fillChoices } from '../core/fill.js?v=1f79c2a121';
+import { parseTf } from '../core/timeframes.js?v=1f79c2a121';
+import * as F from '../format.js?v=1f79c2a121';
+import { confirmBox, h, icon, toast } from './dom.js?v=1f79c2a121';
+import { renderHistory } from './panels.js?v=1f79c2a121';
+import { StatsView } from './statsview.js?v=1f79c2a121';
 
 const DAY = 86400;
 
@@ -161,7 +161,7 @@ export class StrategyView {
     if (!base.t.length) { this.out.replaceChildren(h('div.empty', {}, 'Bu aralıkta veri yok.')); this._runLabel(false); return; }
     this.out.replaceChildren(h('div.muted', {}, `${base.t.length.toLocaleString('tr-TR')} ${fillTf} bar üzerinde test ediliyor…`));
     const runInfo = {};
-    const worker = new Worker(new URL('../workers/backtest.worker.js?v=3bd48c7187', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('../workers/backtest.worker.js?v=1f79c2a121', import.meta.url), { type: 'module' });
     this.worker = worker;
     const started = performance.now();
     worker.onmessage = (e) => {
