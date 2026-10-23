@@ -3,12 +3,12 @@
 // straight into IndexedDB. A pack fetches only the years it lacks or that
 // changed, so pressing the button again tops it up, and a download cut short
 // (the page was closed) carries on where it stopped.
-import { emptyCols, parseFile } from './rtc.js?v=eb96803c93';
-import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=eb96803c93';
-import { parseTf } from '../core/timeframes.js?v=eb96803c93';
-import { createDataset, datasetJson, listDatasets } from './server.js?v=eb96803c93';
-import { storageEstimate } from './db.js?v=eb96803c93';
-import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=eb96803c93';
+import { emptyCols, parseFile } from './rtc.js?v=4a4bde5db4';
+import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=4a4bde5db4';
+import { parseTf } from '../core/timeframes.js?v=4a4bde5db4';
+import { createDataset, datasetJson, listDatasets } from './server.js?v=4a4bde5db4';
+import { storageEstimate } from './db.js?v=4a4bde5db4';
+import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=4a4bde5db4';
 
 export { DATA_URL, getManifest };
 export const YEARS = 15;
@@ -35,9 +35,9 @@ function estimateBytes(pack, tf) {
   return Math.floor((minutes / (tf === '1m' ? 1 : 5)) * 24 * 1.03);
 }
 
-/** Packs read straight from the site, without a download: EURUSD first;
- *  the others join once it has proved itself on every device. */
-export const STREAMED = ['EURUSD'];
+/** Packs read straight from the site, without a download: all of them
+ *  (EURUSD went first and proved itself on the phones). */
+export const STREAMED = PACKS.map((p) => p.id);
 
 /** The STREAMED packs as datasets at 1m, read from the site until they are
  *  downloaded (series.js, StreamRows): nothing to download before the first
@@ -334,6 +334,6 @@ export async function status(db) {
 
 /** CSV upload, parsed on the device. */
 export async function importCsv(db, query, body) {
-  const { importCsvFile } = await import('./csvimport.js?v=eb96803c93');
+  const { importCsvFile } = await import('./csvimport.js?v=4a4bde5db4');
   return importCsvFile(db, query, body);
 }

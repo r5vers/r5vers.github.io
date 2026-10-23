@@ -1,27 +1,27 @@
 // Replay Terminal - application controller.
-import { api } from './api.js?v=eb96803c93';
-import { columnsToBars } from './core/aggregate.js?v=eb96803c93';
-import { Broker } from './core/broker.js?v=eb96803c93';
-import { computeStats } from './core/stats.js?v=eb96803c93';
-import { bucket, parseTf } from './core/timeframes.js?v=eb96803c93';
-import { TradingChart } from './chart/chart.js?v=eb96803c93';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=eb96803c93';
-import { configureICT } from './chart/sessions.js?v=eb96803c93';
-import { INDICATORS } from './chart/indicators.js?v=eb96803c93';
-import { TradeLines } from './chart/tradelines.js?v=eb96803c93';
-import * as F from './format.js?v=eb96803c93';
-import { ReplayEngine } from './replay.js?v=eb96803c93';
-import * as D from './ui/dialogs.js?v=eb96803c93';
-import { DataView } from './ui/dataview.js?v=eb96803c93';
-import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=eb96803c93';
-import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=eb96803c93';
-import { openPalette, wirePalette } from './ui/palette.js?v=eb96803c93';
-import { wireTooltips } from './ui/tooltip.js?v=eb96803c93';
-import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=eb96803c93';
-import { scrubWheel } from './ui/scrubwheel.js?v=eb96803c93';
-import { StatsView } from './ui/statsview.js?v=eb96803c93';
-import { StrategyView } from './ui/strategyview.js?v=eb96803c93';
-import { Ticket } from './ui/ticket.js?v=eb96803c93';
+import { api } from './api.js?v=4a4bde5db4';
+import { columnsToBars } from './core/aggregate.js?v=4a4bde5db4';
+import { Broker } from './core/broker.js?v=4a4bde5db4';
+import { computeStats } from './core/stats.js?v=4a4bde5db4';
+import { bucket, parseTf } from './core/timeframes.js?v=4a4bde5db4';
+import { TradingChart } from './chart/chart.js?v=4a4bde5db4';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=4a4bde5db4';
+import { configureICT } from './chart/sessions.js?v=4a4bde5db4';
+import { INDICATORS } from './chart/indicators.js?v=4a4bde5db4';
+import { TradeLines } from './chart/tradelines.js?v=4a4bde5db4';
+import * as F from './format.js?v=4a4bde5db4';
+import { ReplayEngine } from './replay.js?v=4a4bde5db4';
+import * as D from './ui/dialogs.js?v=4a4bde5db4';
+import { DataView } from './ui/dataview.js?v=4a4bde5db4';
+import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=4a4bde5db4';
+import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=4a4bde5db4';
+import { openPalette, wirePalette } from './ui/palette.js?v=4a4bde5db4';
+import { wireTooltips } from './ui/tooltip.js?v=4a4bde5db4';
+import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=4a4bde5db4';
+import { scrubWheel } from './ui/scrubwheel.js?v=4a4bde5db4';
+import { StatsView } from './ui/statsview.js?v=4a4bde5db4';
+import { StrategyView } from './ui/strategyview.js?v=4a4bde5db4';
+import { Ticket } from './ui/ticket.js?v=4a4bde5db4';
 
 const LW = window.LightweightCharts;
 const SPEEDS = [[1, '1x'], [2, '2x'], [4, '4x'], [8, '8x'], [16, '16x'], [40, '40x'], [0, 'Maks']];
@@ -748,6 +748,8 @@ class App {
     const st = s.state;
     if (this.mode === 'replay') await this.exitReplay(true, false);
     if (!this.ds || this.ds.id !== s.dataset_id) {
+      // the list may predate the packs read from the site: ask again first
+      if (!this.datasets.some((d) => d.id === s.dataset_id)) await this.loadDatasets(undefined, { keep: true });
       if (!this.datasets.some((d) => d.id === s.dataset_id)) {
         // a session from another device whose data pack is not on this one yet
         const [kind, pack, tf] = String(s.dataset_key || '').split(':');

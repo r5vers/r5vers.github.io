@@ -11,7 +11,7 @@
 //
 // Candles stay per device: a session carries `dataset_key` ("pack:EURUSD:1m")
 // and finds the device's own copy of that data.
-import { Cloud } from './cloud.js?v=eb96803c93';
+import { Cloud } from './cloud.js?v=4a4bde5db4';
 
 export const GROUP = 'RV Grup';
 const FLUSH_DELAY = 1500;
@@ -62,7 +62,7 @@ async function unpack(text) {
   const bin = atob(text.slice(3));
   const u8 = Uint8Array.from(bin, (c) => c.charCodeAt(0));
   if (typeof DecompressionStream === 'undefined') {           // Safari before 16.4
-    const { gunzipSync } = await import('../../vendor/fflate.js?v=eb96803c93');
+    const { gunzipSync } = await import('../../vendor/fflate.js?v=4a4bde5db4');
     return JSON.parse(new TextDecoder().decode(gunzipSync(u8)));
   }
   return JSON.parse(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
@@ -79,7 +79,12 @@ export async function datasetByKey(db, key) {
   if (!key) return null;
   const all = (await db.all('datasets')).map(([, d]) => d);
   const [kind, a, b, ...rest] = key.split(':');
-  if (kind === 'pack') return all.find((d) => d.meta?.pack === a && d.base_tf === b) || null;
+  // a pack session finds that pack at its own resolution, else the pack at
+  // another one (1m first: it shows every chart timeframe a 5m copy does)
+  if (kind === 'pack') {
+    const same = all.filter((d) => d.meta?.pack === a);
+    return same.find((d) => d.base_tf === b) || same.find((d) => d.base_tf === '1m') || same[0] || null;
+  }
   return all.find((d) => d.symbol === a && d.base_tf === b && d.name === rest.join(':')) || null;
 }
 

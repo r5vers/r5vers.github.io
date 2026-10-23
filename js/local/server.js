@@ -3,12 +3,12 @@
 //
 // handle(db, { method, path, query, body }) -> { status, json } | { status, bytes, headers }
 // `body` is the request body as an ArrayBuffer (or undefined).
-import { canAggregate, parseTf, CHART_TFS } from '../core/timeframes.js?v=eb96803c93';
-import { aggregateCols, barRows } from './query.js?v=eb96803c93';
-import { colsToRecords, toJsonColumns } from './rtc.js?v=eb96803c93';
-import { ChunkRows, deleteSeries, deviceSource, readAll, replaceSeries } from './series.js?v=eb96803c93';
-import * as packs from './packs.js?v=eb96803c93';
-import * as sync from './sync.js?v=eb96803c93';
+import { canAggregate, parseTf, CHART_TFS } from '../core/timeframes.js?v=4a4bde5db4';
+import { aggregateCols, barRows } from './query.js?v=4a4bde5db4';
+import { colsToRecords, toJsonColumns } from './rtc.js?v=4a4bde5db4';
+import { ChunkRows, deleteSeries, deviceSource, readAll, replaceSeries } from './series.js?v=4a4bde5db4';
+import * as packs from './packs.js?v=4a4bde5db4';
+import * as sync from './sync.js?v=4a4bde5db4';
 
 const MAX_BARS = 200_000;
 const MAX_BIN_BARS = 6_000_000;

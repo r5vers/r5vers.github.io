@@ -10,10 +10,10 @@
 // first (StreamRows): a query fetches the years it touches, keeps them here
 // when the device has room, and works on without when it has not. That is
 // how every pack is ready at once on every device, phones included.
-import { parseTf, HOUR } from '../core/timeframes.js?v=eb96803c93';
-import { colsToRecords, concatCols, emptyCols, parseFile, recordsToCols, sliceCols } from './rtc.js?v=eb96803c93';
-import { MemRows, aggregateAll, lowerBound, rollUp, upperBound } from './query.js?v=eb96803c93';
-import { DATA_URL, fetchFile, getManifest, sha256, within } from './net.js?v=eb96803c93';
+import { parseTf, HOUR } from '../core/timeframes.js?v=4a4bde5db4';
+import { colsToRecords, concatCols, emptyCols, parseFile, recordsToCols, sliceCols } from './rtc.js?v=4a4bde5db4';
+import { MemRows, aggregateAll, lowerBound, rollUp, upperBound } from './query.js?v=4a4bde5db4';
+import { DATA_URL, fetchFile, getManifest, sha256, within } from './net.js?v=4a4bde5db4';
 
 export const CHUNK = 1 << 16;
 const FIELDS = ['t', 'o', 'h', 'l', 'c', 'v'];
