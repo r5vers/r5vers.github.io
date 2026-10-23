@@ -36,8 +36,11 @@ function keepInSync(db) {
   setTimeout(tick, 4000);
   setInterval(tick, SYNC_EVERY);
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') tick();
-    else flush(db, { force: true }).catch(() => {});
+    if (document.visibilityState === 'visible') {
+      tick();
+      // a phone that slept stopped its download: carry on with it
+      resume(db).catch(() => {});
+    } else flush(db, { force: true }).catch(() => {});
   });
 }
 

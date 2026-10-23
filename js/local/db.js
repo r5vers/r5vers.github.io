@@ -40,34 +40,69 @@ export class MemoryDb {
 
 const req = (r) => new Promise((resolve, reject) => { r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
 
+/** A write is kept only once its transaction commits: a full disk shows up
+ *  as the transaction aborting, after the request itself succeeded. */
+const done = (t) => new Promise((resolve, reject) => {
+  t.oncomplete = () => resolve();
+  t.onabort = t.onerror = () => reject(t.error || new DOMException('IndexedDB yazılamadı', 'AbortError'));
+});
+
+/** Errors that mean the connection is gone, not the request: Safari on
+ *  iPhone drops it when the app goes to the background ("Connection to
+ *  Indexed Database server lost"), another tab may close it to upgrade. */
+const lost = (e) => e && (e.name === 'InvalidStateError' || e.name === 'UnknownError' || /connection|closing|closed/i.test(e.message || ''));
+
 export class IdbDb {
   static async open() {
-    const r = indexedDB.open(DB_NAME, DB_VERSION);
-    r.onupgradeneeded = () => { for (const s of STORES) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s); };
     const db = new IdbDb();
-    db.idb = await req(r);
-    // another tab upgrading the schema: let it, this one reopens on next use
-    db.idb.onversionchange = () => db.idb.close();
+    await db._open();
     return db;
   }
-  _store(name, mode = 'readonly') { return this.idb.transaction(name, mode).objectStore(name); }
-  async get(store, key) { return req(this._store(store).get(key)); }
-  async put(store, key, value) { await req(this._store(store, 'readwrite').put(value, key)); }
-  async del(store, key) { await req(this._store(store, 'readwrite').delete(key)); }
-  async all(store, prefix = '') {
-    const s = this._store(store);
-    const keyRange = IDBKeyRange.bound(...range(prefix));
-    const [keys, values] = await Promise.all([req(s.getAllKeys(keyRange)), req(s.getAll(keyRange))]);
-    return keys.map((k, i) => [k, values[i]]);
+  async _open() {
+    const r = indexedDB.open(DB_NAME, DB_VERSION);
+    r.onupgradeneeded = () => { for (const s of STORES) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s); };
+    const idb = await req(r);
+    // another tab upgrading the schema: let it, this one reopens on next use
+    idb.onversionchange = () => { idb.close(); if (this.idb === idb) this.idb = null; };
+    idb.onclose = () => { if (this.idb === idb) this.idb = null; };
+    this.idb = idb;
   }
-  async delPrefix(store, prefix) { await req(this._store(store, 'readwrite').delete(IDBKeyRange.bound(...range(prefix)))); }
+  /** Run `fn(transaction)` on `store`, reconnecting once if the connection was lost. */
+  async _run(store, mode, fn) {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        if (!this.idb) await (this._opening ||= this._open().finally(() => { this._opening = null; }));
+        const t = this.idb.transaction(store, mode);
+        const out = fn(t.objectStore(store));
+        const value = await (out instanceof IDBRequest ? req(out) : out);
+        if (mode === 'readwrite') await done(t);
+        return value;
+      } catch (e) {
+        if (attempt || !lost(e)) throw e;
+        try { this.idb?.close(); } catch { /* already gone */ }
+        this.idb = null;
+      }
+    }
+  }
+  async get(store, key) { return this._run(store, 'readonly', (s) => s.get(key)); }
+  async put(store, key, value) { await this._run(store, 'readwrite', (s) => s.put(value, key)); }
+  async del(store, key) { await this._run(store, 'readwrite', (s) => s.delete(key)); }
+  async all(store, prefix = '') {
+    return this._run(store, 'readonly', async (s) => {
+      const keyRange = IDBKeyRange.bound(...range(prefix));
+      const [keys, values] = await Promise.all([req(s.getAllKeys(keyRange)), req(s.getAll(keyRange))]);
+      return keys.map((k, i) => [k, values[i]]);
+    });
+  }
+  async delPrefix(store, prefix) { await this._run(store, 'readwrite', (s) => s.delete(IDBKeyRange.bound(...range(prefix)))); }
   async nextId(name) {
     // one readwrite transaction: two tabs never get the same id
-    const s = this._store('meta', 'readwrite');
     const key = `seq:${name}`;
-    const n = ((await req(s.get(key))) || 0) + 1;
-    await req(s.put(n, key));
-    return n;
+    return this._run('meta', 'readwrite', async (s) => {
+      const n = ((await req(s.get(key))) || 0) + 1;
+      await req(s.put(n, key));
+      return n;
+    });
   }
   async tx(fn) { return fn(this); }
 }

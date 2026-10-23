@@ -55,8 +55,39 @@ export async function getManifest(fetchFn = fetch, force = false) {
 }
 
 async function gunzip(response) {
-  if (typeof DecompressionStream === 'undefined') throw new Error('bu tarayıcı sıkıştırılmış veriyi açamıyor (güncelleyin)');
-  return new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  if (typeof DecompressionStream !== 'undefined' && response.body) {
+    return new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  }
+  // Safari before 16.4: unpacked in JavaScript
+  const { gunzipSync } = await import('../../vendor/fflate.js');
+  const out = gunzipSync(new Uint8Array(await response.arrayBuffer()));
+  return out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
+}
+
+/** One data file, tried again after a dropped connection (a phone switching
+ *  networks or waking up); a missing file is not tried again. */
+async function fetchFile(fetchFn, url, tries = 4) {
+  for (let i = 1; ; i++) {
+    try {
+      const r = await fetchFn(url);
+      if (r.ok) return { raw: await gunzip(r) };
+      if (r.status === 404 || i >= tries) throw Object.assign(new Error(`indirilemedi (HTTP ${r.status})`), { final: true });
+    } catch (e) {
+      if (e.final || i >= tries) throw e;
+    }
+    await new Promise((res) => setTimeout(res, 1500 * i));
+  }
+}
+
+/** What went wrong, said for the person in front of the screen. */
+async function explain(e) {
+  if (e?.name === 'QuotaExceededError' || /quota/i.test(e?.message || '')) {
+    const est = await storageEstimate();
+    const free = est.quota ? Math.max(0, (est.quota - (est.usage || 0)) / 1e6) : null;
+    return `cihazda yer kalmadı${free != null ? ` (siteye ayrılan boş alan ~${Math.round(free)} MB)` : ''}: daha az paket ya da 5m indirin, telefonda boş alan açın`;
+  }
+  if (e instanceof TypeError && /network|load failed|fetch/i.test(e?.message || '')) return 'bağlantı koptu: sayfa açıkken kaldığı yerden devam eder';
+  return e?.message || String(e);
 }
 
 async function sha256(buf) {
@@ -120,7 +151,10 @@ export async function download(db, ids, tf, { fetchFn = fetch } = {}) {
 /** Called when the worker starts: unfinished downloads continue. */
 export async function resume(db, { fetchFn = fetch } = {}) {
   const pending = (await db.get('downloads', 'pending')) || [];
+  // a full device does not get fuller by itself: those wait for a click
+  const full = new Set([...jobList.values()].filter((j) => j.full).map((j) => `${j.pack}:${j.tf}`));
   for (const key of pending) {
+    if (full.has(key)) continue;
     const [id, tf] = key.split(':');
     if (BY_ID[id] && RESOLUTIONS.includes(tf)) await download(db, [id], tf, { fetchFn }).catch(() => {});
   }
@@ -174,9 +208,7 @@ async function runJob(db, j, fetchFn) {
     }
     for (const f of todo) {
       if (j.cancelled) { j.status = 'cancelled'; return; }
-      const r = await fetchFn(`${DATA_URL}${f.path}`);
-      if (!r.ok) throw new Error(`${f.path} indirilemedi (HTTP ${r.status})`);
-      const raw = await gunzip(r);
+      const { raw } = await fetchFile(fetchFn, `${DATA_URL}${f.path}`).catch((e) => { throw Object.assign(e, { message: `${f.path}: ${e.message}` }); });
       if (f.sha256 && (await sha256(raw)) !== f.sha256) throw new Error(`${f.path} bozuk indi, tekrar deneyin`);
       const { scale, cols } = parseFile(raw);
       ds = await putPart(db, ds, f.tag, cols, scale);
@@ -199,7 +231,10 @@ async function runJob(db, j, fetchFn) {
     await db.put('downloads', 'pending', [...pending]);
   } catch (e) {
     j.status = 'error';
-    j.message = e.message || String(e);
+    // the years already in are kept; the download stays asked for, so it
+    // carries on from there when the page is back (resume)
+    j.message = await explain(e);
+    j.full = /yer kalmadı/.test(j.message);
   } finally {
     j.finished_at = Date.now() / 1000;
     j.eta = null;

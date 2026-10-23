@@ -61,6 +61,10 @@ async function unpack(text) {
   if (!text.startsWith('gz:')) return JSON.parse(text);
   const bin = atob(text.slice(3));
   const u8 = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  if (typeof DecompressionStream === 'undefined') {           // Safari before 16.4
+    const { gunzipSync } = await import('../../vendor/fflate.js');
+    return JSON.parse(new TextDecoder().decode(gunzipSync(u8)));
+  }
   return JSON.parse(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
 }
 
