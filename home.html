@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="tr" data-theme="dark" class="doc-scroll booting">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Ana ekran · RV</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="page-home">
+  <header class="home-bar glass">
+    <a class="brand" href="/home.html" title="Ana ekran"><span class="tile" id="brand-tile"></span><span class="word"><span class="rv">RV</span><small>replay terminal</small></span></a>
+    <div class="spacer"></div>
+    <button class="btn search-btn" id="home-search" type="button" title="Piyasa, oturum, test ya da komut ara" aria-label="Ara"></button>
+    <button class="btn primary" id="home-chart" type="button">Grafiği aç</button>
+    <button class="btn icon" id="home-look" type="button" title="Görünüm" aria-label="Görünüm"></button>
+    <button class="profile-chip" id="home-profile" type="button" title="Profil" aria-haspopup="true"></button>
+  </header>
+  <main class="home" id="home"></main>
+  <div id="modal-root"></div>
+  <div id="toasts" aria-live="polite"></div>
+  <script type="module" src="js/home.js"></script>
+</body>
+</html>

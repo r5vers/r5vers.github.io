@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="tr" data-theme="dark" class="booting">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RV · Replay Terminal</title>
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Replay">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="page-chart">
+<div id="app" class="mode-browse">
+  <header class="topbar glass">
+    <a class="brand" href="/home.html" title="Ana ekran"><span class="tile" id="brand-tile"></span><span class="word"><span class="rv">RV</span><small>replay terminal</small></span></a>
+    <button class="instrument" id="instrument-btn" type="button" title="Enstrüman ve veri seti" aria-haspopup="true">
+      <span class="dot"></span>
+      <span><span class="sym" id="instrument-sym">—</span><span class="sub" id="instrument-sub">veri seti seçin</span></span>
+      <span class="chev" data-icon="chevron"></span>
+    </button>
+    <div class="tf-group" id="tf-group" role="group" aria-label="Zaman dilimi"></div>
+    <select id="tf-select" class="ctl sm mobile-only" title="Zaman dilimi" aria-label="Zaman dilimi"></select>
+    <div class="mode-switch" id="mode-switch" role="tablist" aria-label="Mod"></div>
+    <div class="spacer"></div>
+    <button class="btn search-btn" id="btn-search" type="button" title="Sembol, zaman dilimi ya da komut ara" aria-label="Ara"><span data-icon="search"></span><span class="lbl">Ara</span><kbd>Ctrl K</kbd></button>
+    <button class="btn" id="btn-indicators" type="button" title="İndikatör ekle"><span data-icon="indicator"></span><span class="lbl">İndikatör</span></button>
+    <button class="btn icon" id="btn-sessions" type="button" title="Kayıtlı replay oturumları"><span data-icon="sessions"></span></button>
+    <button class="btn icon mobile-only" id="btn-draw" type="button" title="Çizim araçları"><span data-icon="draw"></span></button>
+    <button class="btn icon" id="btn-panel" type="button" title="İşlem paneli"><span data-icon="panel"></span></button>
+    <button class="btn icon" id="btn-fullscreen" type="button" title="Tam ekran (Shift+F)"><span data-icon="expand"></span></button>
+    <button class="btn icon" id="btn-settings" type="button" title="Ayarlar ve görünüm"><span data-icon="sliders"></span></button>
+    <button class="profile-chip" id="btn-profile" type="button" title="Profil" aria-haspopup="true"></button>
+  </header>
+
+  <main class="workspace">
+    <nav class="toolbar glass" id="draw-toolbar" aria-label="Çizim araçları"></nav>
+    <section class="chart-area glass" id="chart-area">
+      <div id="chart" class="chart"></div>
+      <div id="legend" class="legend"></div>
+      <div id="chart-msg" class="chart-msg hidden"></div>
+      <div id="drawing-props" class="floating hidden"></div>
+      <div class="replay-dock glass-pop" id="replay-controls"></div>
+    </section>
+    <aside class="sidepanel glass" id="sidepanel"></aside>
+  </main>
+
+  <section class="bottom glass" id="bottom">
+    <div class="resizer" id="bottom-resizer"></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="tab-body" id="tab-body"></div>
+  </section>
+</div>
+<div id="context-menu" class="context-menu glass-pop hidden"></div>
+<div id="modal-root"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script src="vendor/lightweight-charts.standalone.production.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

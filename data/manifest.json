@@ -1,0 +1,1951 @@
+{
+ "built_at": 1792592448,
+ "format": 2,
+ "packs": {
+  "EURUSD": {
+   "fields": {
+    "align": "fx",
+    "contract_size": 100000.0,
+    "currency": "USD",
+    "decimals": 5,
+    "name": "EUR/USD \u00b7 15 y\u0131l \u00b7 1m",
+    "pip_size": 0.0001,
+    "price_type": "bid",
+    "quote_conv": "none",
+    "source": "oanda",
+    "symbol": "EURUSD"
+   },
+   "tfs": {
+    "1m": {
+     "bars": 5418172,
+     "bytes": 130036128,
+     "files": [
+      {
+       "bars": 72280,
+       "first_ts": 1319155200,
+       "gz_bytes": 758807,
+       "last_ts": 1325282340,
+       "path": "EURUSD/1m/2011.bin.gz",
+       "sha256": "2896643b1d83e696b0c43810bd0cc6f6893a5ef2329e3db1593511d9aa9e36b5",
+       "tag": "2011"
+      },
+      {
+       "bars": 364946,
+       "first_ts": 1325440620,
+       "gz_bytes": 3644952,
+       "last_ts": 1356976800,
+       "path": "EURUSD/1m/2012.bin.gz",
+       "sha256": "f67872c6972e586fb290c7d2b7de75f86b25357efca037a3710b5a46796fe93a",
+       "tag": "2012"
+      },
+      {
+       "bars": 370946,
+       "first_ts": 1357088400,
+       "gz_bytes": 3850572,
+       "last_ts": 1388512800,
+       "path": "EURUSD/1m/2013.bin.gz",
+       "sha256": "2f4fab25c65a02b706602cd1233dedcb42745cb0771860669fe116017bf551eb",
+       "tag": "2013"
+      },
+      {
+       "bars": 353454,
+       "first_ts": 1388613600,
+       "gz_bytes": 3480093,
+       "last_ts": 1420052340,
+       "path": "EURUSD/1m/2014.bin.gz",
+       "sha256": "2ce236bb72bee6f59bc33133fb4fa4dc973cab74723cb843d6b9ea7397ab4fef",
+       "tag": "2014"
+      },
+      {
+       "bars": 353080,
+       "first_ts": 1420149600,
+       "gz_bytes": 3702125,
+       "last_ts": 1451588340,
+       "path": "EURUSD/1m/2015.bin.gz",
+       "sha256": "66fe2d8d23fdd67e13bfd499833172a74f34186a85e62802ca2a4aa94ea04125",
+       "tag": "2015"
+      },
+      {
+       "bars": 353010,
+       "first_ts": 1451858400,
+       "gz_bytes": 3576403,
+       "last_ts": 1483135140,
+       "path": "EURUSD/1m/2016.bin.gz",
+       "sha256": "0057f0f0529f0e7356d7a50b45e29f343de1c00b5a96d5e6146ac9687d5a193f",
+       "tag": "2016"
+      },
+      {
+       "bars": 353717,
+       "first_ts": 1483398000,
+       "gz_bytes": 3563373,
+       "last_ts": 1514584740,
+       "path": "EURUSD/1m/2017.bin.gz",
+       "sha256": "9d111613409eaf2b178b0e72f98e90b959096f58a488871bd5e2be7c13b4fdb0",
+       "tag": "2017"
+      },
+      {
+       "bars": 359814,
+       "first_ts": 1514844000,
+       "gz_bytes": 3721509,
+       "last_ts": 1546293540,
+       "path": "EURUSD/1m/2018.bin.gz",
+       "sha256": "ccc09e65a2e7e420768116262eab98ca5d67f72f35b6678ec112cf9eb40867b6",
+       "tag": "2018"
+      },
+      {
+       "bars": 334841,
+       "first_ts": 1546380000,
+       "gz_bytes": 3119919,
+       "last_ts": 1577829540,
+       "path": "EURUSD/1m/2019.bin.gz",
+       "sha256": "b0a53176f07207b4061a84db272197eb262526e04669ca21e7766e7778936657",
+       "tag": "2019"
+      },
+      {
+       "bars": 362762,
+       "first_ts": 1577916000,
+       "gz_bytes": 3756292,
+       "last_ts": 1609451940,
+       "path": "EURUSD/1m/2020.bin.gz",
+       "sha256": "f13a60d0abef343fcf9eb87ac0ce7a902e51b84a72fe353bb8afd3a79586de7f",
+       "tag": "2020"
+      },
+      {
+       "bars": 362338,
+       "first_ts": 1609711200,
+       "gz_bytes": 3648367,
+       "last_ts": 1640987880,
+       "path": "EURUSD/1m/2021.bin.gz",
+       "sha256": "c8f4d3ea3cdd37667a56837cb2aacca8b1ce0a3575a61fcaf566d8a7ce5354cf",
+       "tag": "2021"
+      },
+      {
+       "bars": 368214,
+       "first_ts": 1641160980,
+       "gz_bytes": 3921082,
+       "last_ts": 1672437480,
+       "path": "EURUSD/1m/2022.bin.gz",
+       "sha256": "f671862a589156d57f48c76faba1a4a5e5a79e954290b261f2b819c11d468c50",
+       "tag": "2022"
+      },
+      {
+       "bars": 368660,
+       "first_ts": 1672614300,
+       "gz_bytes": 3738328,
+       "last_ts": 1703887020,
+       "path": "EURUSD/1m/2023.bin.gz",
+       "sha256": "0da221e8ea56d5acd6a55916bcf81327c2daba8a56a20bc9b5b296e42948a08b",
+       "tag": "2023"
+      },
+      {
+       "bars": 370853,
+       "first_ts": 1704146580,
+       "gz_bytes": 3632206,
+       "last_ts": 1735682340,
+       "path": "EURUSD/1m/2024.bin.gz",
+       "sha256": "aa581bea5a7eae4cc7fd3b979dc68c1c0c3e99733bcaa7e60e474ecc65da5f1d",
+       "tag": "2024"
+      },
+      {
+       "bars": 370613,
+       "first_ts": 1735769040,
+       "gz_bytes": 3862418,
+       "last_ts": 1767218340,
+       "path": "EURUSD/1m/2025.bin.gz",
+       "sha256": "6da4c0fee00e4fb8066c1a85a526c3ae7beee5f81f9666e1f5dbe729168a096c",
+       "tag": "2025"
+      },
+      {
+       "bars": 298644,
+       "first_ts": 1767305040,
+       "gz_bytes": 3008312,
+       "last_ts": 1792590360,
+       "path": "EURUSD/1m/2026.bin.gz",
+       "sha256": "f80b424265097c4f1cee35a050702fb32550d01ba28be613cfc1654c1b07e7b9",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 54984758,
+     "last_ts": 1792590360,
+     "scale": 5
+    },
+    "5m": {
+     "bars": 1119184,
+     "bytes": 26860416,
+     "files": [
+      {
+       "bars": 15046,
+       "first_ts": 1319155200,
+       "gz_bytes": 191551,
+       "last_ts": 1325282100,
+       "path": "EURUSD/5m/2011.bin.gz",
+       "sha256": "dacce1d5fe5decd40ddcbe18682b1222a16804e0aebfb9c6113e9104cd87970f",
+       "tag": "2011"
+      },
+      {
+       "bars": 76123,
+       "first_ts": 1325440500,
+       "gz_bytes": 934966,
+       "last_ts": 1356976800,
+       "path": "EURUSD/5m/2012.bin.gz",
+       "sha256": "9fd8a686ce8b2afa4f696b008e6d30ada2bf53bd6829f983a51201dad5af619f",
+       "tag": "2012"
+      },
+      {
+       "bars": 74546,
+       "first_ts": 1357088400,
+       "gz_bytes": 937823,
+       "last_ts": 1388512800,
+       "path": "EURUSD/5m/2013.bin.gz",
+       "sha256": "c73189e5e37a01ff6ab77fb025a8aadaf6f358b19ee5ea054d20cd77e440695f",
+       "tag": "2013"
+      },
+      {
+       "bars": 74329,
+       "first_ts": 1388613600,
+       "gz_bytes": 889091,
+       "last_ts": 1420052100,
+       "path": "EURUSD/5m/2014.bin.gz",
+       "sha256": "f8b0e21cd21b624bf0770e639a60554240d536ff96e363a36ea650f356746795",
+       "tag": "2014"
+      },
+      {
+       "bars": 74393,
+       "first_ts": 1420149600,
+       "gz_bytes": 937233,
+       "last_ts": 1451588100,
+       "path": "EURUSD/5m/2015.bin.gz",
+       "sha256": "0640ffb636a7de8262889800aee37f725ead76f69965202734cfffce105611cd",
+       "tag": "2015"
+      },
+      {
+       "bars": 74437,
+       "first_ts": 1451858400,
+       "gz_bytes": 907620,
+       "last_ts": 1483134900,
+       "path": "EURUSD/5m/2016.bin.gz",
+       "sha256": "e867385c22547528cbe133e00fbaa7e39bb2ff8f20d5855d84f4f9e2c6e8935a",
+       "tag": "2016"
+      },
+      {
+       "bars": 74192,
+       "first_ts": 1483398000,
+       "gz_bytes": 900879,
+       "last_ts": 1514584500,
+       "path": "EURUSD/5m/2017.bin.gz",
+       "sha256": "7af2b4d13da1db7e19c0c2b87f3579420f7d75ab0f4822daa99336e8d38c7c45",
+       "tag": "2017"
+      },
+      {
+       "bars": 74499,
+       "first_ts": 1514844000,
+       "gz_bytes": 926223,
+       "last_ts": 1546293300,
+       "path": "EURUSD/5m/2018.bin.gz",
+       "sha256": "d0a5baeb89ec3a016e4e732cd604973de690bb580ea31b806bb9539f777652d5",
+       "tag": "2018"
+      },
+      {
+       "bars": 73983,
+       "first_ts": 1546380000,
+       "gz_bytes": 848904,
+       "last_ts": 1577829300,
+       "path": "EURUSD/5m/2019.bin.gz",
+       "sha256": "d2348ebfa33efbc6fb23475cb5b30f0a79e70fa5ecc276e053d327b82c0fa116",
+       "tag": "2019"
+      },
+      {
+       "bars": 74574,
+       "first_ts": 1577916000,
+       "gz_bytes": 937138,
+       "last_ts": 1609451700,
+       "path": "EURUSD/5m/2020.bin.gz",
+       "sha256": "5fa7e2eac696877b98603560d28d374889ac68a33c76bf1a6fdd6df1b3b0cb03",
+       "tag": "2020"
+      },
+      {
+       "bars": 74505,
+       "first_ts": 1609711200,
+       "gz_bytes": 912501,
+       "last_ts": 1640987700,
+       "path": "EURUSD/5m/2021.bin.gz",
+       "sha256": "a64f7b0ecf32460902240254f5420869c6abf5bab64f7882881fe64c6e60f9e8",
+       "tag": "2021"
+      },
+      {
+       "bars": 74464,
+       "first_ts": 1641160800,
+       "gz_bytes": 960519,
+       "last_ts": 1672437300,
+       "path": "EURUSD/5m/2022.bin.gz",
+       "sha256": "6dc205537dbd3f604de1542fad324a85db9d74e2540443f6bb9c044c787dab5f",
+       "tag": "2022"
+      },
+      {
+       "bars": 74537,
+       "first_ts": 1672614300,
+       "gz_bytes": 923294,
+       "last_ts": 1703886900,
+       "path": "EURUSD/5m/2023.bin.gz",
+       "sha256": "be52850cbae406cf109f5fc075bae0ba5e8b1ed8ff881fb1f14d27ddcf5f19bb",
+       "tag": "2023"
+      },
+      {
+       "bars": 74869,
+       "first_ts": 1704146400,
+       "gz_bytes": 901522,
+       "last_ts": 1735682100,
+       "path": "EURUSD/5m/2024.bin.gz",
+       "sha256": "45975ef6bdf64faad15056bd01f59f7666d637b33d49b3522ef0037de18543a0",
+       "tag": "2024"
+      },
+      {
+       "bars": 74584,
+       "first_ts": 1735768800,
+       "gz_bytes": 947212,
+       "last_ts": 1767218100,
+       "path": "EURUSD/5m/2025.bin.gz",
+       "sha256": "179d4706bdf5c70a694b438bb245338bf4d0a29d74727be0e9ea1c433918b04c",
+       "tag": "2025"
+      },
+      {
+       "bars": 60103,
+       "first_ts": 1767304800,
+       "gz_bytes": 741457,
+       "last_ts": 1792590300,
+       "path": "EURUSD/5m/2026.bin.gz",
+       "sha256": "f805811d5d1b53b428258787c43209e62f01e4e95ba069a314c3053a1b54734b",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 13797933,
+     "last_ts": 1792590300,
+     "scale": 5
+    }
+   }
+  },
+  "GBPUSD": {
+   "fields": {
+    "align": "fx",
+    "contract_size": 100000.0,
+    "currency": "USD",
+    "decimals": 5,
+    "name": "GBP/USD \u00b7 15 y\u0131l \u00b7 1m",
+    "pip_size": 0.0001,
+    "price_type": "bid",
+    "quote_conv": "none",
+    "source": "oanda",
+    "symbol": "GBPUSD"
+   },
+   "tfs": {
+    "1m": {
+     "bars": 5336562,
+     "bytes": 128077488,
+     "files": [
+      {
+       "bars": 68469,
+       "first_ts": 1319155200,
+       "gz_bytes": 686513,
+       "last_ts": 1325282340,
+       "path": "GBPUSD/1m/2011.bin.gz",
+       "sha256": "3384e97ffc72509f2d234b3fb79a68362867dfa9591a8c46627440485e6c0c18",
+       "tag": "2011"
+      },
+      {
+       "bars": 328823,
+       "first_ts": 1325440680,
+       "gz_bytes": 3049307,
+       "last_ts": 1356976800,
+       "path": "GBPUSD/1m/2012.bin.gz",
+       "sha256": "b874e3ffc76b1ef0eb4e34118c76949a6fab7cb622a10e5bb203cd8d60798290",
+       "tag": "2012"
+      },
+      {
+       "bars": 370973,
+       "first_ts": 1357088400,
+       "gz_bytes": 3869278,
+       "last_ts": 1388512800,
+       "path": "GBPUSD/1m/2013.bin.gz",
+       "sha256": "48bcec6e6ef523dc5f167d07eb0910a5ea2462cc3a55c6f6bb464ae06e65c249",
+       "tag": "2013"
+      },
+      {
+       "bars": 349766,
+       "first_ts": 1388613600,
+       "gz_bytes": 3512062,
+       "last_ts": 1420052340,
+       "path": "GBPUSD/1m/2014.bin.gz",
+       "sha256": "1157555a96ebb246ba670b488b29695df34c1c61ceac47d7e4bd62816f284d53",
+       "tag": "2014"
+      },
+      {
+       "bars": 340003,
+       "first_ts": 1420149600,
+       "gz_bytes": 3501631,
+       "last_ts": 1451588340,
+       "path": "GBPUSD/1m/2015.bin.gz",
+       "sha256": "e2f3edd25606e06e1e91b5822515b7b47fe5d4bb5283d28958c5d394d144a431",
+       "tag": "2015"
+      },
+      {
+       "bars": 348338,
+       "first_ts": 1451858400,
+       "gz_bytes": 3678385,
+       "last_ts": 1483135140,
+       "path": "GBPUSD/1m/2016.bin.gz",
+       "sha256": "3738d6d1b751f24ff33d0f731b5fbc7f91b26fb1a33b4c523353e3212422c5e8",
+       "tag": "2016"
+      },
+      {
+       "bars": 353265,
+       "first_ts": 1483398000,
+       "gz_bytes": 3656047,
+       "last_ts": 1514584740,
+       "path": "GBPUSD/1m/2017.bin.gz",
+       "sha256": "c37dc2bbe2f3e75278aab6e0e1c34870573b1283ae408fbf01b8aae7a57b1280",
+       "tag": "2017"
+      },
+      {
+       "bars": 360782,
+       "first_ts": 1514844000,
+       "gz_bytes": 3783722,
+       "last_ts": 1546293540,
+       "path": "GBPUSD/1m/2018.bin.gz",
+       "sha256": "b18c41d9a6dd0276df24257f869cc36d0d16092abed831be277ad5d55a6f10e6",
+       "tag": "2018"
+      },
+      {
+       "bars": 327236,
+       "first_ts": 1546380000,
+       "gz_bytes": 3271635,
+       "last_ts": 1577829540,
+       "path": "GBPUSD/1m/2019.bin.gz",
+       "sha256": "ec267a1f7bfab47011505afddec0d70ff815fd00c3c976895d86501f0009da1c",
+       "tag": "2019"
+      },
+      {
+       "bars": 358778,
+       "first_ts": 1577916000,
+       "gz_bytes": 3793358,
+       "last_ts": 1609451940,
+       "path": "GBPUSD/1m/2020.bin.gz",
+       "sha256": "1cbc2703bcc2db37d013fbde004b4c489774a32a8156de28c1083cf7c5182e61",
+       "tag": "2020"
+      },
+      {
+       "bars": 353679,
+       "first_ts": 1609711200,
+       "gz_bytes": 3614678,
+       "last_ts": 1640987880,
+       "path": "GBPUSD/1m/2021.bin.gz",
+       "sha256": "381dd818a0dfc899ac0b142fc2e0c1e14c80b15e7d737ab3c227d5a66e6808d3",
+       "tag": "2021"
+      },
+      {
+       "bars": 366356,
+       "first_ts": 1641160980,
+       "gz_bytes": 4000791,
+       "last_ts": 1672437480,
+       "path": "GBPUSD/1m/2022.bin.gz",
+       "sha256": "c66cb4db4acf28005ec329f8d1ed8e2fa0621bbf706b7b8be2ea7cd92540a7f3",
+       "tag": "2022"
+      },
+      {
+       "bars": 369087,
+       "first_ts": 1672614300,
+       "gz_bytes": 3876317,
+       "last_ts": 1703887080,
+       "path": "GBPUSD/1m/2023.bin.gz",
+       "sha256": "c92b9f0b21a52294ef4cd29fe97c357455c3956d0849cc26be30e8e83ff40841",
+       "tag": "2023"
+      },
+      {
+       "bars": 371499,
+       "first_ts": 1704146580,
+       "gz_bytes": 3784947,
+       "last_ts": 1735682340,
+       "path": "GBPUSD/1m/2024.bin.gz",
+       "sha256": "f2e9dc207e2ba18dce1454520b56c8c1e1ec61f214510823b86e1db0de647310",
+       "tag": "2024"
+      },
+      {
+       "bars": 370555,
+       "first_ts": 1735769040,
+       "gz_bytes": 3917149,
+       "last_ts": 1767218340,
+       "path": "GBPUSD/1m/2025.bin.gz",
+       "sha256": "d018966c1890794eb1358181047412f7be87e1eb70a4b6b280641052ee20adbf",
+       "tag": "2025"
+      },
+      {
+       "bars": 298953,
+       "first_ts": 1767305040,
+       "gz_bytes": 3126004,
+       "last_ts": 1792590840,
+       "path": "GBPUSD/1m/2026.bin.gz",
+       "sha256": "4aceac8a8a72fafe792d1e634d611928b9ccdd07d9310998c921b19ba390b947",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 55121824,
+     "last_ts": 1792590840,
+     "scale": 5
+    },
+    "5m": {
+     "bars": 1117207,
+     "bytes": 26812968,
+     "files": [
+      {
+       "bars": 14883,
+       "first_ts": 1319155200,
+       "gz_bytes": 183432,
+       "last_ts": 1325282100,
+       "path": "GBPUSD/5m/2011.bin.gz",
+       "sha256": "191cef247b7e876393aedf9f49b2f481aed34c6c102913f0b8301517cc8b47cf",
+       "tag": "2011"
+      },
+      {
+       "bars": 75099,
+       "first_ts": 1325440500,
+       "gz_bytes": 874037,
+       "last_ts": 1356976800,
+       "path": "GBPUSD/5m/2012.bin.gz",
+       "sha256": "15ca75b6a825853fa42824094fd24ed58941346521da58d1846760a3df99fbd0",
+       "tag": "2012"
+      },
+      {
+       "bars": 74545,
+       "first_ts": 1357088400,
+       "gz_bytes": 946258,
+       "last_ts": 1388512800,
+       "path": "GBPUSD/5m/2013.bin.gz",
+       "sha256": "63a65db61b199ea3ef3c6a6ee7ea7f65adbfced37a02e0488ab89249da5f06df",
+       "tag": "2013"
+      },
+      {
+       "bars": 74219,
+       "first_ts": 1388613600,
+       "gz_bytes": 903108,
+       "last_ts": 1420052100,
+       "path": "GBPUSD/5m/2014.bin.gz",
+       "sha256": "85e41835728ff2582b8c83bd43f6f5064aedeff899890bd32e1c2026649b350e",
+       "tag": "2014"
+      },
+      {
+       "bars": 74210,
+       "first_ts": 1420149600,
+       "gz_bytes": 918115,
+       "last_ts": 1451588100,
+       "path": "GBPUSD/5m/2015.bin.gz",
+       "sha256": "24bc5d3cb1478abe61cb8cb1730156c51f2ab1f79a720f30d3acf9027ce7d1c7",
+       "tag": "2015"
+      },
+      {
+       "bars": 74354,
+       "first_ts": 1451858400,
+       "gz_bytes": 942272,
+       "last_ts": 1483134900,
+       "path": "GBPUSD/5m/2016.bin.gz",
+       "sha256": "40ef3884e6170028e83eb9051389d5f6118ff1e45dab5448afc91e74b68bb26e",
+       "tag": "2016"
+      },
+      {
+       "bars": 74111,
+       "first_ts": 1483398000,
+       "gz_bytes": 925921,
+       "last_ts": 1514584500,
+       "path": "GBPUSD/5m/2017.bin.gz",
+       "sha256": "e6ab77502e2c927d0d96dd2c535c3a3a83d901ebbbaf4184540f8e6a8d099a4d",
+       "tag": "2017"
+      },
+      {
+       "bars": 74499,
+       "first_ts": 1514844000,
+       "gz_bytes": 944821,
+       "last_ts": 1546293300,
+       "path": "GBPUSD/5m/2018.bin.gz",
+       "sha256": "e4586f41f5845ee20441b5a86448a1c280e76594036740ec7f41d06911434a97",
+       "tag": "2018"
+      },
+      {
+       "bars": 73852,
+       "first_ts": 1546380000,
+       "gz_bytes": 893886,
+       "last_ts": 1577829300,
+       "path": "GBPUSD/5m/2019.bin.gz",
+       "sha256": "15fb35252481d886ce49864cc7cca2075139c486fe1e16abf88955287060c966",
+       "tag": "2019"
+      },
+      {
+       "bars": 74530,
+       "first_ts": 1577916000,
+       "gz_bytes": 950717,
+       "last_ts": 1609451700,
+       "path": "GBPUSD/5m/2020.bin.gz",
+       "sha256": "1e34c5c1ee70186337f978477121ae2ba350834f0a64f1108025075d097f7296",
+       "tag": "2020"
+      },
+      {
+       "bars": 74449,
+       "first_ts": 1609711200,
+       "gz_bytes": 915362,
+       "last_ts": 1640987700,
+       "path": "GBPUSD/5m/2021.bin.gz",
+       "sha256": "9891c6e640c4bc0aad8aa775adba10f10e6a6d68fbbe5bc1542027f4a1fc9ba6",
+       "tag": "2021"
+      },
+      {
+       "bars": 74385,
+       "first_ts": 1641160800,
+       "gz_bytes": 979319,
+       "last_ts": 1672437300,
+       "path": "GBPUSD/5m/2022.bin.gz",
+       "sha256": "6548cff6db4544e3779ee428e239ced0e8ed0244118d72e78eacb49f8bbf50ed",
+       "tag": "2022"
+      },
+      {
+       "bars": 74559,
+       "first_ts": 1672614300,
+       "gz_bytes": 952810,
+       "last_ts": 1703886900,
+       "path": "GBPUSD/5m/2023.bin.gz",
+       "sha256": "b194a6b305a461bba30b138bd8802e1e58658679a34c2e896137b35df43c0664",
+       "tag": "2023"
+      },
+      {
+       "bars": 74871,
+       "first_ts": 1704146400,
+       "gz_bytes": 934003,
+       "last_ts": 1735682100,
+       "path": "GBPUSD/5m/2024.bin.gz",
+       "sha256": "643d22e89da92cd804b007b88469d5a093f814f18a60770171539cac67bcf163",
+       "tag": "2024"
+      },
+      {
+       "bars": 74545,
+       "first_ts": 1735768800,
+       "gz_bytes": 958871,
+       "last_ts": 1767218100,
+       "path": "GBPUSD/5m/2025.bin.gz",
+       "sha256": "261468967a680eef075891e8f9d2d0cd13eb21ce7c30668f2127526ec252b4a5",
+       "tag": "2025"
+      },
+      {
+       "bars": 60096,
+       "first_ts": 1767304800,
+       "gz_bytes": 766760,
+       "last_ts": 1792590600,
+       "path": "GBPUSD/5m/2026.bin.gz",
+       "sha256": "b94b42bca6827f32051997791e9cdd36c00aea1aa98f291b95dfeb5171b8efec",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 13989692,
+     "last_ts": 1792590600,
+     "scale": 5
+    }
+   }
+  },
+  "NAS100": {
+   "fields": {
+    "align": "fx",
+    "contract_size": 1.0,
+    "currency": "USD",
+    "decimals": 2,
+    "name": "NASDAQ 100 \u00b7 15 y\u0131l \u00b7 1m",
+    "pip_size": 1.0,
+    "price_type": "bid",
+    "quote_conv": "none",
+    "source": "oanda",
+    "symbol": "NAS100"
+   },
+   "tfs": {
+    "1m": {
+     "bars": 5003711,
+     "bytes": 120089064,
+     "files": [
+      {
+       "bars": 58194,
+       "first_ts": 1319155200,
+       "gz_bytes": 490462,
+       "last_ts": 1325279640,
+       "path": "NAS100/1m/2011.bin.gz",
+       "sha256": "93c5f2922911f270f9a71c92ab642c04d16f1a3f448df4a21b3d7a23d3adea63",
+       "tag": "2011"
+      },
+      {
+       "bars": 280851,
+       "first_ts": 1325588400,
+       "gz_bytes": 2250797,
+       "last_ts": 1356976800,
+       "path": "NAS100/1m/2012.bin.gz",
+       "sha256": "f3c2041aceef3fe2dea6dead1e154c68227b8ac321cd8487d8b9637d3b516b1d",
+       "tag": "2012"
+      },
+      {
+       "bars": 262144,
+       "first_ts": 1357126860,
+       "gz_bytes": 2069931,
+       "last_ts": 1388512800,
+       "path": "NAS100/1m/2013.bin.gz",
+       "sha256": "e2f1ef3077dcede93354baf1eacba4f84a66a03e6c14a9470f832dc38aeea3a0",
+       "tag": "2013"
+      },
+      {
+       "bars": 315337,
+       "first_ts": 1388660400,
+       "gz_bytes": 2939875,
+       "last_ts": 1420052340,
+       "path": "NAS100/1m/2014.bin.gz",
+       "sha256": "fd3a82081ab942a81050aab6c8b73523d7916180cc9b8a1ebc250e599796be7e",
+       "tag": "2014"
+      },
+      {
+       "bars": 333198,
+       "first_ts": 1420149660,
+       "gz_bytes": 3257023,
+       "last_ts": 1451588340,
+       "path": "NAS100/1m/2015.bin.gz",
+       "sha256": "a9e3f570198d5b13fb16eff4909cf5a5dc008bfc531eaa32e3140b90bf8f196d",
+       "tag": "2015"
+      },
+      {
+       "bars": 342177,
+       "first_ts": 1451688840,
+       "gz_bytes": 3324319,
+       "last_ts": 1483132440,
+       "path": "NAS100/1m/2016.bin.gz",
+       "sha256": "ac4a61001dc94ab500a4872aba0be5a8522d470796cbf5421aa412a4b07c40c9",
+       "tag": "2016"
+      },
+      {
+       "bars": 334529,
+       "first_ts": 1483398000,
+       "gz_bytes": 3072917,
+       "last_ts": 1514584800,
+       "path": "NAS100/1m/2017.bin.gz",
+       "sha256": "a68e43bd9ad029faf07a57a56da05dada18b715ca790a39917f08411d370f29f",
+       "tag": "2017"
+      },
+      {
+       "bars": 347356,
+       "first_ts": 1514847600,
+       "gz_bytes": 3913202,
+       "last_ts": 1546293540,
+       "path": "NAS100/1m/2018.bin.gz",
+       "sha256": "2ef122ff51d1f31831ae9db8a988099a878931a2a9d2631ce66674271d2aa37c",
+       "tag": "2018"
+      },
+      {
+       "bars": 345418,
+       "first_ts": 1546383600,
+       "gz_bytes": 3709596,
+       "last_ts": 1577829540,
+       "path": "NAS100/1m/2019.bin.gz",
+       "sha256": "f17be978eb070090506152c4081b4d248936cbf432f242e1cd8005c3065145cf",
+       "tag": "2019"
+      },
+      {
+       "bars": 346171,
+       "first_ts": 1577919600,
+       "gz_bytes": 4102261,
+       "last_ts": 1609451940,
+       "path": "NAS100/1m/2020.bin.gz",
+       "sha256": "bdaf63a72ef18636ca51033271274925e560ecc2b2da1dad9e5180bc4a86962a",
+       "tag": "2020"
+      },
+      {
+       "bars": 348171,
+       "first_ts": 1609714800,
+       "gz_bytes": 4140010,
+       "last_ts": 1640987940,
+       "path": "NAS100/1m/2021.bin.gz",
+       "sha256": "926014f7884f6b80f9c84903dd5cac30a7a04753b129ee1971063d4adf57f6aa",
+       "tag": "2021"
+      },
+      {
+       "bars": 352736,
+       "first_ts": 1641164400,
+       "gz_bytes": 4393116,
+       "last_ts": 1672437540,
+       "path": "NAS100/1m/2022.bin.gz",
+       "sha256": "a43876758bffb6de4698322bdb4f46c179036279f36988145578d9cd3220d947",
+       "tag": "2022"
+      },
+      {
+       "bars": 344195,
+       "first_ts": 1672700400,
+       "gz_bytes": 3913689,
+       "last_ts": 1703887140,
+       "path": "NAS100/1m/2023.bin.gz",
+       "sha256": "44204adf36fb2efa2581319a5803f5bc002b1de4a7fcbc6b6fadb3c6bd4194d0",
+       "tag": "2023"
+      },
+      {
+       "bars": 354693,
+       "first_ts": 1704150000,
+       "gz_bytes": 4245452,
+       "last_ts": 1735682340,
+       "path": "NAS100/1m/2024.bin.gz",
+       "sha256": "6ec975540248de3becdd2a7a5543aa7ede8b7610f70bf5d933416fb0ed8e3db8",
+       "tag": "2024"
+      },
+      {
+       "bars": 352541,
+       "first_ts": 1735772400,
+       "gz_bytes": 4384252,
+       "last_ts": 1767218340,
+       "path": "NAS100/1m/2025.bin.gz",
+       "sha256": "bd48ca75ffd0234db73455fe9d5983c243699fc77818425daf42ce45a8200f9f",
+       "tag": "2025"
+      },
+      {
+       "bars": 286000,
+       "first_ts": 1767308400,
+       "gz_bytes": 3761566,
+       "last_ts": 1792590360,
+       "path": "NAS100/1m/2026.bin.gz",
+       "sha256": "d140a92b9e2732929ef5eab83e53abdcd8760fe06cf18e99bc3db990f3ff593f",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 53968468,
+     "last_ts": 1792590360,
+     "scale": 2
+    },
+    "5m": {
+     "bars": 1047610,
+     "bytes": 25142640,
+     "files": [
+      {
+       "bars": 13288,
+       "first_ts": 1319155200,
+       "gz_bytes": 148208,
+       "last_ts": 1325279400,
+       "path": "NAS100/5m/2011.bin.gz",
+       "sha256": "b25709c05bc99b29696b141003ddd627475972739787fbc1bc1bff838034a621",
+       "tag": "2011"
+      },
+      {
+       "bars": 68150,
+       "first_ts": 1325588400,
+       "gz_bytes": 726937,
+       "last_ts": 1356976800,
+       "path": "NAS100/5m/2012.bin.gz",
+       "sha256": "afeeaf54f6aa954edf966505410413065c85a8506242484f1e3588791642d3e6",
+       "tag": "2012"
+      },
+      {
+       "bars": 66073,
+       "first_ts": 1357126800,
+       "gz_bytes": 691873,
+       "last_ts": 1388512800,
+       "path": "NAS100/5m/2013.bin.gz",
+       "sha256": "d92561e96804c608edbb63276af35ac118da477cec3959b1298f563d155e2445",
+       "tag": "2013"
+      },
+      {
+       "bars": 69394,
+       "first_ts": 1388660400,
+       "gz_bytes": 817948,
+       "last_ts": 1420052100,
+       "path": "NAS100/5m/2014.bin.gz",
+       "sha256": "c0319badf069574e76fc35610244cc229cbafcfe67803bd205f6e65b85602561",
+       "tag": "2014"
+      },
+      {
+       "bars": 70348,
+       "first_ts": 1420149600,
+       "gz_bytes": 868990,
+       "last_ts": 1451588100,
+       "path": "NAS100/5m/2015.bin.gz",
+       "sha256": "65bfc52f4a2a5378d7b19fe82e5d7c7bef692099e76e17f7edc2787f1abe8c57",
+       "tag": "2015"
+      },
+      {
+       "bars": 70416,
+       "first_ts": 1451688600,
+       "gz_bytes": 869757,
+       "last_ts": 1483132200,
+       "path": "NAS100/5m/2016.bin.gz",
+       "sha256": "2f16cfa9e9927cfefa6ea2b53940716541b8d1e5111f43378d9ed881b85214a5",
+       "tag": "2016"
+      },
+      {
+       "bars": 69718,
+       "first_ts": 1483398000,
+       "gz_bytes": 821528,
+       "last_ts": 1514584800,
+       "path": "NAS100/5m/2017.bin.gz",
+       "sha256": "e811b6186a649e40844a9b67f8d78b80dee9641f8e3e86de98b029f08d88b8c9",
+       "tag": "2017"
+      },
+      {
+       "bars": 69927,
+       "first_ts": 1514847600,
+       "gz_bytes": 963536,
+       "last_ts": 1546293300,
+       "path": "NAS100/5m/2018.bin.gz",
+       "sha256": "41a473b49a3fe83e870a94c81a1cfb6d6d569bc3f046740f8b4bdaf3cfb6128d",
+       "tag": "2018"
+      },
+      {
+       "bars": 69958,
+       "first_ts": 1546383600,
+       "gz_bytes": 932752,
+       "last_ts": 1577829300,
+       "path": "NAS100/5m/2019.bin.gz",
+       "sha256": "f1e3d80fffcc50859320673b701e88cb14df4f85b08b26f63f124faaa155ee58",
+       "tag": "2019"
+      },
+      {
+       "bars": 69618,
+       "first_ts": 1577919600,
+       "gz_bytes": 1003193,
+       "last_ts": 1609451700,
+       "path": "NAS100/5m/2020.bin.gz",
+       "sha256": "ef9948006674cd25b13745372c69a268ffec01611cb9e619acf164fbbc27f272",
+       "tag": "2020"
+      },
+      {
+       "bars": 70671,
+       "first_ts": 1609714800,
+       "gz_bytes": 1021065,
+       "last_ts": 1640987700,
+       "path": "NAS100/5m/2021.bin.gz",
+       "sha256": "5b1a8afd33a9ba5f6af66fea6e2d349ec02518d378c66999760016ef7638ca16",
+       "tag": "2021"
+      },
+      {
+       "bars": 70649,
+       "first_ts": 1641164400,
+       "gz_bytes": 1057848,
+       "last_ts": 1672437300,
+       "path": "NAS100/5m/2022.bin.gz",
+       "sha256": "a6fbe8e07aa9188222837f510e01eebf0355886d0e06498ccf74c18a160cffff",
+       "tag": "2022"
+      },
+      {
+       "bars": 70673,
+       "first_ts": 1672700400,
+       "gz_bytes": 992114,
+       "last_ts": 1703886900,
+       "path": "NAS100/5m/2023.bin.gz",
+       "sha256": "5617b05d3bff221aaca6a02915b1f2243b48c584cce1ae280510b4f42a76c8ed",
+       "tag": "2023"
+      },
+      {
+       "bars": 71013,
+       "first_ts": 1704150000,
+       "gz_bytes": 1035001,
+       "last_ts": 1735682100,
+       "path": "NAS100/5m/2024.bin.gz",
+       "sha256": "b0f8088186af8d7534d9e562a73f66def989c51155e9c4d0db0f4ca3c6d23bc7",
+       "tag": "2024"
+      },
+      {
+       "bars": 70512,
+       "first_ts": 1735772400,
+       "gz_bytes": 1058235,
+       "last_ts": 1767218100,
+       "path": "NAS100/5m/2025.bin.gz",
+       "sha256": "879a10d196a0e5c4278f3eb5c2a7d3d22c26d31c3481e6a74d50aa24cdab9c21",
+       "tag": "2025"
+      },
+      {
+       "bars": 57202,
+       "first_ts": 1767308400,
+       "gz_bytes": 893499,
+       "last_ts": 1792590300,
+       "path": "NAS100/5m/2026.bin.gz",
+       "sha256": "14ad7ca2d516ea40e2f48b281dff8357f94c2a71da0ed4dfe865c6112e9e3250",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 13902484,
+     "last_ts": 1792590300,
+     "scale": 2
+    }
+   }
+  },
+  "SPX500": {
+   "fields": {
+    "align": "fx",
+    "contract_size": 1.0,
+    "currency": "USD",
+    "decimals": 2,
+    "name": "S&P 500 \u00b7 15 y\u0131l \u00b7 1m",
+    "pip_size": 1.0,
+    "price_type": "bid",
+    "quote_conv": "none",
+    "source": "oanda",
+    "symbol": "SPX500"
+   },
+   "tfs": {
+    "1m": {
+     "bars": 4383150,
+     "bytes": 105195600,
+     "files": [
+      {
+       "bars": 64423,
+       "first_ts": 1319155200,
+       "gz_bytes": 480665,
+       "last_ts": 1325279640,
+       "path": "SPX500/1m/2011.bin.gz",
+       "sha256": "5d5bb35a499352a17be8f7e9a7308178ec38bb635b67ad66d68eac2fff17066d",
+       "tag": "2011"
+      },
+      {
+       "bars": 253225,
+       "first_ts": 1325588400,
+       "gz_bytes": 1704247,
+       "last_ts": 1356976800,
+       "path": "SPX500/1m/2012.bin.gz",
+       "sha256": "29fc2ed343ccb68a9b63c9f507b09805a8ae422702f9a45cebfd000aa2f2a81e",
+       "tag": "2012"
+      },
+      {
+       "bars": 228299,
+       "first_ts": 1357126860,
+       "gz_bytes": 1652729,
+       "last_ts": 1388512800,
+       "path": "SPX500/1m/2013.bin.gz",
+       "sha256": "d11dd45552be47d13e729bc5cbeb6b0caeb4ef97b9bfd30909c68e87940826ff",
+       "tag": "2013"
+      },
+      {
+       "bars": 228011,
+       "first_ts": 1388660400,
+       "gz_bytes": 1803037,
+       "last_ts": 1420052340,
+       "path": "SPX500/1m/2014.bin.gz",
+       "sha256": "b7e9bbeaf0ab6e44c0b3797f8c28c8fb367eb78c0099b6c817e3a0cbc8ea68fc",
+       "tag": "2014"
+      },
+      {
+       "bars": 260529,
+       "first_ts": 1420149600,
+       "gz_bytes": 2205923,
+       "last_ts": 1451588340,
+       "path": "SPX500/1m/2015.bin.gz",
+       "sha256": "c4b4d4f140aa232821773e89f36d2ce81e6c4b991f2f7801ba1c1bbba5a8d487",
+       "tag": "2015"
+      },
+      {
+       "bars": 254205,
+       "first_ts": 1451688300,
+       "gz_bytes": 2090308,
+       "last_ts": 1483132440,
+       "path": "SPX500/1m/2016.bin.gz",
+       "sha256": "20e3906717ac317479394ad7ebca4127311428e7e6ce6976e8224c19a19be672",
+       "tag": "2016"
+      },
+      {
+       "bars": 182752,
+       "first_ts": 1483398000,
+       "gz_bytes": 1318246,
+       "last_ts": 1514584740,
+       "path": "SPX500/1m/2017.bin.gz",
+       "sha256": "f9a98ba20e852d8c8cde37682abae47353e0110fefcef2907d1e5147999ad905",
+       "tag": "2017"
+      },
+      {
+       "bars": 296230,
+       "first_ts": 1514847600,
+       "gz_bytes": 2665491,
+       "last_ts": 1546293540,
+       "path": "SPX500/1m/2018.bin.gz",
+       "sha256": "b707643fd42fa4808acde3331851a2c64afe5a1d11228e8a6d1fede8bf28425a",
+       "tag": "2018"
+      },
+      {
+       "bars": 287384,
+       "first_ts": 1546383600,
+       "gz_bytes": 2354494,
+       "last_ts": 1577829540,
+       "path": "SPX500/1m/2019.bin.gz",
+       "sha256": "0323c178b4bd5e3236a4a4c4af3242226a3e468798580798faeded3f40a0072a",
+       "tag": "2019"
+      },
+      {
+       "bars": 335782,
+       "first_ts": 1577919600,
+       "gz_bytes": 3270309,
+       "last_ts": 1609451940,
+       "path": "SPX500/1m/2020.bin.gz",
+       "sha256": "d0ea80438040e3af83f8d54dd5c18bdb45e0a4fef9271b6bbe30665d00cd4f08",
+       "tag": "2020"
+      },
+      {
+       "bars": 340585,
+       "first_ts": 1609714800,
+       "gz_bytes": 3253734,
+       "last_ts": 1640987940,
+       "path": "SPX500/1m/2021.bin.gz",
+       "sha256": "bcd7fda229af5b46ac96a2fde9b2fe0fd4f5be31bef6ed8d8061fecc9ca07120",
+       "tag": "2021"
+      },
+      {
+       "bars": 350927,
+       "first_ts": 1641164400,
+       "gz_bytes": 3470510,
+       "last_ts": 1672437540,
+       "path": "SPX500/1m/2022.bin.gz",
+       "sha256": "93457a27a43f5a14dac60c664191a4b5dd27986cc6906f2895f0f859d0837e31",
+       "tag": "2022"
+      },
+      {
+       "bars": 335851,
+       "first_ts": 1672700400,
+       "gz_bytes": 2883906,
+       "last_ts": 1703887140,
+       "path": "SPX500/1m/2023.bin.gz",
+       "sha256": "befa4008da1b2722c8adaf06b5945245bb86baff2140ff3ab8a19aafb43e1b14",
+       "tag": "2023"
+      },
+      {
+       "bars": 333624,
+       "first_ts": 1704150000,
+       "gz_bytes": 2861211,
+       "last_ts": 1735682340,
+       "path": "SPX500/1m/2024.bin.gz",
+       "sha256": "607a522a5f72ba741f71992e7a290e45084eac994fcd18e5ceef5fb8a701053e",
+       "tag": "2024"
+      },
+      {
+       "bars": 346411,
+       "first_ts": 1735772400,
+       "gz_bytes": 3278273,
+       "last_ts": 1767218220,
+       "path": "SPX500/1m/2025.bin.gz",
+       "sha256": "8bf6d9349d2357962079952889d0dc6518d89a5df16c074508605aee56bbaa3f",
+       "tag": "2025"
+      },
+      {
+       "bars": 284912,
+       "first_ts": 1767308400,
+       "gz_bytes": 2855862,
+       "last_ts": 1792591440,
+       "path": "SPX500/1m/2026.bin.gz",
+       "sha256": "d4cf867caf06b69dd4ef8dfe918d931bd29d39cbf42388630e22cf3669aaaddb",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 38148945,
+     "last_ts": 1792591440,
+     "scale": 2
+    },
+    "5m": {
+     "bars": 1016438,
+     "bytes": 24394512,
+     "files": [
+      {
+       "bars": 13522,
+       "first_ts": 1319155200,
+       "gz_bytes": 138704,
+       "last_ts": 1325279400,
+       "path": "SPX500/5m/2011.bin.gz",
+       "sha256": "075f1da9198165f5fe71616e2bcdf218a62dc17e9eb245aacc35a7ff1f234ea3",
+       "tag": "2011"
+      },
+      {
+       "bars": 66126,
+       "first_ts": 1325588400,
+       "gz_bytes": 613300,
+       "last_ts": 1356976800,
+       "path": "SPX500/5m/2012.bin.gz",
+       "sha256": "ccb4e2d20c13e28b4dc61f9c8951525509e6524b7e108c3708fe224577f22e5c",
+       "tag": "2012"
+      },
+      {
+       "bars": 63660,
+       "first_ts": 1357126800,
+       "gz_bytes": 610530,
+       "last_ts": 1388512800,
+       "path": "SPX500/5m/2013.bin.gz",
+       "sha256": "4e6ce2c882cb4497bac1925a7d435cca9066b0949ef3f9de248b9a4336325bf3",
+       "tag": "2013"
+      },
+      {
+       "bars": 63363,
+       "first_ts": 1388660400,
+       "gz_bytes": 638594,
+       "last_ts": 1420052100,
+       "path": "SPX500/5m/2014.bin.gz",
+       "sha256": "29997cdfd82ffaffa9055ae643a5c39d4ec20d88e808b521019bebf6b4eadfea",
+       "tag": "2014"
+      },
+      {
+       "bars": 66239,
+       "first_ts": 1420149600,
+       "gz_bytes": 710076,
+       "last_ts": 1451588100,
+       "path": "SPX500/5m/2015.bin.gz",
+       "sha256": "996164bdc301a8a322dfcbf643638f165083a2fe95df053e6739b39da173fc2c",
+       "tag": "2015"
+      },
+      {
+       "bars": 66135,
+       "first_ts": 1451688300,
+       "gz_bytes": 692143,
+       "last_ts": 1483132200,
+       "path": "SPX500/5m/2016.bin.gz",
+       "sha256": "fae4954443516b6d9ce013d837e947dba2a704acad74c7b329457864267fe14f",
+       "tag": "2016"
+      },
+      {
+       "bars": 60065,
+       "first_ts": 1483398000,
+       "gz_bytes": 564790,
+       "last_ts": 1514584500,
+       "path": "SPX500/5m/2017.bin.gz",
+       "sha256": "bcff19ccc45c935b7ba543b9730fe364bfbc6007c1c6384f53a7b14ec3977048",
+       "tag": "2017"
+      },
+      {
+       "bars": 68605,
+       "first_ts": 1514847600,
+       "gz_bytes": 781132,
+       "last_ts": 1546293300,
+       "path": "SPX500/5m/2018.bin.gz",
+       "sha256": "adb9bed20ef85a7fb2ffd5076f45d09b597cba286a541145973f13b1e9cfdaae",
+       "tag": "2018"
+      },
+      {
+       "bars": 68814,
+       "first_ts": 1546383600,
+       "gz_bytes": 741486,
+       "last_ts": 1577829300,
+       "path": "SPX500/5m/2019.bin.gz",
+       "sha256": "1d227a61ab068e8389516a4b89d9b4650e70807ef71eb04ad092e85a2c59b67b",
+       "tag": "2019"
+      },
+      {
+       "bars": 69526,
+       "first_ts": 1577919600,
+       "gz_bytes": 859499,
+       "last_ts": 1609451700,
+       "path": "SPX500/5m/2020.bin.gz",
+       "sha256": "91125e9ce5f286eae0c81601d397f172aa2ee59cdc74ed6ecb9e89ddba38d82e",
+       "tag": "2020"
+      },
+      {
+       "bars": 70575,
+       "first_ts": 1609714800,
+       "gz_bytes": 856553,
+       "last_ts": 1640987700,
+       "path": "SPX500/5m/2021.bin.gz",
+       "sha256": "af352abb92a445f1d0a722b08d95b1f6d76f3502821d9762a0f27c52f2711de3",
+       "tag": "2021"
+      },
+      {
+       "bars": 70642,
+       "first_ts": 1641164400,
+       "gz_bytes": 892575,
+       "last_ts": 1672437300,
+       "path": "SPX500/5m/2022.bin.gz",
+       "sha256": "97c42f63fad67fb8500a066fbd194ebce14d918cc600a919e81746403dd4f694",
+       "tag": "2022"
+      },
+      {
+       "bars": 70578,
+       "first_ts": 1672700400,
+       "gz_bytes": 796942,
+       "last_ts": 1703886900,
+       "path": "SPX500/5m/2023.bin.gz",
+       "sha256": "c6e33b0c989be518a9a1aa4fef0460a9bf29172888abd5811c2941e0106a7789",
+       "tag": "2023"
+      },
+      {
+       "bars": 70858,
+       "first_ts": 1704150000,
+       "gz_bytes": 804869,
+       "last_ts": 1735682100,
+       "path": "SPX500/5m/2024.bin.gz",
+       "sha256": "96c4d64077c745ddebf19b145532afdc5a37197dd811ed28cf692486be4fbbca",
+       "tag": "2024"
+      },
+      {
+       "bars": 70512,
+       "first_ts": 1735772400,
+       "gz_bytes": 864752,
+       "last_ts": 1767218100,
+       "path": "SPX500/5m/2025.bin.gz",
+       "sha256": "4b390a5e1cbde99c8cc5abdadc442a20e733b5c4f238a452397818f5308665fe",
+       "tag": "2025"
+      },
+      {
+       "bars": 57218,
+       "first_ts": 1767308400,
+       "gz_bytes": 731599,
+       "last_ts": 1792591200,
+       "path": "SPX500/5m/2026.bin.gz",
+       "sha256": "476b56881917522594f51431fe3014a9877c9fbfc40cb9577b5ca9106da1f015",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 11297544,
+     "last_ts": 1792591200,
+     "scale": 2
+    }
+   }
+  },
+  "USDCAD": {
+   "fields": {
+    "align": "fx",
+    "contract_size": 100000.0,
+    "currency": "USD",
+    "decimals": 5,
+    "name": "USD/CAD \u00b7 15 y\u0131l \u00b7 1m",
+    "pip_size": 0.0001,
+    "price_type": "bid",
+    "quote_conv": "divide",
+    "source": "oanda",
+    "symbol": "USDCAD"
+   },
+   "tfs": {
+    "1m": {
+     "bars": 5362634,
+     "bytes": 128703216,
+     "files": [
+      {
+       "bars": 67489,
+       "first_ts": 1319155200,
+       "gz_bytes": 681929,
+       "last_ts": 1325282340,
+       "path": "USDCAD/1m/2011.bin.gz",
+       "sha256": "5fdf4e104f66d3c75e804c099adff106f0cb022a0ed4ed1908d4f6a4543819b4",
+       "tag": "2011"
+      },
+      {
+       "bars": 322162,
+       "first_ts": 1325440680,
+       "gz_bytes": 2951645,
+       "last_ts": 1356976800,
+       "path": "USDCAD/1m/2012.bin.gz",
+       "sha256": "e545e8e5f645c85eea4a740ce5335e272558ac068dbec3cb9c105e2389a5130e",
+       "tag": "2012"
+      },
+      {
+       "bars": 362217,
+       "first_ts": 1357088400,
+       "gz_bytes": 3496283,
+       "last_ts": 1388512800,
+       "path": "USDCAD/1m/2013.bin.gz",
+       "sha256": "b3c1cd11e61a788597d7d487c7f7954daf6f15a499cd853d526a422509d5242b",
+       "tag": "2013"
+      },
+      {
+       "bars": 343482,
+       "first_ts": 1388613600,
+       "gz_bytes": 3331081,
+       "last_ts": 1420052340,
+       "path": "USDCAD/1m/2014.bin.gz",
+       "sha256": "cf744dc712ce100a50a2b9c1870f7f1a5d4346c3554a31bc048263c46bfe164b",
+       "tag": "2014"
+      },
+      {
+       "bars": 353749,
+       "first_ts": 1420149600,
+       "gz_bytes": 3685834,
+       "last_ts": 1451588340,
+       "path": "USDCAD/1m/2015.bin.gz",
+       "sha256": "b780c8060babf7183f0482295cd3869ac529d5a9f1ca32efdda782a18375cf14",
+       "tag": "2015"
+      },
+      {
+       "bars": 361597,
+       "first_ts": 1451858400,
+       "gz_bytes": 3827204,
+       "last_ts": 1483135140,
+       "path": "USDCAD/1m/2016.bin.gz",
+       "sha256": "41252a2524b9742d0fc02e80914e6c70a031efa37e584c43ea69f1390c1ab76a",
+       "tag": "2016"
+      },
+      {
+       "bars": 364397,
+       "first_ts": 1483398000,
+       "gz_bytes": 3751218,
+       "last_ts": 1514584740,
+       "path": "USDCAD/1m/2017.bin.gz",
+       "sha256": "ad9284a821e79cf28b27662d48e774b83144c72607b4fe41d1e0a3cd2f45e1d3",
+       "tag": "2017"
+      },
+      {
+       "bars": 367846,
+       "first_ts": 1514844060,
+       "gz_bytes": 3804599,
+       "last_ts": 1546293540,
+       "path": "USDCAD/1m/2018.bin.gz",
+       "sha256": "866239f3ec3982c0f2793195494f9813d50827ac6247bdfb8f7884a5a35c72f5",
+       "tag": "2018"
+      },
+      {
+       "bars": 333741,
+       "first_ts": 1546380000,
+       "gz_bytes": 3208390,
+       "last_ts": 1577829540,
+       "path": "USDCAD/1m/2019.bin.gz",
+       "sha256": "7e34809b29d449659c017222a9d8a691a95ddf77608a0785d2cb433e8c6e6b4b",
+       "tag": "2019"
+      },
+      {
+       "bars": 356510,
+       "first_ts": 1577916000,
+       "gz_bytes": 3643387,
+       "last_ts": 1609451940,
+       "path": "USDCAD/1m/2020.bin.gz",
+       "sha256": "3be4a731e8ae44b2b48303c13872c67634841af1de7af497f4294c28caa14f01",
+       "tag": "2020"
+      },
+      {
+       "bars": 355426,
+       "first_ts": 1609711200,
+       "gz_bytes": 3588797,
+       "last_ts": 1640987880,
+       "path": "USDCAD/1m/2021.bin.gz",
+       "sha256": "1f8ed0502443c006c63a520c6603b96a8e2dd7f06b9031a2a5c8c261689b6bb9",
+       "tag": "2021"
+      },
+      {
+       "bars": 366534,
+       "first_ts": 1641160980,
+       "gz_bytes": 3902587,
+       "last_ts": 1672437480,
+       "path": "USDCAD/1m/2022.bin.gz",
+       "sha256": "1a5653410b9fb9c5c5148cfe4d4685787c80110d36aa11f6341024ffbe87e360",
+       "tag": "2022"
+      },
+      {
+       "bars": 368367,
+       "first_ts": 1672614300,
+       "gz_bytes": 3784135,
+       "last_ts": 1703887080,
+       "path": "USDCAD/1m/2023.bin.gz",
+       "sha256": "2208c0efee8454e0cc543471436ca3444a58de537051c29b930bd43d0d2edcec",
+       "tag": "2023"
+      },
+      {
+       "bars": 370711,
+       "first_ts": 1704146580,
+       "gz_bytes": 3689194,
+       "last_ts": 1735682340,
+       "path": "USDCAD/1m/2024.bin.gz",
+       "sha256": "3e491d3e91db4377f4d2d3b0548adf68f720fb37d958d95c2de1eeb9f8768e33",
+       "tag": "2024"
+      },
+      {
+       "bars": 369893,
+       "first_ts": 1735769040,
+       "gz_bytes": 3765685,
+       "last_ts": 1767218340,
+       "path": "USDCAD/1m/2025.bin.gz",
+       "sha256": "eff561aee21ca3eba05efc83a4194de7daf4cb1baf29873d5cab6cdb136a1c43",
+       "tag": "2025"
+      },
+      {
+       "bars": 298513,
+       "first_ts": 1767305040,
+       "gz_bytes": 2980155,
+       "last_ts": 1792591320,
+       "path": "USDCAD/1m/2026.bin.gz",
+       "sha256": "f99b7f72bf956a13b399846b047bcd558b1d6fdb43a92be9db10e0dd73e70dd1",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 54092123,
+     "last_ts": 1792591320,
+     "scale": 5
+    },
+    "5m": {
+     "bars": 1116972,
+     "bytes": 26807328,
+     "files": [
+      {
+       "bars": 14702,
+       "first_ts": 1319155200,
+       "gz_bytes": 181484,
+       "last_ts": 1325282100,
+       "path": "USDCAD/5m/2011.bin.gz",
+       "sha256": "29aab78b4790901c97d1fd16a9d4d39364f3799c2047913d811816f8028572b9",
+       "tag": "2011"
+      },
+      {
+       "bars": 74657,
+       "first_ts": 1325440500,
+       "gz_bytes": 853010,
+       "last_ts": 1356976800,
+       "path": "USDCAD/5m/2012.bin.gz",
+       "sha256": "9b05cfa6ef7c5d717b9509dee095a15a4cdaa6a4541cd237a82d329aa39a52b1",
+       "tag": "2012"
+      },
+      {
+       "bars": 74519,
+       "first_ts": 1357088400,
+       "gz_bytes": 882487,
+       "last_ts": 1388512800,
+       "path": "USDCAD/5m/2013.bin.gz",
+       "sha256": "267a0aaefdb99e43355268914eb63a2f6ec3359c70ffbb714688c71e86ee2076",
+       "tag": "2013"
+      },
+      {
+       "bars": 74178,
+       "first_ts": 1388613600,
+       "gz_bytes": 878285,
+       "last_ts": 1420052100,
+       "path": "USDCAD/5m/2014.bin.gz",
+       "sha256": "67a193fd8aa3f5bf1b87f06e2aa371ef66650545bd813faa4a717279d9a64cea",
+       "tag": "2014"
+      },
+      {
+       "bars": 74399,
+       "first_ts": 1420149600,
+       "gz_bytes": 933675,
+       "last_ts": 1451588100,
+       "path": "USDCAD/5m/2015.bin.gz",
+       "sha256": "f8eadffdf94b1e28818c5a3bf7757f80c53d84f600159f65c52820c84e70fc5e",
+       "tag": "2015"
+      },
+      {
+       "bars": 74482,
+       "first_ts": 1451858400,
+       "gz_bytes": 952100,
+       "last_ts": 1483134900,
+       "path": "USDCAD/5m/2016.bin.gz",
+       "sha256": "2336056d0e9ba6e7baee5eb0d1366df5df3d7bd1345e63fcbc583d83b25efd76",
+       "tag": "2016"
+      },
+      {
+       "bars": 74238,
+       "first_ts": 1483398000,
+       "gz_bytes": 927297,
+       "last_ts": 1514584500,
+       "path": "USDCAD/5m/2017.bin.gz",
+       "sha256": "2d39a550283a242d507c46b8ce3aea616f3ac39e1445d8f37837564bfb1cd34a",
+       "tag": "2017"
+      },
+      {
+       "bars": 74573,
+       "first_ts": 1514844000,
+       "gz_bytes": 937540,
+       "last_ts": 1546293300,
+       "path": "USDCAD/5m/2018.bin.gz",
+       "sha256": "cc03a89a23354a1bd3a9d19f394b4b3f818d29fcf5071f265aa91dde70407c9d",
+       "tag": "2018"
+      },
+      {
+       "bars": 73853,
+       "first_ts": 1546380000,
+       "gz_bytes": 862759,
+       "last_ts": 1577829300,
+       "path": "USDCAD/5m/2019.bin.gz",
+       "sha256": "e7110361765923d4b406f077d8cb27f5601aed0744a37283551de33f75855310",
+       "tag": "2019"
+      },
+      {
+       "bars": 74420,
+       "first_ts": 1577916000,
+       "gz_bytes": 915412,
+       "last_ts": 1609451700,
+       "path": "USDCAD/5m/2020.bin.gz",
+       "sha256": "822b72456fedc9795aa22e2f39d1393e5d1f4b1fb4389a538847e4339f772bba",
+       "tag": "2020"
+      },
+      {
+       "bars": 74457,
+       "first_ts": 1609711200,
+       "gz_bytes": 903549,
+       "last_ts": 1640987700,
+       "path": "USDCAD/5m/2021.bin.gz",
+       "sha256": "2d5ef4d04b3cbad51d32d7c3b8d670b951883265b224910a82f39f5b0494e720",
+       "tag": "2021"
+      },
+      {
+       "bars": 74430,
+       "first_ts": 1641160800,
+       "gz_bytes": 957393,
+       "last_ts": 1672437300,
+       "path": "USDCAD/5m/2022.bin.gz",
+       "sha256": "d8af99ba205a6ac923e6a5f3f150d2dcdc8cc535d50f51568c2b931de00ddfee",
+       "tag": "2022"
+      },
+      {
+       "bars": 74531,
+       "first_ts": 1672614300,
+       "gz_bytes": 932800,
+       "last_ts": 1703886900,
+       "path": "USDCAD/5m/2023.bin.gz",
+       "sha256": "b5d9e31e1c6b503a3a49e0543ca2e82a08b027e0cda966d14a8f1920a2200895",
+       "tag": "2023"
+      },
+      {
+       "bars": 74864,
+       "first_ts": 1704146400,
+       "gz_bytes": 913319,
+       "last_ts": 1735682100,
+       "path": "USDCAD/5m/2024.bin.gz",
+       "sha256": "a6860a58ef27cb27e4bde8d5d19d9a63b8880f6d65ce12bbdb4571feb7057ec9",
+       "tag": "2024"
+      },
+      {
+       "bars": 74569,
+       "first_ts": 1735768800,
+       "gz_bytes": 927555,
+       "last_ts": 1767218100,
+       "path": "USDCAD/5m/2025.bin.gz",
+       "sha256": "9a9bd91afc8ffd217a98804500123ad9ccef31d61060e5032ea26e99d95a7823",
+       "tag": "2025"
+      },
+      {
+       "bars": 60100,
+       "first_ts": 1767304800,
+       "gz_bytes": 736732,
+       "last_ts": 1792591200,
+       "path": "USDCAD/5m/2026.bin.gz",
+       "sha256": "c500cf93dabc473a5de5e2746c9f3a93a04d2e5f466e6a9f7f82bff49738b98e",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 13695397,
+     "last_ts": 1792591200,
+     "scale": 5
+    }
+   }
+  },
+  "XAUUSD": {
+   "fields": {
+    "align": "fx",
+    "contract_size": 100.0,
+    "currency": "USD",
+    "decimals": 3,
+    "name": "XAU/USD \u00b7 15 y\u0131l \u00b7 1m",
+    "pip_size": 0.1,
+    "price_type": "bid",
+    "quote_conv": "none",
+    "source": "oanda",
+    "symbol": "XAUUSD"
+   },
+   "tfs": {
+    "1m": {
+     "bars": 5237574,
+     "bytes": 125701776,
+     "files": [
+      {
+       "bars": 68289,
+       "first_ts": 1319155200,
+       "gz_bytes": 871737,
+       "last_ts": 1325282340,
+       "path": "XAUUSD/1m/2011.bin.gz",
+       "sha256": "d95b7913386f0d864e95d11b2fcecc4704e019ac06f3e5e274b096d76b4dc32a",
+       "tag": "2011"
+      },
+      {
+       "bars": 344992,
+       "first_ts": 1325443020,
+       "gz_bytes": 4202927,
+       "last_ts": 1356976800,
+       "path": "XAUUSD/1m/2012.bin.gz",
+       "sha256": "92cfccd8b481c04524aa699f0248ded7412f89cb6218a797c5bece0b36373666",
+       "tag": "2012"
+      },
+      {
+       "bars": 354950,
+       "first_ts": 1357088400,
+       "gz_bytes": 4605511,
+       "last_ts": 1388512800,
+       "path": "XAUUSD/1m/2013.bin.gz",
+       "sha256": "3e92ed9bf20dec46c64d5d990b68dde2132db893916d501e923c87404586bcc5",
+       "tag": "2013"
+      },
+      {
+       "bars": 347900,
+       "first_ts": 1388617380,
+       "gz_bytes": 4401896,
+       "last_ts": 1420052340,
+       "path": "XAUUSD/1m/2014.bin.gz",
+       "sha256": "2b144addc4beefb9f888ff9a3c386c02e604527885a217366d50146d863de3da",
+       "tag": "2014"
+      },
+      {
+       "bars": 339013,
+       "first_ts": 1420153200,
+       "gz_bytes": 4268724,
+       "last_ts": 1451602800,
+       "path": "XAUUSD/1m/2015.bin.gz",
+       "sha256": "b83f1bab1b9f4d5527c6e03cb4731c267b7a452b6252999685ab4345035f1a50",
+       "tag": "2015"
+      },
+      {
+       "bars": 348283,
+       "first_ts": 1451654340,
+       "gz_bytes": 4568181,
+       "last_ts": 1483135140,
+       "path": "XAUUSD/1m/2016.bin.gz",
+       "sha256": "3223e363d43310bba09c03a44b622bfa59ab809d31d54cef88b18f5b6eacb54d",
+       "tag": "2016"
+      },
+      {
+       "bars": 345097,
+       "first_ts": 1483398000,
+       "gz_bytes": 4535916,
+       "last_ts": 1514584740,
+       "path": "XAUUSD/1m/2017.bin.gz",
+       "sha256": "51ea37ad7d24a18e5f32e0504754b340a84878ea575df132fa852c40bb80eeed",
+       "tag": "2017"
+      },
+      {
+       "bars": 349978,
+       "first_ts": 1514847900,
+       "gz_bytes": 4664693,
+       "last_ts": 1546293540,
+       "path": "XAUUSD/1m/2018.bin.gz",
+       "sha256": "3027a0d7faef117bc8b4315d6721d7fdd88e3e2886e26fce70ef0e10c07efaf2",
+       "tag": "2018"
+      },
+      {
+       "bars": 337111,
+       "first_ts": 1546383600,
+       "gz_bytes": 3991987,
+       "last_ts": 1577829540,
+       "path": "XAUUSD/1m/2019.bin.gz",
+       "sha256": "efa7dc6663b086ba401329e5d279aedfb8d92c014a03da3ed2d062d46f108a07",
+       "tag": "2019"
+      },
+      {
+       "bars": 352841,
+       "first_ts": 1577919600,
+       "gz_bytes": 4562038,
+       "last_ts": 1609451940,
+       "path": "XAUUSD/1m/2020.bin.gz",
+       "sha256": "7227ed6896df7eba666b0091f46e0ab6b20a75230fac5aca3e1f0f2549767460",
+       "tag": "2020"
+      },
+      {
+       "bars": 351435,
+       "first_ts": 1609714800,
+       "gz_bytes": 4440113,
+       "last_ts": 1640987880,
+       "path": "XAUUSD/1m/2021.bin.gz",
+       "sha256": "dd46e95e6e6838ecfda426c65532d1c6e47f86cd79f2781df372c44a768a4450",
+       "tag": "2021"
+      },
+      {
+       "bars": 352677,
+       "first_ts": 1641164580,
+       "gz_bytes": 4625247,
+       "last_ts": 1672437480,
+       "path": "XAUUSD/1m/2022.bin.gz",
+       "sha256": "247073647b270b6e754f1449d0c52fa757a879637841ad430d309065200d6516",
+       "tag": "2022"
+      },
+      {
+       "bars": 351962,
+       "first_ts": 1672700580,
+       "gz_bytes": 4339375,
+       "last_ts": 1703887080,
+       "path": "XAUUSD/1m/2023.bin.gz",
+       "sha256": "db56d273578a1e6a9452973786e1a3a4ee1cbf0cb56d309b8944ba2a1ab65d06",
+       "tag": "2023"
+      },
+      {
+       "bars": 354866,
+       "first_ts": 1704150180,
+       "gz_bytes": 4424876,
+       "last_ts": 1735682340,
+       "path": "XAUUSD/1m/2024.bin.gz",
+       "sha256": "55c295811627ec3e4a28d387bd37526c316b05c0c8a05ecb102e60bff0dc1bb8",
+       "tag": "2024"
+      },
+      {
+       "bars": 353499,
+       "first_ts": 1735772640,
+       "gz_bytes": 4715405,
+       "last_ts": 1767218340,
+       "path": "XAUUSD/1m/2025.bin.gz",
+       "sha256": "2010494f56906d2b6cd8a738061fa7f919a9783fac29ffac0453ca557a9810f9",
+       "tag": "2025"
+      },
+      {
+       "bars": 284681,
+       "first_ts": 1767308640,
+       "gz_bytes": 3995653,
+       "last_ts": 1792590780,
+       "path": "XAUUSD/1m/2026.bin.gz",
+       "sha256": "020dcb5359e1723f1ec6abc482c12af7a3e15378827b2e7a98c3ad47f7dec823",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 67214279,
+     "last_ts": 1792590780,
+     "scale": 3
+    },
+    "5m": {
+     "bars": 1065089,
+     "bytes": 25562136,
+     "files": [
+      {
+       "bars": 13973,
+       "first_ts": 1319155200,
+       "gz_bytes": 213303,
+       "last_ts": 1325282100,
+       "path": "XAUUSD/5m/2011.bin.gz",
+       "sha256": "7dc9e5abe9d2f215439ed97071dc01c5a753030b6aff786bd4af9cedadd1cc67",
+       "tag": "2011"
+      },
+      {
+       "bars": 71665,
+       "first_ts": 1325442900,
+       "gz_bytes": 1057449,
+       "last_ts": 1356976800,
+       "path": "XAUUSD/5m/2012.bin.gz",
+       "sha256": "8ffef30821f20101342a11503cd5224bb1ba0fc7a2f94803fb20ac0eb600f6b9",
+       "tag": "2012"
+      },
+      {
+       "bars": 71345,
+       "first_ts": 1357088400,
+       "gz_bytes": 1099515,
+       "last_ts": 1388512800,
+       "path": "XAUUSD/5m/2013.bin.gz",
+       "sha256": "6d6375ede5ae7b4b37a3ee8c47332a4da6e1d4a8851b30264cf2fc66d19dcb12",
+       "tag": "2013"
+      },
+      {
+       "bars": 71330,
+       "first_ts": 1388617200,
+       "gz_bytes": 1076701,
+       "last_ts": 1420052100,
+       "path": "XAUUSD/5m/2014.bin.gz",
+       "sha256": "49238ff2d4a6027c4fe3e8e74ff7188f73c16272ece5b585b6200ca163457a56",
+       "tag": "2014"
+      },
+      {
+       "bars": 71108,
+       "first_ts": 1420153200,
+       "gz_bytes": 1066014,
+       "last_ts": 1451602800,
+       "path": "XAUUSD/5m/2015.bin.gz",
+       "sha256": "9a1d6fe1cec0a06cf8c696a6ffd107bbd3dfd0eec36b575d09ccde623d4c310c",
+       "tag": "2015"
+      },
+      {
+       "bars": 70873,
+       "first_ts": 1451654100,
+       "gz_bytes": 1092559,
+       "last_ts": 1483134900,
+       "path": "XAUUSD/5m/2016.bin.gz",
+       "sha256": "39e4031cacf7ec3223def43b11bb291a50f804d3ae89fdfe5e4ea873489f880b",
+       "tag": "2016"
+      },
+      {
+       "bars": 70570,
+       "first_ts": 1483398000,
+       "gz_bytes": 1085910,
+       "last_ts": 1514584500,
+       "path": "XAUUSD/5m/2017.bin.gz",
+       "sha256": "ca934eba3bfbbcb4b72ee1e4a6d08c6f810aa7f3b77ec8e8daa692c1dac07dde",
+       "tag": "2017"
+      },
+      {
+       "bars": 70831,
+       "first_ts": 1514847900,
+       "gz_bytes": 1100937,
+       "last_ts": 1546293300,
+       "path": "XAUUSD/5m/2018.bin.gz",
+       "sha256": "0c240575eb573826e3980a85a04869124479822328dea8ec44886068378d6d05",
+       "tag": "2018"
+      },
+      {
+       "bars": 70707,
+       "first_ts": 1546383600,
+       "gz_bytes": 1022007,
+       "last_ts": 1577829300,
+       "path": "XAUUSD/5m/2019.bin.gz",
+       "sha256": "4cc11be4b9fea9f4be4f02ab82f08210e9a49e50136e01238c27061b8783d367",
+       "tag": "2019"
+      },
+      {
+       "bars": 71033,
+       "first_ts": 1577919600,
+       "gz_bytes": 1097106,
+       "last_ts": 1609451700,
+       "path": "XAUUSD/5m/2020.bin.gz",
+       "sha256": "01763e14bf503a76fdf77bf5d13fd8273a46932b5eb8e1960d54749bab0a7ed5",
+       "tag": "2020"
+      },
+      {
+       "bars": 70855,
+       "first_ts": 1609714800,
+       "gz_bytes": 1070719,
+       "last_ts": 1640987700,
+       "path": "XAUUSD/5m/2021.bin.gz",
+       "sha256": "64e07d2010eba2dfc7892c4e8c14b0fb9170508cc19c34a0107497a823bc8d2a",
+       "tag": "2021"
+      },
+      {
+       "bars": 70881,
+       "first_ts": 1641164400,
+       "gz_bytes": 1097997,
+       "last_ts": 1672437300,
+       "path": "XAUUSD/5m/2022.bin.gz",
+       "sha256": "acff41bc7cb6d5a95894507f095df0881a9403cf58c006c2343f492558404294",
+       "tag": "2022"
+      },
+      {
+       "bars": 70684,
+       "first_ts": 1672700400,
+       "gz_bytes": 1044307,
+       "last_ts": 1703886900,
+       "path": "XAUUSD/5m/2023.bin.gz",
+       "sha256": "fb9ff879231cdc416e78e5577e70c2a9e3f911f3ed8c973e12d7804dfed7eed6",
+       "tag": "2023"
+      },
+      {
+       "bars": 71208,
+       "first_ts": 1704150000,
+       "gz_bytes": 1063324,
+       "last_ts": 1735682100,
+       "path": "XAUUSD/5m/2024.bin.gz",
+       "sha256": "908e44142ab21eed45bcf0aad7cb3afc7b81dfe1b09082fb6adaac54183134ec",
+       "tag": "2024"
+      },
+      {
+       "bars": 70922,
+       "first_ts": 1735772400,
+       "gz_bytes": 1114670,
+       "last_ts": 1767218100,
+       "path": "XAUUSD/5m/2025.bin.gz",
+       "sha256": "0e12b25166b828cfe3ab1bc3671e991d105ae583f9eaf81a2f8b3265d8569ae4",
+       "tag": "2025"
+      },
+      {
+       "bars": 57104,
+       "first_ts": 1767308400,
+       "gz_bytes": 933812,
+       "last_ts": 1792590600,
+       "path": "XAUUSD/5m/2026.bin.gz",
+       "sha256": "6a89b7cf04973759cf5bdc8394c90c62d85b767e4f9475ab3c66e7cc9c732c42",
+       "tag": "2026"
+      }
+     ],
+     "first_ts": 1319155200,
+     "gz_bytes": 16236330,
+     "last_ts": 1792590600,
+     "scale": 3
+    }
+   }
+  }
+ },
+ "years": 15
+}

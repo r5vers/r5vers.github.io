@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="tr" data-theme="dark" class="doc-scroll">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Profil seç · RV</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="page-profiles">
+  <main class="profiles" id="profiles">
+    <div class="brand-solo" id="brand-tile" aria-label="RV"></div>
+    <h1 id="title">Kim çalışıyor?</h1>
+    <p class="lead" id="lead">Her profilin kendi replay oturumları, backtestleri, çizimleri ve görünümü var. Piyasa verisi herkes için ortak.</p>
+    <div class="stage"><div class="profile-grid" id="grid"></div></div>
+    <div class="profile-actions">
+      <button class="btn outline" id="manage" type="button">Profilleri yönet</button>
+      <button class="btn outline" id="gate-bg" type="button" style="display: none">Arka plan</button>
+    </div>
+  </main>
+  <div id="modal-root"></div>
+  <div id="toasts" aria-live="polite"></div>
+  <script type="module" src="js/profiles.js"></script>
+</body>
+</html>
