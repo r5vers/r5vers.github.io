@@ -1,50 +1,49 @@
-// Keeping a profile the same on every device: what changes here goes to the
-// cloud within seconds, what changed elsewhere comes back when the profile
-// is opened and every half minute while a page is open.
+// Everything but candles lives in the cloud: profiles (name, colour, PIN,
+// photo), every kv key (look, themes, chart layout, drawings...), replay
+// sessions and backtests, strategies. A device joins the group once with
+// its password; from then on what changes on one device reaches the others
+// within seconds, and a device opening the site gets the latest.
 //
-// Synced, per profile: the card (name, color, avatar, photo), every kv key
-// (look, drawings, editor, home layout...), replay sessions and backtests,
-// strategies. Candles are not: each device downloads its own packs; a
-// session carries `dataset_key` ("pack:EURUSD:1m") and finds the device's
-// copy of its data by it.
+// The group is one Firebase account (cloud.js); its items:
+//   { kind: 'profile' | 'kv' | 'session' | 'strategy', gid, key, value, deleted, updated_at, sv }
+// `gid` names a profile on every device (local ids differ per device). Of two
+// copies of an item the later `updated_at` (ms) wins.
 //
-// Each change gets a stamp (ms); of two copies the later stamp wins.
+// Candles stay per device: a session carries `dataset_key` ("pack:EURUSD:1m")
+// and finds the device's own copy of that data.
 import { Cloud } from './cloud.js';
 
+export const GROUP = 'RV Grup';
 const FLUSH_DELAY = 1500;
 const BIG = 200_000;            // values above this many characters are gzipped
 const MAX_DOC = 900_000;        // Firestore keeps up to 1 MiB per document
 
-const ik = (pid, kind, key) => `${pid}|${kind}|${key}`;
+const ok = (gid, kind, key) => `${gid}|${kind}|${key}`;
 
-// ── which profile is linked, its signed-in cloud client ───────────────────
-const clients = new Map();       // uid -> Cloud
 let fetchImpl = null;
-export function useFetch(fn) { fetchImpl = fn; clients.clear(); }
+let client = null;
+export function useFetch(fn) { fetchImpl = fn; client = null; }
+const newCloud = (session = null) => new Cloud({ session, ...(fetchImpl ? { fetchFn: fetchImpl } : {}) });
 
-export function cloudFor(link) {
-  if (!link?.session) return null;
-  let c = clients.get(link.uid);
-  if (!c) {
-    c = new Cloud({ session: link.session, ...(fetchImpl ? { fetchFn: fetchImpl } : {}) });
-    clients.set(link.uid, c);
-  }
-  return c;
+async function group(db) { return db.get('meta', 'group'); }
+async function cloudOf(db) {
+  const g = await group(db);
+  if (!g?.session) return null;
+  if (!client || client.session?.uid !== g.uid) client = newCloud(g.session);
+  return client;
 }
-export function newCloud() { return new Cloud(fetchImpl ? { fetchFn: fetchImpl } : {}); }
+async function saveGroup(db, patch) {
+  const g = await group(db);
+  if (!g) return;
+  await db.put('meta', 'group', { ...g, ...patch, ...(client?.session ? { session: client.session } : {}) });
+}
 
-async function profile(db, pid) { return db.get('profiles', String(pid)); }
-
-async function saveLink(db, pid, patch) {
-  const p = await profile(db, pid);
-  if (!p?.cloud) return;
-  const c = clients.get(p.cloud.uid);
-  p.cloud = { ...p.cloud, ...patch, ...(c?.session ? { session: c.session } : {}) };
-  await db.put('profiles', String(pid), p);
+export function newGid() {
+  return [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 // ── values ────────────────────────────────────────────────────────────────
-async function pack(value) {
+export async function pack(value) {
   const text = JSON.stringify(value);
   if (text.length <= BIG || typeof CompressionStream === 'undefined') return text;
   const gz = await new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
@@ -75,198 +74,219 @@ export async function datasetByKey(db, key) {
   return all.find((d) => d.symbol === a && d.base_tf === b && d.name === rest.join(':')) || null;
 }
 
+// ── profiles: local id <-> gid ────────────────────────────────────────────
+async function profiles(db) { return (await db.all('profiles')).map(([, p]) => p); }
+async function byGid(db, gid) { return (await profiles(db)).find((p) => p.gid === gid) || null; }
+
 // ── local changes ─────────────────────────────────────────────────────────
-const timers = new Map();
+let timer = null;
 
-/** A synced thing of profile `pid` changed on this device. */
-export async function touch(db, pid, kind, key) {
-  const p = await profile(db, pid);
-  if (!p?.cloud) return;
+/** A synced thing of local profile `pid` changed on this device. Call it
+ *  before a profile is deleted (its gid is still known then). */
+export async function touch(db, pid, kind, key = '') {
+  const p = await db.get('profiles', String(pid));
+  if (!p?.gid) return;
   const t = Date.now();
-  await db.put('stamps', ik(pid, kind, key), t);
-  await db.put('outbox', ik(pid, kind, key), t);
-  clearTimeout(timers.get(pid));
-  const h = setTimeout(() => { timers.delete(pid); flush(db, pid).catch(() => {}); }, FLUSH_DELAY);
-  h?.unref?.();                          // (Node, in tests: do not hold the process)
-  timers.set(pid, h);
+  await db.put('stamps', ok(p.gid, kind, key), t);
+  await db.put('outbox', ok(p.gid, kind, key), t);
+  if (!(await group(db))) return;
+  clearTimeout(timer);
+  timer = setTimeout(() => { timer = null; flush(db).catch(() => {}); }, FLUSH_DELAY);
+  timer?.unref?.();                      // (Node, in tests: do not hold the process)
 }
 
-/** Everything of a profile as changed now (linking it to the cloud). */
-export async function touchAll(db, pid) {
+/** Everything on this device as changed now (joining a group). */
+export async function touchAll(db) {
   const t = Date.now();
-  const mark = async (kind, key) => { await db.put('stamps', ik(pid, kind, key), t); await db.put('outbox', ik(pid, kind, key), t); };
-  await mark('card', 'card');
-  for (const [k] of await db.all('kv', `${pid}:`)) await mark('kv', k.slice(String(pid).length + 1));
-  for (const [, s] of await db.all('sessions')) if (s.profile_id === pid) await mark('session', s.id);
-  for (const [, s] of await db.all('strategies', `${pid}:`)) await mark('strategy', s.name);
-}
-
-async function cardOf(db, p) {
-  const photo = await db.get('photos', String(p.id));
-  // photos are 320 px JPEGs (tens of KB); a card must stay under 1 MiB
-  return { name: p.name, color: p.color, avatar: p.avatar || '', photo: photo && photo.length < 600_000 ? photo : null };
+  const mark = async (gid, kind, key) => { await db.put('stamps', ok(gid, kind, key), t); await db.put('outbox', ok(gid, kind, key), t); };
+  for (const p of await profiles(db)) {
+    if (!p.gid) { p.gid = newGid(); await db.put('profiles', String(p.id), p); }
+    await mark(p.gid, 'profile', '');
+    for (const [k] of await db.all('kv', `${p.id}:`)) await mark(p.gid, 'kv', k.slice(String(p.id).length + 1));
+    for (const [, s] of await db.all('sessions')) if (s.profile_id === p.id) await mark(p.gid, 'session', s.id);
+    for (const [, s] of await db.all('strategies', `${p.id}:`)) await mark(p.gid, 'strategy', s.name);
+  }
 }
 
 /** The current local copy of one thing, as an item (or a deletion). */
-async function itemOf(db, pid, kind, key, stamp) {
+async function itemOf(db, gid, kind, key, stamp) {
+  const p = await byGid(db, gid);
   let value;
-  if (kind === 'kv') value = await db.get('kv', `${pid}:${key}`);
-  else if (kind === 'session') {
+  if (p && kind === 'profile') {
+    const photo = await db.get('photos', String(p.id));
+    value = { name: p.name, color: p.color, avatar: p.avatar || '', pin: p.pin || null, photo: photo && photo.length < 600_000 ? photo : null, created_at: p.created_at };
+  } else if (p && kind === 'kv') value = await db.get('kv', `${p.id}:${key}`);
+  else if (p && kind === 'session') {
     const s = await db.get('sessions', key);
-    if (s && s.profile_id === pid) {
+    if (s && s.profile_id === p.id) {
       const { profile_id, ...rest } = s;
       value = { ...rest, dataset_key: rest.dataset_key || (await datasetKey(db, s.dataset_id)) };
     }
-  } else if (kind === 'strategy') value = await db.get('strategies', `${pid}:${key}`);
-  if (value === undefined) return { kind, key, value: '', deleted: true, updated_at: stamp };
-  return { kind, key, value: await pack(value), deleted: false, updated_at: stamp };
+  } else if (p && kind === 'strategy') value = await db.get('strategies', `${p.id}:${key}`);
+  if (value === undefined) return { kind, gid, key, value: '', deleted: true, updated_at: stamp };
+  return { kind, gid, key, value: await pack(value), deleted: false, updated_at: stamp };
 }
 
-/** Send what changed here. */
-export async function flush(db, pid) {
-  const p = await profile(db, pid);
-  const cloud = cloudFor(p?.cloud);
+/** Send what changed on this device. */
+export async function flush(db) {
+  const cloud = await cloudOf(db);
   if (!cloud) return 0;
-  const pending = await db.all('outbox', `${pid}|`);
+  const pending = await db.all('outbox');
   if (!pending.length) return 0;
-  const items = [];
-  const tooBig = [];
-  let card = null;
+  const items = [], tooBig = [];
   for (const [k, stamp] of pending) {
-    const [, kind, ...rest] = k.split('|');
-    const key = rest.join('|');
-    if (kind === 'card') { card = { ...(await cardOf(db, p)), updated_at: stamp }; continue; }
-    const it = await itemOf(db, pid, kind, key, stamp);
-    if (it.value.length > MAX_DOC) { tooBig.push(key); continue; }
+    const [gid, kind, ...rest] = k.split('|');
+    const it = await itemOf(db, gid, kind, rest.join('|'), stamp);
+    if (it.value.length > MAX_DOC) { tooBig.push(it.key || kind); continue; }
     items.push(it);
   }
-  if (card) await cloud.putProfile(card);
   if (items.length) await cloud.putItems(items);
   // sent: off the list, unless it changed again meanwhile
   for (const [k, stamp] of pending) if ((await db.get('outbox', k)) === stamp) await db.del('outbox', k);
-  await saveLink(db, pid, { error: tooBig.length ? `buluta sığmadı: ${tooBig.join(', ')}` : null });
-  return items.length + (card ? 1 : 0);
+  await saveGroup(db, { error: tooBig.length ? `buluta sığmadı: ${tooBig.join(', ')}` : null });
+  return items.length;
 }
 
 // ── changes from the cloud ────────────────────────────────────────────────
-async function apply(db, pid, it) {
-  const sk = ik(pid, it.kind, it.key);
+async function dropProfile(db, p) {
+  for (const [k, s] of await db.all('sessions')) if (s.profile_id === p.id) await db.del('sessions', k);
+  await db.delPrefix('strategies', `${p.id}:`);
+  await db.delPrefix('kv', `${p.id}:`);
+  await db.del('photos', String(p.id));
+  await db.del('profiles', String(p.id));
+  if ((await db.get('meta', 'current_profile')) === p.id) await db.del('meta', 'current_profile');
+}
+
+async function apply(db, it) {
+  const sk = ok(it.gid, it.kind, it.key);
   const mine = await db.get('stamps', sk);
   if (mine != null && mine >= it.updated_at) return false;           // ours is newer
   const value = it.deleted ? undefined : await unpack(it.value);
-  if (it.kind === 'kv') {
-    if (value === undefined) await db.del('kv', `${pid}:${it.key}`);
-    else await db.put('kv', `${pid}:${it.key}`, value);
-  } else if (it.kind === 'session') {
-    if (value === undefined) await db.del('sessions', it.key);
+  let p = await byGid(db, it.gid);
+  if (it.kind === 'profile') {
+    if (value === undefined) { if (p) await dropProfile(db, p); }
     else {
-      // this device's copy of the session's data, or none yet (null until downloaded)
-      const ds = await datasetByKey(db, value.dataset_key);
-      await db.put('sessions', it.key, { ...value, dataset_id: ds ? ds.id : null, profile_id: pid });
+      const t = Math.floor(Date.now() / 1000);
+      p = { ...(p || { id: await db.nextId('profile'), gid: it.gid, created_at: value.created_at || t }),
+        name: value.name, color: value.color, avatar: value.avatar || '', pin: value.pin || null, updated_at: t };
+      await db.put('profiles', String(p.id), p);
+      if (value.photo) await db.put('photos', String(p.id), value.photo);
+      else await db.del('photos', String(p.id));
     }
-  } else if (it.kind === 'strategy') {
-    if (value === undefined) await db.del('strategies', `${pid}:${it.key}`);
-    else await db.put('strategies', `${pid}:${it.key}`, value);
-  } else return false;
+  } else {
+    if (!p) return false;                // its profile is gone (or not here yet)
+    if (it.kind === 'kv') {
+      if (value === undefined) await db.del('kv', `${p.id}:${it.key}`);
+      else await db.put('kv', `${p.id}:${it.key}`, value);
+    } else if (it.kind === 'session') {
+      if (value === undefined) await db.del('sessions', it.key);
+      else {
+        // this device's copy of the session's data, or none yet (until downloaded)
+        const ds = await datasetByKey(db, value.dataset_key);
+        await db.put('sessions', it.key, { ...value, dataset_id: ds ? ds.id : null, profile_id: p.id });
+      }
+    } else if (it.kind === 'strategy') {
+      if (value === undefined) await db.del('strategies', `${p.id}:${it.key}`);
+      else await db.put('strategies', `${p.id}:${it.key}`, value);
+    } else return false;
+  }
   await db.put('stamps', sk, it.updated_at);
   await db.del('outbox', sk);
   return true;
 }
 
-async function applyCard(db, pid, card) {
-  if (!card) return false;
-  const sk = ik(pid, 'card', 'card');
-  const mine = await db.get('stamps', sk);
-  if (mine != null && mine >= (card.updated_at || 0)) return false;
-  const p = await profile(db, pid);
-  p.name = card.name || p.name;
-  p.color = card.color || p.color;
-  p.avatar = card.avatar ?? p.avatar;
-  p.updated_at = Math.floor(Date.now() / 1000);
-  await db.put('profiles', String(pid), p);
-  if (card.photo) await db.put('photos', String(pid), card.photo);
-  else await db.del('photos', String(pid));
-  await db.put('stamps', sk, card.updated_at || 0);
-  return true;
-}
-
-/** Bring what changed elsewhere. Returns what was updated: [{ kind, key }]. */
-export async function pull(db, pid, { full = false } = {}) {
-  const p = await profile(db, pid);
-  const cloud = cloudFor(p?.cloud);
+/** Bring what changed elsewhere. Returns what was updated: [{ kind, key, gid }]. */
+export async function pull(db, { full = false } = {}) {
+  const cloud = await cloudOf(db);
   if (!cloud) return [];
-  const items = await cloud.itemsSince(full ? null : p.cloud.cursor);
+  const g = await group(db);
+  const items = await cloud.itemsSince(full ? null : g.cursor);
+  // profiles first: the rest of a batch may belong to a profile new here
+  items.sort((a, b) => (a.kind === 'profile' ? 0 : 1) - (b.kind === 'profile' ? 0 : 1));
   const changed = [];
-  let cursor = full ? null : p.cloud.cursor;
+  let cursor = full ? null : g.cursor;
   for (const it of items) {
-    if (await apply(db, pid, it)) changed.push({ kind: it.kind, key: it.key });
+    if (await apply(db, it)) changed.push({ kind: it.kind, key: it.key, gid: it.gid });
     if (!cursor || it.sv > cursor) cursor = it.sv;
   }
-  if (await applyCard(db, pid, await cloud.getProfile(p.cloud.uid))) changed.push({ kind: 'card', key: 'card' });
-  await saveLink(db, pid, { cursor, last_sync: Date.now(), error: null });
+  await saveGroup(db, { cursor, last_sync: Date.now(), error: null });
   return changed;
 }
 
-const running = new Map();
-/** Send, then bring; one at a time per profile. */
-export function sync(db, pid, opts) {
-  if (running.has(pid)) return running.get(pid);
-  const job = (async () => {
+let running = null;
+/** Send, then bring; one at a time. */
+export function sync(db, opts) {
+  if (running) return running;
+  running = (async () => {
     try {
-      await flush(db, pid);
-      const changed = await pull(db, pid, opts);
-      // pages that are open hear about it (boot.js passes it on)
-      if (changed.length) globalThis.dispatchEvent?.(new CustomEvent('rv-synced', { detail: { pid, changed } }));
+      await flush(db);
+      const changed = await pull(db, opts);
+      // pages that are open hear about it
+      if (changed.length) globalThis.dispatchEvent?.(new CustomEvent('rv-synced', { detail: { changed } }));
       return changed;
     } catch (e) {
-      await saveLink(db, pid, { error: e.message }).catch(() => {});
+      await saveGroup(db, { error: e.message }).catch(() => {});
       throw e;
-    } finally { running.delete(pid); }
+    } finally { running = null; }
   })();
-  running.set(pid, job);
-  return job;
+  return running;
 }
 
-// ── linking ───────────────────────────────────────────────────────────────
-/** Put a local profile in the cloud under its name and `password`. */
-export async function link(db, pid, password) {
-  const p = await profile(db, pid);
-  if (p.cloud) throw Object.assign(new Error('bu profil zaten bulutta'), { status: 409 });
+// ── joining the group ─────────────────────────────────────────────────────
+/** Join the group with its password (or set it up: `create`). What this
+ *  device already has goes up, then everything comes down. */
+export async function connect(db, password, { create = false } = {}) {
   const cloud = newCloud();
-  const session = await cloud.signUp(p.name, password);
-  clients.set(session.uid, cloud);
-  p.cloud = { uid: session.uid, name: p.name, session, cursor: null, last_sync: null, error: null };
-  await db.put('profiles', String(pid), p);
-  await touchAll(db, pid);
-  await flush(db, pid);
-  return p.cloud;
+  if (create) await cloud.signUp(GROUP, password);
+  else await cloud.signIn(GROUP, password);
+  client = cloud;
+  await db.put('meta', 'group', { uid: cloud.session.uid, session: cloud.session, cursor: null, last_sync: null, error: null });
+  await touchAll(db);
+  return sync(db, { full: true });
 }
 
-/** Sign in to a cloud profile; returns its uid and session (for a profile
- *  record that link() did not make: the first time on a device). */
-export async function signIn(name, password) {
+export async function disconnect(db) {
+  client = null;
+  await db.del('meta', 'group');
+  await db.delPrefix('outbox', '');
+}
+
+export async function status(db) {
+  const g = await group(db);
+  const pending = (await db.all('outbox')).length;
+  if (!g) return { enabled: newCloud().enabled, linked: false, pending };
+  return { enabled: true, linked: true, last_sync: g.last_sync || null, error: g.error || null, pending };
+}
+
+// ── the move from the server site (Railway) ───────────────────────────────
+/** Items for everything in a server export (GET /api/export, Python
+ *  Store.export_profiles); a profile's gid comes from its server id, so a
+ *  second move writes the same documents again. */
+export async function exportItems(exp, now = Date.now()) {
+  const items = [];
+  const add = async (kind, gid, key, value) => items.push({ kind, gid, key, value: await pack(value), deleted: false, updated_at: now });
+  for (const p of exp.profiles) {
+    const gid = `srv${p.id}`;
+    await add('profile', gid, '', { name: p.name, color: p.color, avatar: p.avatar || '', pin: p.pin || null, photo: p.photo || null, created_at: p.created_at });
+    for (const [k, v] of Object.entries(p.kv || {})) await add('kv', gid, k, v);
+    for (const s of p.sessions || []) await add('session', gid, s.id, { ...s, dataset_id: null });
+    for (const s of p.strategies || []) await add('strategy', gid, s.name, s);
+  }
+  return items;
+}
+
+/** Put a server export into the group's cloud (the server site's button). */
+export async function pushExport(exp, password) {
   const cloud = newCloud();
-  const session = await cloud.signIn(name, password);
-  clients.set(session.uid, cloud);
-  return { uid: session.uid, session, card: await cloud.getProfile(session.uid) };
-}
-
-export async function unlink(db, pid) {
-  const p = await profile(db, pid);
-  if (!p?.cloud) return;
-  clients.delete(p.cloud.uid);
-  delete p.cloud;
-  await db.put('profiles', String(pid), p);
-  await db.delPrefix('outbox', `${pid}|`);
-}
-
-export async function cloudProfiles() { return newCloud().listProfiles(); }
-
-/** What the page shows about a profile's link. */
-export async function status(db, pid) {
-  const p = pid != null ? await profile(db, pid) : null;
-  const pending = pid != null ? (await db.all('outbox', `${pid}|`)).length : 0;
-  if (!p?.cloud) return { enabled: newCloud().enabled, linked: false, pending: 0 };
-  const { uid, name, last_sync, error } = p.cloud;
-  return { enabled: true, linked: true, uid, name, last_sync, error: error || null, pending };
+  try { await cloud.signIn(GROUP, password); } catch (e) {
+    // no group yet: this sets it up with this password
+    if (e.status !== 403) throw e;
+    try { await cloud.signUp(GROUP, password); } catch (e2) {
+      if (/kullanılıyor/.test(e2.message)) throw Object.assign(new Error('grup şifresi yanlış'), { status: 403 });
+      throw e2;
+    }
+  }
+  const items = (await exportItems(exp)).filter((it) => it.value.length <= MAX_DOC);
+  await cloud.putItems(items);
+  return { profiles: exp.profiles.length, items: items.length };
 }

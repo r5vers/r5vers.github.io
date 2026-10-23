@@ -1,16 +1,14 @@
-// Cloud profiles on Firebase (project in firebase-config.js), over its REST
-// API: Auth for name + password, Firestore for the data.
+// The group's cloud on Firebase (project in firebase-config.js), over its
+// REST API: Auth for the group's name + password, Firestore for the data.
 //
-//   profiles/{uid}            the profile card everyone sees: name, color,
-//                             avatar, photo, updated_at
-//   users/{uid}/items/{id}    the profile's own things, one document each:
-//                             { kind, key, value, deleted, updated_at, sv }
+//   users/{uid}/items/{id}    one document per synced thing (sync.js):
+//                             { kind, gid, key, value, deleted, updated_at, sv }
 //                             `sv` is the server's write time: a device asks
 //                             for everything after the last `sv` it saw, so
 //                             a wrong clock on some phone loses nothing.
 //
-// The Firestore rules (see README) let anyone read the cards and only the
-// signed-in owner read or write users/{uid}.
+// The Firestore rules (see README) let only the signed-in owner read or
+// write users/{uid}.
 import { FIREBASE_CONFIG } from './firebase-config.js';
 
 const AUTH = 'https://identitytoolkit.googleapis.com/v1/accounts';
@@ -141,39 +139,24 @@ export class Cloud {
     return d;
   }
 
-  // ── profile cards (public) ──────────────────────────────────────────────
-  async listProfiles() {
-    const out = [];
-    let pageToken = '';
-    do {
-      const d = await this._fs('GET', `/profiles?pageSize=100${pageToken ? `&pageToken=${pageToken}` : ''}`, undefined, { auth: false });
-      for (const doc of d?.documents || []) out.push({ uid: doc.name.split('/').pop(), ...fromFields(doc.fields) });
-      pageToken = d?.nextPageToken || '';
-    } while (pageToken);
-    return out;
-  }
-
-  async getProfile(uid) {
-    const d = await this._fs('GET', `/profiles/${uid}`, undefined, { auth: false });
-    return d ? { uid, ...fromFields(d.fields) } : null;
-  }
-
-  async putProfile(card) {
-    await this._fs('PATCH', `/profiles/${this.session.uid}`, { fields: toFields(card) });
-  }
-
-  // ── the profile's own items ─────────────────────────────────────────────
-  /** Write items in one commit; each gets the server's time as `sv`. */
+  // ── the group's items ───────────────────────────────────────────────────
+  /** Write items, a few commits as needed (Firestore takes 500 writes and
+   *  10 MB per request); each gets the server's time as `sv`. */
   async putItems(items) {
     const uid = this.session.uid;
     const root = `projects/${this.cfg.projectId}/databases/(default)/documents`;
-    for (let i = 0; i < items.length; i += 400) {
-      const writes = items.slice(i, i + 400).map((it) => ({
-        update: { name: `${root}/users/${uid}/items/${itemId(it.kind, it.key)}`, fields: toFields(it) },
+    let batch = [], bytes = 0;
+    const send = async () => { if (batch.length) await this._fs('POST', ':commit', { writes: batch }); batch = []; bytes = 0; };
+    for (const it of items) {
+      const size = (it.value?.length || 0) + 300;
+      if (batch.length >= 400 || bytes + size > 8_000_000) await send();
+      batch.push({
+        update: { name: `${root}/users/${uid}/items/${itemId(it.kind, `${it.gid ?? ''}|${it.key}`)}`, fields: toFields(it) },
         updateTransforms: [{ fieldPath: 'sv', setToServerValue: 'REQUEST_TIME' }],
-      }));
-      await this._fs('POST', ':commit', { writes });
+      });
+      bytes += size;
     }
+    await send();
   }
 
   /** Items written at or after `since` (an RFC 3339 server time), oldest
@@ -204,9 +187,7 @@ export class Cloud {
   }
 
   async deleteAccount() {
-    const idToken = await this.token();
-    await this._fs('DELETE', `/profiles/${this.session.uid}`);
-    await this._auth('delete', { idToken });
+    await this._auth('delete', { idToken: await this.token() });
     this.session = null;
   }
 }

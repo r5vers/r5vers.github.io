@@ -100,13 +100,11 @@ export const api = {
   leaveProfile: () => request('POST', '/profiles/leave'),
   setPhoto: (id, blob, pin) => request('PUT', `/profiles/${id}/photo`, { body: blob, raw: true, params: { pin } }),
   deletePhoto: (id, pin) => request('DELETE', `/profiles/${id}/photo`, { params: { pin } }),
-  // cloud profiles (only without a server: js/local/sync.js)
+  // the group's cloud (only without a server: js/local/sync.js)
   cloudStatus: () => request('GET', '/cloud/status'),
-  cloudProfiles: () => request('GET', '/cloud/profiles'),
-  cloudLink: (password) => request('POST', '/cloud/link', { body: { password } }),
-  cloudLogin: (name, password) => request('POST', '/cloud/login', { body: { name, password } }),
+  cloudConnect: (password, create = false) => request('POST', '/cloud/connect', { body: { password, create } }),
   cloudSync: () => request('POST', '/cloud/sync'),
-  cloudUnlink: () => request('POST', '/cloud/unlink'),
+  cloudDisconnect: () => request('POST', '/cloud/disconnect'),
   strategies: () => request('GET', '/strategies'),
   saveStrategy: (name, code) => request('PUT', `/strategies/${encodeURIComponent(name)}`, { body: { code } }),
   deleteStrategy: (name) => request('DELETE', `/strategies/${encodeURIComponent(name)}`),

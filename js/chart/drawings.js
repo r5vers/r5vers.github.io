@@ -5,13 +5,19 @@
 // The manager owns the mouse on the chart: other things that want to grab it
 // (trade lines, "pick a price" mode) register as interceptors and get first go.
 
-const POINTS = { trend: 2, ray: 2, rect: 2, fib: 2, measure: 2, hline: 1, hray: 1, vline: 1, text: 1, long: 1, short: 1 };
-const COLORS = { trend: '#2962ff', ray: '#2962ff', hline: '#f5a623', hray: '#f5a623', vline: '#9598a1', rect: '#9c27b0', fib: '#9598a1', measure: '#2962ff', text: '#d1d4dc', long: '#26a69a', short: '#ef5350' };
+// how many clicks a tool takes; the pen takes a stroke instead (0)
+const POINTS = { trend: 2, ray: 2, arrow: 2, rect: 2, ellipse: 2, fib: 2, measure: 2, triangle: 3, channel: 3, hline: 1, hray: 1, vline: 1, text: 1, long: 1, short: 1, pen: 0 };
+const COLORS = { trend: '#2962ff', ray: '#2962ff', arrow: '#2962ff', hline: '#f5a623', hray: '#f5a623', vline: '#9598a1', rect: '#9c27b0', ellipse: '#ff9f0a', triangle: '#30d158', channel: '#2962ff', fib: '#9598a1', measure: '#2962ff', text: '#d1d4dc', long: '#26a69a', short: '#ef5350', pen: '#f5a623' };
+/** The zones of a long / short position, unless the drawing has its own. */
+export const POSITION_COLORS = { profit: '#26a69a', loss: '#ef5350' };
+/** Tools that fill an area (and so have a fill setting). */
+export const FILLED = ['rect', 'ellipse', 'triangle', 'channel', 'fib', 'long', 'short'];
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.705, 0.786, 1];
 export const TOOL_NAMES = {
   cursor: 'İmleç', trend: 'Trend çizgisi', ray: 'Işın', hline: 'Yatay çizgi', hray: 'Yatay ışın',
   vline: 'Dikey çizgi', rect: 'Dikdörtgen (bölge)', fib: 'Fibonacci düzeltmesi', long: 'Long pozisyon',
-  short: 'Short pozisyon', measure: 'Ölçüm', text: 'Metin',
+  short: 'Short pozisyon', measure: 'Ölçüm', text: 'Metin', arrow: 'Ok', ellipse: 'Elips', triangle: 'Üçgen',
+  channel: 'Paralel kanal', pen: 'Kalem',
 };
 export function fibLevels(d) {
   return (d.levels || FIB_LEVELS.map(value => ({ value, visible: true }))).filter(l => l.visible !== false && Number.isFinite(l.value));
@@ -33,6 +39,44 @@ function distToSegment(px, py, ax, ay, bx, by) {
   let t = len2 ? ((px - ax) * dx + (py - ay) * dy) / len2 : 0;
   t = Math.max(0, Math.min(1, t));
   return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+function pointInPoly(x, y, pts) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[i], b = pts[j];
+    if ((a.y > y) !== (b.y > y) && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+  }
+  return inside;
+}
+const nearPath = (x, y, pts, tol, closed = false) => pts.some((p, i) => {
+  const q = pts[i + 1] || (closed ? pts[0] : null);
+  return q && distToSegment(x, y, p.x, p.y, q.x, q.y) <= tol;
+});
+
+/** Fewer points along a freehand stroke, the shape kept within `eps` px. */
+export function simplify(pts, eps) {
+  if (pts.length < 3) return pts.map((_, i) => i);
+  const keep = new Uint8Array(pts.length);
+  keep[0] = keep[pts.length - 1] = 1;
+  const stack = [[0, pts.length - 1]];
+  while (stack.length) {
+    const [a, b] = stack.pop();
+    let far = -1, best = eps;
+    for (let i = a + 1; i < b; i++) {
+      const d = distToSegment(pts[i].x, pts[i].y, pts[a].x, pts[a].y, pts[b].x, pts[b].y);
+      if (d > best) { best = d; far = i; }
+    }
+    if (far > 0) { keep[far] = 1; stack.push([a, far], [far, b]); }
+  }
+  return [...keep.keys()].filter((i) => keep[i]);
+}
+
+/** Black or white, whichever reads on `hex`. */
+function inkOn(hex) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || '');
+  if (!m) return '#fff';
+  return (0.299 * parseInt(m[1], 16) + 0.587 * parseInt(m[2], 16) + 0.114 * parseInt(m[3], 16)) / 255 > 0.62 ? '#111318' : '#fff';
 }
 
 function rgba(hex, a) {
@@ -158,7 +202,7 @@ export class DrawingManager {
 
   _px(p) { return { x: this.tc.xOf(p.time), y: this.tc.yOf(p.price) }; }
 
-  _pointAt(x, y, snap = true) {
+  _pointAt(x, y, snap = true, fine = false) {
     const l = this.tc.logicalAt(x);
     let price = this.tc.priceAt(y);
     if (l == null || price == null) return null;
@@ -173,11 +217,15 @@ export class DrawingManager {
         if (best) price = best.v;
       }
     }
-    return { time: this.tc.logicalToTime(l), price, logical: l };
+    // the pen keeps where in a bar a point is (a time inside it), lines snap to bars
+    const i = Math.floor(l);
+    const time = fine ? this.tc.logicalToTime(i) + (l - i) * this.tc.tfSeconds : this.tc.logicalToTime(l);
+    return { time, price, logical: l };
   }
 
   _handles(d) {
     const P = d.points.map((p) => this._px(p));
+    if (d.type === 'pen') return [];
     if (d.type === 'long' || d.type === 'short') {
       const x0 = P[0].x, x1 = this.tc.xOf(d.points[1].time);
       return [
@@ -209,7 +257,15 @@ export class DrawingManager {
     if (P.some((p) => p.x == null || p.y == null)) return false;
     const W = this.tc.paneWidth();
     switch (d.type) {
-      case 'trend': return distToSegment(x, y, P[0].x, P[0].y, P[1].x, P[1].y) <= TOL;
+      case 'trend': case 'arrow': return distToSegment(x, y, P[0].x, P[0].y, P[1].x, P[1].y) <= TOL;
+      case 'ellipse': {
+        const cx = (P[0].x + P[1].x) / 2, cy = (P[0].y + P[1].y) / 2;
+        const rx = Math.abs(P[1].x - P[0].x) / 2 + TOL, ry = Math.abs(P[1].y - P[0].y) / 2 + TOL;
+        return ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
+      }
+      case 'triangle': return pointInPoly(x, y, P) || nearPath(x, y, P, TOL, true);
+      case 'channel': { const Q = this._channel(P); return pointInPoly(x, y, Q) || nearPath(x, y, Q, TOL, true); }
+      case 'pen': return nearPath(x, y, P, TOL + (d.width ?? 2) / 2);
       case 'ray': {
         const [a, b] = this._rayEnd(P[0], P[1], W);
         return distToSegment(x, y, a.x, a.y, b.x, b.y) <= TOL;
@@ -248,6 +304,14 @@ export class DrawingManager {
     return [a, { x: a.x + dx * Math.max(tEdge, 1), y: a.y + dy * Math.max(tEdge, 1) }];
   }
 
+  /** The four corners of a parallel channel: the line p0-p1 and its copy through p2. */
+  _channel(P) {
+    const [a, b, c] = P;
+    const dx = b.x - a.x;
+    const off = c.y - (Math.abs(dx) < 1e-6 ? a.y : a.y + ((b.y - a.y) * (c.x - a.x)) / dx);
+    return [a, b, { x: b.x, y: b.y + off }, { x: a.x, y: a.y + off }];
+  }
+
   _fibPrice(d, level) {
     const [p0, p1] = d.points;
     return p1.price + (p0.price - p1.price) * level;
@@ -279,9 +343,11 @@ export class DrawingManager {
 
     if (this.creating) {
       this._take(e);
+      const c = this.creating;
+      if (c.pen) { this._finishCreate(); return; }
       const pt = this._pointAt(x, y);
-      if (pt) this._setPoint(this.creating.d, 1, pt);
-      this._finishCreate();
+      if (pt) this._setPoint(c.d, c.i, pt);
+      if (!this._nextPoint(x, y)) this._finishCreate();
       return;
     }
 
@@ -316,8 +382,15 @@ export class DrawingManager {
     const { x, y } = this._xy(e);
     if (this.drag?.external) { this.drag.external.move?.(x, y, e); return; }
     if (this.creating) {
+      const c = this.creating;
+      if (c.pen) {
+        if (Math.hypot(x - c.lx, y - c.ly) < 2) return;
+        const pt = this._pointAt(x, y, false, true);
+        if (pt) { c.d.points.push({ time: pt.time, price: pt.price }); c.px.push({ x, y }); c.lx = x; c.ly = y; this.redraw(); }
+        return;
+      }
       const pt = this._pointAt(x, y);
-      if (pt) { this._setPoint(this.creating.d, 1, pt); this.redraw(); }
+      if (pt) { this._setPoint(c.d, c.i, pt); this.redraw(); }
       return;
     }
     if (this.drag) {
@@ -348,7 +421,10 @@ export class DrawingManager {
     }
     if (this.creating) {
       const { x, y } = this._xy(e);
-      if (Math.hypot(x - this.creating.x, y - this.creating.y) > 5) this._finishCreate();
+      const c = this.creating;
+      if (c.pen) { if (c.d.points.length > 1) this._finishCreate(); else this._cancelCreate(); return; }
+      // dragged out: that point is placed; a third one still follows the mouse
+      if (Math.hypot(x - c.x, y - c.y) > 5 && !this._nextPoint(x, y)) this._finishCreate();
       return;
     }
     if (this.drag) {
@@ -382,7 +458,14 @@ export class DrawingManager {
       ? [1, 3, 5].reduce((s, i, k) => s + [0.299, 0.587, 0.114][k] * parseInt(look.chartColor.slice(i, i + 2), 16), 0) / 255 > 0.55
       : this.tc.theme === 'light';
     const own = type === 'text' ? (lightBg ? '#1d1f24' : '#eef0f4') : COLORS[type];
-    const d = { id: this._newId(), type, color: own, width: 1.5, ...(this.defaults?.(type) || {}), points: [{ time: pt.time, price: pt.price }] };
+    const d = { id: this._newId(), type, color: own, width: type === 'pen' ? 2 : 1.5, ...(this.defaults?.(type) || {}), points: [{ time: pt.time, price: pt.price }] };
+    if (type === 'pen') {
+      const fine = this._pointAt(x, y, false, true);
+      d.points = [{ time: fine.time, price: fine.price }];
+      this.drawings.push(d);
+      this.creating = { d, x, y, pen: true, lx: x, ly: y, px: [{ x, y }] };
+      return;
+    }
     if (POINTS[type] === 1) {
       if (type === 'text') {
         this.setTool('cursor');
@@ -408,8 +491,19 @@ export class DrawingManager {
     }
     d.points.push({ time: pt.time, price: pt.price });
     this.drawings.push(d);
-    this.creating = { d, x, y };
+    this.creating = { d, x, y, i: 1 };
     this.redraw();
+  }
+
+  /** A tool with a point still to place moves on to it; false when done. */
+  _nextPoint(x, y) {
+    const c = this.creating;
+    if (c.i + 1 >= POINTS[c.d.type]) return false;
+    c.i += 1;
+    c.d.points.push({ ...c.d.points[c.i - 1] });
+    c.x = x; c.y = y;
+    this.redraw();
+    return true;
   }
 
   _setPoint(d, i, pt) {
@@ -417,8 +511,16 @@ export class DrawingManager {
   }
 
   _finishCreate() {
-    const { d } = this.creating;
+    const { d, pen, px } = this.creating;
     this.creating = null;
+    if (pen) {
+      // the stroke as drawn, with the points that add nothing dropped; the pen
+      // stays in hand for the next stroke
+      d.points = simplify(px, 0.75).map((i) => d.points[i]);
+      this.select(d.id);
+      this._changed();
+      return;
+    }
     this.setTool('cursor');
     this.select(d.id);
     this._changed();
@@ -438,7 +540,10 @@ export class DrawingManager {
 
   _shift(p, dl, dp) {
     const l = this.tc.timeToLogical(p.time);
-    return { time: this.tc.logicalToTime(l + dl), price: p.price + dp };
+    // whole bars, so a point inside a bar (the pen's) stays as far into it
+    const bar = Math.floor(Math.round(l * 1e6) / 1e6);
+    const into = p.time - this.tc.logicalToTime(bar);
+    return { time: this.tc.logicalToTime(bar + dl) + (Number.isFinite(into) ? into : 0), price: p.price + dp };
   }
 
   _dragTo(x, y, shift) {
@@ -499,15 +604,21 @@ export class DrawingManager {
   }
 
   _label(ctx, text, x, y, { color = '#d1d4dc', bg = 'rgba(19,23,34,0.85)', align = 'left', base = 'middle' } = {}) {
-    ctx.font = '11px -apple-system, Segoe UI, Roboto, sans-serif';
-    const w = ctx.measureText(text).width + 8;
-    let lx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
-    const ly = base === 'bottom' ? y - 16 : base === 'top' ? y : y - 8;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+    ctx.font = '500 11px -apple-system, "Segoe UI", Roboto, sans-serif';
+    const w = ctx.measureText(text).width + 12, H = 18;
+    const lx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+    const ly = base === 'bottom' ? y - H : base === 'top' ? y : y - H / 2;
     ctx.fillStyle = bg;
-    ctx.fillRect(lx, ly, w, 16);
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(lx, ly, w, H, 5); else ctx.rect(lx, ly, w, H);
+    ctx.fill();
     ctx.fillStyle = color;
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, lx + 4, ly + 8);
+    ctx.fillText(text, lx + 6, ly + H / 2 + 0.5);
+    ctx.restore();
   }
 
   _render(ctx, d, W, H) {
@@ -525,6 +636,60 @@ export class DrawingManager {
 
     switch (d.type) {
       case 'trend': line(P[0], P[1]); break;
+      case 'arrow': {
+        line(P[0], P[1]);
+        const ang = Math.atan2(P[1].y - P[0].y, P[1].x - P[0].x), len = 9 + (d.width ?? 1.5) * 2.2;
+        ctx.setLineDash([]);
+        ctx.fillStyle = rgba(color, drawingOpacity(d.lineOpacity));
+        ctx.beginPath();
+        ctx.moveTo(P[1].x, P[1].y);
+        ctx.lineTo(P[1].x - len * Math.cos(ang - 0.42), P[1].y - len * Math.sin(ang - 0.42));
+        ctx.lineTo(P[1].x - len * Math.cos(ang + 0.42), P[1].y - len * Math.sin(ang + 0.42));
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+      case 'ellipse': {
+        ctx.beginPath();
+        ctx.ellipse((P[0].x + P[1].x) / 2, (P[0].y + P[1].y) / 2, Math.abs(P[1].x - P[0].x) / 2, Math.abs(P[1].y - P[0].y) / 2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = rgba(color, drawingOpacity(d.fill, 18));
+        ctx.fill();
+        if ((d.width ?? 1.5) > 0) ctx.stroke();
+        break;
+      }
+      case 'triangle': case 'channel': {
+        const Q = d.type === 'channel' ? this._channel(P) : P;
+        ctx.beginPath();
+        Q.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+        ctx.closePath();
+        ctx.fillStyle = rgba(color, drawingOpacity(d.fill, d.type === 'channel' ? 10 : 18));
+        ctx.fill();
+        if (d.type === 'triangle') { if ((d.width ?? 1.5) > 0) ctx.stroke(); break; }
+        line(Q[0], Q[1]);
+        line(Q[3], Q[2]);
+        if (d.mid !== false) {
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = rgba(color, 0.55 * drawingOpacity(d.lineOpacity));
+          line({ x: (Q[0].x + Q[3].x) / 2, y: (Q[0].y + Q[3].y) / 2 }, { x: (Q[1].x + Q[2].x) / 2, y: (Q[1].y + Q[2].y) / 2 });
+        }
+        break;
+      }
+      case 'pen': {
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(P[0].x, P[0].y);
+        // through the midpoints, so the stroke reads as one smooth line
+        for (let i = 1; i < P.length - 1; i++) ctx.quadraticCurveTo(P[i].x, P[i].y, (P[i].x + P[i + 1].x) / 2, (P[i].y + P[i + 1].y) / 2);
+        ctx.lineTo(P[P.length - 1].x, P[P.length - 1].y);
+        ctx.stroke();
+        if (sel) {
+          ctx.setLineDash([3, 3]); ctx.lineWidth = 1; ctx.strokeStyle = rgba(color, 0.5);
+          const xs = P.map((p) => p.x), ys = P.map((p) => p.y), pad = 5 + (d.width ?? 2) / 2;
+          ctx.strokeRect(Math.min(...xs) - pad, Math.min(...ys) - pad, Math.max(...xs) - Math.min(...xs) + pad * 2, Math.max(...ys) - Math.min(...ys) + pad * 2);
+        }
+        break;
+      }
       case 'ray': { const [a, b] = this._rayEnd(P[0], P[1], W); line(a, b); break; }
       case 'hline':
         line({ x: 0, y: P[0].y }, { x: W, y: P[0].y });
@@ -589,19 +754,33 @@ export class DrawingManager {
         const x0 = P[0].x, x1 = this.tc.xOf(d.points[1].time);
         const yE = P[0].y, yT = this.tc.yOf(d.target), yS = this.tc.yOf(d.stop);
         const l = Math.min(x0, x1), w = Math.abs(x1 - x0);
-        ctx.fillStyle = 'rgba(38,166,154,0.22)';
-        ctx.fillRect(l, Math.min(yE, yT), w, Math.abs(yT - yE));
-        ctx.fillStyle = 'rgba(239,83,80,0.22)';
-        ctx.fillRect(l, Math.min(yE, yS), w, Math.abs(yS - yE));
-        ctx.strokeStyle = '#787b86';
+        const pc = d.profitColor || POSITION_COLORS.profit, lc = d.lossColor || POSITION_COLORS.loss;
+        const zone = drawingOpacity(d.fill, 22);
+        ctx.setLineDash([]);
+        for (const [y, c] of [[yT, pc], [yS, lc]]) {
+          ctx.fillStyle = rgba(c, zone);
+          ctx.fillRect(l, Math.min(yE, y), w, Math.abs(y - yE));
+          if (d.border !== false) {
+            ctx.strokeStyle = rgba(c, Math.min(1, zone * 2.6));
+            ctx.lineWidth = 1;
+            ctx.strokeRect(l + 0.5, Math.min(yE, y) + 0.5, w - 1, Math.abs(y - yE) - 1);
+          }
+        }
+        ctx.strokeStyle = d.lineColor || '#9598a1';
+        ctx.lineWidth = d.width ?? 1.5;
+        ctx.setLineDash(d.dash === 'dot' ? [1.5, 4] : d.dash ? [6, 4] : []);
         line({ x: l, y: yE }, { x: l + w, y: yE });
         const entry = d.points[0].price;
         const reward = Math.abs(d.target - entry), risk = Math.abs(entry - d.stop);
         const rr = risk > 0 ? (reward / risk).toFixed(2) : '—';
-        const cx = l + w / 2;
-        this._label(ctx, `Hedef ${fmt.price(d.target)} · ${fmt.pips(reward)} pip · ${fmt.pct(reward / entry)}`, cx, yT + (yT < yE ? -3 : 3), { align: 'center', base: yT < yE ? 'bottom' : 'top', bg: '#089981', color: '#fff' });
-        this._label(ctx, `Stop ${fmt.price(d.stop)} · ${fmt.pips(risk)} pip · ${fmt.pct(risk / entry)}`, cx, yS + (yS < yE ? -3 : 3), { align: 'center', base: yS < yE ? 'bottom' : 'top', bg: '#f23645', color: '#fff' });
-        this._label(ctx, `${d.type === 'long' ? 'LONG' : 'SHORT'} ${fmt.price(entry)} · R:R ${rr}`, cx, yE, { align: 'center', bg: 'rgba(42,46,57,0.95)' });
+        const cx = l + w / 2, mode = d.posLabels || 'full';
+        if (mode === 'none' && !sel) break;
+        const short = mode === 'compact';
+        const tText = short ? `TP ${fmt.pips(reward)} pip` : `Hedef ${fmt.price(d.target)} · ${fmt.pips(reward)} pip · ${fmt.pct(reward / entry)}`;
+        const sText = short ? `SL ${fmt.pips(risk)} pip` : `Stop ${fmt.price(d.stop)} · ${fmt.pips(risk)} pip · ${fmt.pct(risk / entry)}`;
+        this._label(ctx, tText, cx, yT + (yT < yE ? -3 : 3), { align: 'center', base: yT < yE ? 'bottom' : 'top', bg: pc, color: inkOn(pc) });
+        this._label(ctx, sText, cx, yS + (yS < yE ? -3 : 3), { align: 'center', base: yS < yE ? 'bottom' : 'top', bg: lc, color: inkOn(lc) });
+        this._label(ctx, short ? `R:R ${rr}` : `${d.type === 'long' ? 'LONG' : 'SHORT'} ${fmt.price(entry)} · R:R ${rr}`, cx, yE, { align: 'center', bg: 'rgba(30,33,42,0.94)', color: '#eef0f4' });
         break;
       }
       case 'text': {

@@ -1,6 +1,9 @@
 // Profile screen: pick who is trading, add / edit / lock profiles.
 import { api } from './api.js';
 import { LOCAL } from './local/boot.js';
+import { pushExport } from './local/sync.js';
+
+const NEW_SITE = 'https://r5vers.github.io';
 import { AVATAR_PATTERNS, avatar as avatarEl, brandMark, confirmBox, field, h, icon, modal, toast } from './ui/dom.js';
 import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance } from './ui/look.js';
 
@@ -23,7 +26,7 @@ async function squarePhoto(file, size = 320) {
 }
 
 let state = { profiles: [], current: null, max: 8 };
-let cloud = { cards: null, error: null };         // profiles in the cloud (no-server mode)
+let cloud = null;                                 // the group's cloud on this device (no-server mode)
 let managing = false;
 
 // The background of this screen (and the password page) is chosen per
@@ -57,15 +60,17 @@ function paint() {
 }
 
 async function load() {
+  if (LOCAL) {
+    // the latest from the other devices before the list is drawn (briefly:
+    // offline the device's own copy shows)
+    try { cloud = await api.cloudStatus(); } catch { cloud = null; }
+    if (cloud?.linked) {
+      try { cloud = await Promise.race([api.cloudSync(), new Promise((r) => setTimeout(() => r(cloud), 6000))]); } catch (err) { cloud = { ...cloud, error: err.message }; }
+    }
+  }
   state = await api.profiles();
   render();
-  if (LOCAL) loadCloud();
-  if (!state.profiles.length && !LOCAL) editDialog(null);
-}
-
-async function loadCloud() {
-  try { cloud = { cards: (await api.cloudProfiles()).profiles, error: null }; } catch (err) { cloud = { cards: null, error: err.message }; }
-  renderCloud();
+  if (!state.profiles.length && (!LOCAL || cloud?.linked)) editDialog(null);
 }
 
 function render() {
@@ -81,8 +86,7 @@ function render() {
   document.getElementById('gate-bg').style.display = managing ? '' : 'none';
   const tiles = state.profiles.map((p) => h(`button.profile-tile${managing ? '.managing' : ''}`, {
     type: 'button', 'aria-label': managing ? `${p.name} profilini düzenle` : `${p.name} olarak gir`, onclick: () => (managing ? editDialog(p) : choose(p)),
-  }, avatarEl(p), h('span.profile-name', {}, p.name, p.cloud ? h('span.cloud-mark', { title: 'Bulutta: diğer cihazlarla eşit' }, icon('cloud', 14)) : null),
-  managing ? h('span.edit-badge', {}, icon('edit', 18)) : null));
+  }, avatarEl(p), h('span.profile-name', {}, p.name), managing ? h('span.edit-badge', {}, icon('edit', 18)) : null));
   if (state.profiles.length < state.max) {
     tiles.push(h('button.profile-tile.add', { type: 'button', onclick: () => editDialog(null) },
       h('span.avatar.lg.plus', {}, icon('plus', 34)), h('span.profile-name', {}, 'Profil ekle')));
@@ -92,83 +96,104 @@ function render() {
   renderCloud();
 }
 
-/** Cloud profiles: bring one to this device with its name and password;
- *  friends' profiles that are not here yet are listed to pick from. */
+/** The cloud on the profile screen. Without a server: join the group once
+ *  per device (then every profile, look and session is the same on all of
+ *  them). On the server site: move everything to the new site. */
 function renderCloud() {
-  if (!LOCAL) return;
   let zone = document.getElementById('cloud-zone');
   if (!zone) {
     zone = h('section.cloud-zone', { id: 'cloud-zone' });
     document.querySelector('.profile-actions').before(zone);
   }
-  const elsewhere = (cloud.cards || []).filter((c) => c.local_id == null);
-  zone.replaceChildren(...[
-    h('div.cloud-head', {},
-      h('span.cloud-title', {}, icon('cloud', 16), 'Bulut'),
-      h('button.btn.small', { type: 'button', onclick: () => cloudLoginDialog() }, icon('download', 14), 'Buluttan profil indir')),
-    h('p.muted.cloud-lead', {}, state.profiles.length || elsewhere.length
-      ? 'Başka cihazda kullandığın profili adı ve şifresiyle buraya indir; sonra iki cihaz da hep aynı kalır.'
-      : 'İlk kez mi? Yeni profil oluştur, ya da başka cihazdaki profilini adı ve şifresiyle indir.'),
-    cloud.error ? h('p.muted.cloud-lead', {}, `Buluta ulaşılamadı: ${cloud.error}`) : null,
-    elsewhere.length ? h('div.friend-row', {}, elsewhere.map((c) => h('button.friend', {
-      type: 'button', title: `${c.name}: buraya indir`, onclick: () => cloudLoginDialog(c.name),
-    }, avatarEl({ ...c, locked: false }, 'md'), h('span', {}, c.name)))) : null,
-  ].filter(Boolean));
+  if (!LOCAL) {
+    zone.replaceChildren(
+      h('div.cloud-head', {}, h('span.cloud-title', {}, icon('cloud', 16), 'Yeni site'),
+        h('button.btn.small', { type: 'button', onclick: moveDialog }, icon('cloud', 14), 'Yeni siteye taşı')),
+      h('p.muted.cloud-lead', {}, 'Bütün profilleri, temaları, çizimleri, replay oturumlarını ve stratejileri buluta aktarır; ', h('b', {}, NEW_SITE.replace('https://', '')), ' her cihazda aynısını açar.'));
+    return;
+  }
+  if (cloud?.linked) {
+    const when = cloud.last_sync ? new Date(cloud.last_sync).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' }) : 'henüz';
+    zone.replaceChildren(...[
+      h('div.cloud-head', {}, h('span.cloud-title', {}, icon('cloud', 16), 'Bulut bağlı'),
+        h('span.muted.cloud-when', {}, cloud.error ? `Eşitlenemedi: ${cloud.error}` : `son eşitleme ${when}`)),
+    ]);
+    zone.classList.add('slim');
+    return;
+  }
+  zone.classList.remove('slim');
+  const pass = h('input.ctl', { type: 'password', placeholder: 'Grup şifresi', autocomplete: 'current-password' });
+  const join = async (create) => {
+    if (create && !(await confirmBox('Grubu kur', 'Bu şifreyle yeni bir bulut grubu kurulur; bu cihazdaki profiller oraya yüklenir. Railway sitesinden “Yeni siteye taşı” yaptıysan kurma, sadece “Bağlan”.', 'Kur'))) return;
+    try {
+      await api.cloudConnect(pass.value, create);
+      toast('Bulut bağlı: profiller ve ayarlar bu cihazda', 'ok', 5000);
+      await load();
+    } catch (err) { toast(err.message, 'err', 6000); pass.select(); }
+  };
+  pass.addEventListener('keydown', (e) => { if (e.key === 'Enter') join(false); });
+  zone.replaceChildren(
+    h('div.cloud-head', {}, h('span.cloud-title', {}, icon('cloud', 16), 'Buluta bağlan')),
+    h('p.muted.cloud-lead', {}, 'Bu cihazda bir kez grup şifresini gir: bütün profiller, temalar, grafik düzenleri, replay oturumları ve stratejiler gelir ve her cihazda aynı kalır. Mum verisi her cihaza ayrıca iner.'),
+    h('div.cloud-link', {}, pass, h('button.btn.small.primary', { type: 'button', onclick: () => join(false) }, 'Bağlan')),
+    h('div.cloud-links', {},
+      h('button.link-btn', { type: 'button', onclick: rescueDialog }, 'Eski siteden (Railway) taşı'),
+      h('button.link-btn', { type: 'button', onclick: () => join(true) }, 'İlk kez mi? Bu şifreyle grubu kur')));
 }
 
-function cloudLoginDialog(name = '') {
-  const nameIn = h('input.ctl', { value: name, maxlength: 24, placeholder: 'Profil adı', autocomplete: 'username' });
-  const pass = h('input.ctl', { type: 'password', placeholder: 'Şifre', autocomplete: 'current-password' });
-  const dlg = modal({
-    title: 'Buluttan profil indir',
+/** The old server site cannot be updated: its own page runs the move
+ *  (js/migrate.js) when this line is pasted into its browser console. */
+function rescueDialog() {
+  const line = `import('${location.origin}/js/migrate.js')`;
+  const copy = h('button.btn.small', { type: 'button', onclick: async () => {
+    try { await navigator.clipboard.writeText(line); toast('Kopyalandı', 'ok'); } catch { toast('Kopyalanamadı: satırı elle seç', 'err'); }
+  } }, 'Kopyala');
+  const step = (n, ...kids) => h('li', {}, h('b', {}, `${n}. `), ...kids);
+  modal({
+    title: 'Eski siteden taşı',
+    body: h('div.rescue', {},
+      h('p.muted', { style: { margin: 0 } }, 'Railway\'deki profiller, PIN\'ler, temalar, grafik düzenleri, çizimler, replay oturumları ve stratejiler buluta aktarılır. En kolayı bilgisayarda Chrome ya da Edge ile:'),
+      h('ol', {},
+        step(1, 'Eski siteyi (Railway adresi) aç ve şifreyle giriş yap.'),
+        step(2, h('kbd', {}, 'F12'), ' tuşuna bas → üstte ', h('b', {}, 'Console'), ' sekmesi.'),
+        step(3, 'Şu satırı yapıştır ve Enter\'a bas:', h('div.rescue-line', {}, h('code', {}, line), copy),
+          h('span.muted', {}, 'Chrome yapıştırmaya izin vermezse önce ', h('code', {}, 'allow pasting'), ' yaz, Enter, sonra tekrar yapıştır.')),
+        step(4, 'Açılan pencerede grup şifresini belirle (kilitli profiller için PIN sorulur). Bitince her cihazda bu siteyi açıp o şifreyle “Bağlan”.'))),
+    actions: [{ label: 'Tamam', kind: 'primary' }],
+  });
+}
+
+/** Server site: everything goes to the group's cloud, for the new site. */
+function moveDialog() {
+  const pass = h('input.ctl', { type: 'password', placeholder: 'Grup şifresi (en az 6 karakter)', autocomplete: 'new-password' });
+  const again = h('input.ctl', { type: 'password', placeholder: 'Şifre tekrar', autocomplete: 'new-password' });
+  modal({
+    title: 'Yeni siteye taşı',
     body: h('div.profile-form', {},
-      field('Profil adı', nameIn),
-      field('Şifre', pass, 'Profili buluta yüklerken belirlediğin şifre'),
-      h('p.muted', { style: { margin: 0, fontSize: '12px' } }, 'Ayarlar, temalar, çizimler, replay oturumları ve stratejiler gelir. Mum verisi her cihaza ayrıca iner (Veri sekmesi).')),
+      h('p.muted', { style: { margin: 0 } }, 'Bu sitedeki her şey (profiller ve PIN\'leri, fotoğraflar, temalar, grafik düzenleri, çizimler, replay oturumları, test geçmişi, stratejiler) buluta aktarılır. Bu site olduğu gibi kalır.'),
+      field('Grup şifresi', pass, 'Yeni sitede her cihazda bir kez bu şifreyle bağlanacaksın'),
+      field('Şifre tekrar', again),
+      h('p.muted', { style: { margin: 0, fontSize: '12px' } }, 'İkinci kez taşırsan buluttaki kopyanın üstüne bu sitedeki hali yazılır.')),
     actions: [
       { label: 'Vazgeç' },
-      { label: 'İndir ve gir', kind: 'primary', onClick: async () => {
+      { label: 'Taşı', kind: 'primary', onClick: async () => {
+        if (pass.value.length < 6) { toast('Şifre en az 6 karakter olmalı', 'err'); return false; }
+        if (pass.value !== again.value) { toast('Şifreler aynı değil', 'err'); return false; }
         try {
-          const res = await api.cloudLogin(nameIn.value, pass.value);
-          toast(`${res.profile.name} bu cihazda`, 'ok');
-          window.location.replace('/home.html');
-        } catch (err) { toast(err.message, 'err'); pass.select(); return false; }
+          const exp = await (await fetch('/api/export')).json();
+          const res = await pushExport(exp, pass.value);
+          modal({
+            title: 'Taşındı',
+            body: h('div', {}, h('p', {}, `${res.profiles} profil ve ${res.items} kayıt bulutta.`),
+              h('p', {}, 'Şimdi her cihazda ', h('a', { href: NEW_SITE, target: '_blank', rel: 'noopener' }, NEW_SITE.replace('https://', '')), ' adresini aç ve bu şifreyle “Bağlan”.')),
+            actions: [{ label: 'Tamam', kind: 'primary' }],
+          });
+        } catch (err) { toast(`Taşınamadı: ${err.message}`, 'err', 8000); return false; }
         return true;
       } },
     ],
   });
-  (name ? pass : nameIn).focus();
-  pass.addEventListener('keydown', (e) => { if (e.key === 'Enter') dlg.el.querySelector('footer .primary')?.click(); });
-}
-
-/** The cloud row of the edit dialog: link this profile, or see its link. */
-function cloudField(p) {
-  if (!LOCAL || !p) return null;
-  if (p.cloud) {
-    const when = p.cloud.last_sync ? new Date(p.cloud.last_sync).toLocaleString('tr-TR') : 'henüz';
-    return field('Bulut', h('div.cloud-linked', {},
-      h('span', {}, icon('cloud', 15), ` Bulutta · giriş adı “${p.cloud.name}” · son eşitleme: ${when}`),
-      state.current === p.id ? h('button.btn.small.outline', { type: 'button', onclick: async () => {
-        if (!(await confirmBox('Buluttan ayır', 'Bu cihazdaki profil buluttan ayrılır ve artık eşitlenmez. Buluttaki kopya ve diğer cihazlar etkilenmez.', 'Ayır'))) return;
-        await api.cloudUnlink();
-        toast('Buluttan ayrıldı', 'ok');
-        await load();
-      } }, 'Ayır') : null));
-  }
-  if (state.current !== p.id) return field('Bulut', h('span.muted', {}, 'Buluta yüklemek için önce bu profille gir.'));
-  const pass = h('input.ctl', { type: 'password', placeholder: 'Şifre belirle (en az 6 karakter)', autocomplete: 'new-password' });
-  const go = h('button.btn.small.primary', { type: 'button', onclick: async () => {
-    go.disabled = true;
-    try {
-      const st = await api.cloudLink(pass.value);
-      toast('Profil bulutta: diğer cihazlarda adı ve bu şifreyle aç', 'ok', 6000);
-      // the dialog shows the link at once; the list behind it too
-      row.replaceWith(cloudField({ ...p, cloud: { name: st.name, last_sync: st.last_sync || Date.now() } }));
-      await load();
-    } catch (err) { toast(err.message, 'err', 6000); } finally { go.disabled = false; }
-  } }, icon('cloud', 14), 'Buluta yükle');
-  const row = field('Bulut', h('div.cloud-link', {}, pass, go), `Diğer cihazlarda “Buluttan profil indir” → “${p.name}” + bu şifre. Her şey eşit kalır.`);
-  return row;
+  pass.focus();
 }
 
 function pinInput(placeholder = 'PIN') {
@@ -280,8 +305,7 @@ function editDialog(p) {
       field('Desen', patterns),
       h('div.row2', {}, field(p?.locked ? 'PIN değiştir' : 'PIN kilidi', pin, 'Başkaları bu profile giremesin (4-8 rakam)'),
         p?.locked ? h('label.check', { style: { alignSelf: 'center' } }, clear, 'PIN kilidini kaldır') : h('span')),
-      needsCurrent ? field('Bu profil kilitli: değişiklik için mevcut PIN', current) : null,
-      cloudField(p)),
+      needsCurrent ? field('Bu profil kilitli: değişiklik için mevcut PIN', current) : null),
     actions,
   });
 }

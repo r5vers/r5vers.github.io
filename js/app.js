@@ -5,7 +5,7 @@ import { Broker } from './core/broker.js';
 import { computeStats } from './core/stats.js';
 import { bucket, parseTf } from './core/timeframes.js';
 import { TradingChart } from './chart/chart.js';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, drawingStylePatch } from './chart/drawings.js';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js';
 import { configureICT } from './chart/sessions.js';
 import { INDICATORS } from './chart/indicators.js';
 import { TradeLines } from './chart/tradelines.js';
@@ -48,8 +48,13 @@ const DEFAULT_SETTINGS = {
   bottomTab: 'data',
 };
 
-const TOOLS = ['cursor', 'trend', 'ray', 'hline', 'hray', 'vline', 'rect', 'fib', 'long', 'short', 'measure', 'text'];
-const TOOL_KEYS = { t: 'trend', h: 'hline', j: 'hray', v: 'vline', r: 'rect', f: 'fib', l: 'long', s: 'short', m: 'measure', x: 'text' };
+const TOOLS = ['cursor', 'trend', 'ray', 'arrow', 'hline', 'hray', 'vline', 'channel', 'rect', 'ellipse', 'triangle', 'fib', 'pen', 'long', 'short', 'measure', 'text'];
+const TOOL_KEYS = { t: 'trend', h: 'hline', j: 'hray', v: 'vline', r: 'rect', f: 'fib', l: 'long', s: 'short', m: 'measure', x: 'text', b: 'pen', a: 'arrow', e: 'ellipse', c: 'channel' };
+// the toolbar: one button per group, the rest of a group a click on its corner away
+const TOOL_GROUPS = [['cursor'], 0, ['trend', 'ray', 'arrow', 'hline', 'hray', 'vline', 'channel'], ['rect', 'ellipse', 'triangle'], ['fib'], ['pen'], 0, ['long'], ['short'], ['measure'], ['text']];
+const TOOL_ICON = { arrow: 'arrowline', pen: 'brush' };
+const toolIcon = (t, size) => icon(TOOL_ICON[t] || t, size);
+const toolKey = (t) => { const k = Object.entries(TOOL_KEYS).find(([, v]) => v === t)?.[0]; return k ? `Alt+${['rect', 'long'].includes(t) ? 'Shift+' : ''}${k.toUpperCase()}` : ''; };
 const TABS = [
   ['data', 'Veri'], ['positions', 'Pozisyonlar'], ['orders', 'Emirler'], ['history', 'Geçmiş'],
   ['stats', 'İstatistik'], ['strategy', 'Strateji testi'],
@@ -1183,14 +1188,11 @@ class App {
     const el = $('#drawing-props');
     if (!d) { el.classList.add('hidden'); return; }
     el.classList.remove('hidden');
-    el.style.left = '50%';
-    el.style.top = '8px';
-    el.style.transform = 'translateX(-50%)';
     // every change also becomes this tool's default for the next drawing
     const set = (patch) => {
       patch = drawingStylePatch(d, patch);
       this.drawings.update(d.id, patch);
-      const keep = Object.fromEntries(Object.entries(patch).filter(([k]) => ['color', 'width', 'dash', 'fill', 'size', 'bold', 'bg', 'opacity', 'lineOpacity', 'textOpacity', 'levels'].includes(k)));
+      const keep = Object.fromEntries(Object.entries(patch).filter(([k]) => ['color', 'width', 'dash', 'fill', 'size', 'bold', 'bg', 'opacity', 'lineOpacity', 'textOpacity', 'levels', 'profitColor', 'lossColor', 'posLabels', 'border', 'lineColor', 'mid'].includes(k)));
       if (Object.keys(keep).length) {
         this.settings.drawDefaults = { ...(this.settings.drawDefaults || {}), [d.type]: { ...(this.settings.drawDefaults?.[d.type] || {}), ...keep } };
         this.saveSettings();
@@ -1206,17 +1208,27 @@ class App {
     const dash = d.dash === 'dot' ? 'dot' : d.dash ? 'dash' : 'solid';
     const styleSeg = h('div.dp-seg', { title: 'Çizgi stili' }, [['solid', '—', 'Düz'], ['dash', '‒ ‒', 'Kesikli'], ['dot', '···', 'Noktalı']].map(([v, l, t]) =>
       h(`button${dash === v ? '.on' : ''}`, { type: 'button', title: t, onclick: () => set({ dash: v === 'solid' ? false : v === 'dot' ? 'dot' : true }) }, l)));
-    const fill = h('select.ctl.sm', { title: 'Dolgu', onchange: (e) => set({ fill: Number(e.target.value) }) }, [...new Set([0, 7, 8, 18, 30, 50, 75, 100, d.fill ?? 18])].sort((a,b)=>a-b).map((v) => h('option', { value: v }, v ? `dolgu %${v}` : 'dolgusuz')));
-    fill.value = d.fill ?? (d.type === 'fib' ? 7 : 18);
+    const position = d.type === 'long' || d.type === 'short';
+    const fillOf = (x) => x.fill ?? (x.type === 'fib' ? 7 : x.type === 'channel' ? 10 : x.type === 'long' || x.type === 'short' ? 22 : 18);
+    const fill = h('select.ctl.sm', { title: position ? 'Bölge opaklığı' : 'Dolgu', onchange: (e) => set({ fill: Number(e.target.value) }) }, [...new Set([0, 7, 10, 18, 22, 30, 50, 75, 100, fillOf(d)])].sort((a,b)=>a-b).map((v) => h('option', { value: v }, v ? `${position ? 'bölge' : 'dolgu'} %${v}` : (position ? 'bölgesiz' : 'dolgusuz'))));
+    fill.value = fillOf(d);
+    // a position: its own colours for the profit and the loss side, and how much it says
+    const swatch = (key, label, fallback) => h('label.dp-zone', { title: `${label} rengi` }, h('i', { style: { background: d[key] || fallback } }), label,
+      h('input', { type: 'color', value: d[key] || fallback, 'aria-label': `${label} rengi`, oninput: (e) => this.drawings.update(d.id, { [key]: e.target.value }), onchange: (e) => set({ [key]: e.target.value }) }));
+    const posLabels = h('select.ctl.sm', { title: 'Etiketler', onchange: (e) => set({ posLabels: e.target.value }) }, [['full', 'tam etiket'], ['compact', 'kısa etiket'], ['none', 'etiketsiz']].map(([v, l]) => h('option', { value: v }, l)));
+    posLabels.value = d.posLabels || 'full';
     const size = h('select.ctl.sm', { title: 'Yazı boyutu', onchange: (e) => set({ size: Number(e.target.value) }) }, [11, 13, 16, 20, 28].map((v) => h('option', { value: v }, `${v}px`)));
     size.value = d.size || 13;
     const text = d.type === 'text';
     el.replaceChildren(...[
-      h('button.btn.small', { title: 'Ayrıntılı çizim ayarları', onclick: () => this.drawingSettings(d) }, TOOL_NAMES[d.type] + ' ⚙'),
+      h('button.btn.small.dp-name', { title: 'Ayrıntılı çizim ayarları', onclick: () => this.drawingSettings(d) }, toolIcon(d.type, 15), TOOL_NAMES[d.type], icon('sliders', 13)),
       ['long', 'short', 'measure'].includes(d.type) ? null : colorRow,
+      position ? swatch('profitColor', 'TP', POSITION_COLORS.profit) : null,
+      position ? swatch('lossColor', 'SL', POSITION_COLORS.loss) : null,
       ['long', 'short', 'text'].includes(d.type) ? null : width,
-      ['trend', 'ray', 'hline', 'hray', 'vline', 'rect', 'fib'].includes(d.type) ? styleSeg : null,
-      ['rect', 'fib'].includes(d.type) ? fill : null,
+      ['trend', 'ray', 'arrow', 'hline', 'hray', 'vline', 'rect', 'ellipse', 'triangle', 'channel', 'fib', 'pen'].includes(d.type) ? styleSeg : null,
+      FILLED.includes(d.type) ? fill : null,
+      position ? posLabels : null,
       text ? size : null,
       text ? h(`button.btn.small${d.bold ? '.active' : ''}`, { title: 'Kalın', onclick: () => set({ bold: !d.bold }), style: { fontWeight: '800' } }, 'B') : null,
       text ? h(`button.btn.small${d.bg ? '.active' : ''}`, { title: 'Arka plan (açık zeminde okunur)', onclick: () => set({ bg: !d.bg }) }, 'Zemin') : null,
@@ -1249,8 +1261,20 @@ class App {
     } });
     const check = (key, value) => h('input', { type: 'checkbox', checked: value, onchange: e => { draft[key] = e.target.checked; } });
     let repaintLevels = () => {};
-    field(d.type === 'fib' ? 'Tüm seviyelerin rengi' : 'Çizgi rengi', h('input', { type: 'color', value: draft.color || '#2962ff', oninput: e => { Object.assign(draft, drawingStylePatch(draft, { color: e.target.value })); repaintLevels(); } }));
-    field('Kalınlık (px)', number('width', draft.width ?? 1.5, d.type === 'rect' ? 0 : 0.5, 12, 0.5));
+    const position = d.type === 'long' || d.type === 'short';
+    const color = (key, fallback) => h('input', { type: 'color', value: draft[key] || fallback, oninput: e => { draft[key] = e.target.value; } });
+    if (position) {
+      field('Kâr bölgesi (TP) rengi', color('profitColor', POSITION_COLORS.profit));
+      field('Zarar bölgesi (SL) rengi', color('lossColor', POSITION_COLORS.loss));
+      field('Giriş çizgisi rengi', color('lineColor', '#9598a1'));
+      field('Bölge kenarlığı', check('border', draft.border !== false));
+      const labels = h('select.ctl', { onchange: e => { draft.posLabels = e.target.value; } }, [['full', 'Tam (fiyat, pip, %)'], ['compact', 'Kısa (pip, R:R)'], ['none', 'Gizli (seçince görünür)']].map(([v, l]) => h('option', { value: v }, l)));
+      labels.value = draft.posLabels || 'full';
+      field('Etiketler', labels);
+    } else {
+      field(d.type === 'fib' ? 'Tüm seviyelerin rengi' : 'Çizgi rengi', h('input', { type: 'color', value: draft.color || '#2962ff', oninput: e => { Object.assign(draft, drawingStylePatch(draft, { color: e.target.value })); repaintLevels(); } }));
+    }
+    field(position ? 'Giriş çizgisi kalınlığı (px)' : 'Kalınlık (px)', number('width', draft.width ?? 1.5, ['rect', 'ellipse', 'triangle'].includes(d.type) ? 0 : 0.5, 12, 0.5));
     const opacityField = (label, key, fallback=100) => {
       const input = h('input', { type:'range', min:0, max:100, step:1, value:draft[key] ?? fallback, 'aria-label':label });
       const value = h('output', {}, `${input.value}%`);
@@ -1258,9 +1282,10 @@ class App {
       field(label, h('span.drawing-opacity', {}, input, value));
     };
     opacityField('Genel opaklık', 'opacity');
-    opacityField(d.type === 'rect' ? 'Kutu kenarlığı opaklığı' : 'Çizgi opaklığı', 'lineOpacity');
+    if (!position) opacityField(['rect', 'ellipse', 'triangle'].includes(d.type) ? 'Kenarlık opaklığı' : 'Çizgi opaklığı', 'lineOpacity');
     if (['fib', 'text'].includes(d.type)) opacityField('Yazı opaklığı', 'textOpacity');
-    if (['fib', 'rect'].includes(d.type)) opacityField(d.type === 'fib' ? 'Fibonacci kutusu / dolgu opaklığı' : 'Kutu dolgu opaklığı', 'fill', d.type === 'fib' ? 7 : 18);
+    if (FILLED.includes(d.type)) opacityField(d.type === 'fib' ? 'Fibonacci kutusu / dolgu opaklığı' : position ? 'Bölge opaklığı' : 'Dolgu opaklığı', 'fill', d.type === 'fib' ? 7 : d.type === 'channel' ? 10 : position ? 22 : 18);
+    if (d.type === 'channel') field('Orta çizgi', check('mid', draft.mid !== false));
     const styles = [['', 'Düz'], ['dash', 'Kesikli'], ['dot', 'Noktalı']];
     const styleInput = (value, change) => {
       const el = h('select.ctl', { onchange: e => change(e.target.value || false) }, styles.map(([v, label]) => h('option', { value: v }, label)));
@@ -1293,16 +1318,21 @@ class App {
       paint(); body.append(h('strong', {}, 'Fibonacci seviyeleri'), rows,
         h('button.btn', { onclick: () => { draft.levels.push({ value: 1.618, color: draft.color || '#9598a1', visible: true }); paint(); } }, '+ Seviye ekle'));
     }
-    for (const [i, point] of draft.points.entries()) {
-      field(`Nokta ${i + 1} · fiyat`, h('input.ctl', { type: 'number', step: 'any', value: point.price, onchange: e => {
-        if (e.target.value !== '' && Number.isFinite(Number(e.target.value))) point.price = Number(e.target.value);
-        else e.target.value = point.price;
-      } }));
+    const priceField = (label, get, put) => field(label, h('input.ctl', { type: 'number', step: 'any', value: get(), onchange: e => {
+      if (e.target.value !== '' && Number.isFinite(Number(e.target.value))) put(Number(e.target.value));
+      else e.target.value = get();
+    } }));
+    if (position) {
+      priceField('Giriş fiyatı', () => draft.points[0].price, v => { draft.points[0].price = v; draft.points[1].price = v; });
+      priceField('Hedef (TP) fiyatı', () => draft.target, v => { draft.target = v; });
+      priceField('Stop (SL) fiyatı', () => draft.stop, v => { draft.stop = v; });
+    } else if (d.type !== 'pen') {
+      for (const [i, point] of draft.points.entries()) priceField(`Nokta ${i + 1} · fiyat`, () => point.price, v => { point.price = v; });
     }
     modal({ title: `${TOOL_NAMES[d.type]} · Ayarlar`, body, wide: d.type === 'fib', actions: [
       { label: 'Vazgeç' }, { label: 'Uygula', kind: 'primary', onClick: () => {
         this.drawings.update(d.id, draft); this.renderDrawingProps(d);
-        const keys = ['color', 'width', 'dash', 'fill', 'size', 'bold', 'bg', 'extend', 'levels', 'labels', 'prices', 'percent', 'opacity', 'lineOpacity', 'textOpacity', 'textColor', 'baseline'];
+        const keys = ['color', 'width', 'dash', 'fill', 'size', 'bold', 'bg', 'extend', 'levels', 'labels', 'prices', 'percent', 'opacity', 'lineOpacity', 'textOpacity', 'textColor', 'baseline', 'profitColor', 'lossColor', 'lineColor', 'border', 'posLabels', 'mid'];
         const defaults = Object.fromEntries(keys.filter(key => key in draft).map(key => [key, draft[key]]));
         this.settings.drawDefaults = { ...this.settings.drawDefaults, [draft.type]: defaults }; this.saveSettings();
       } },
@@ -1414,20 +1444,80 @@ class App {
 
   renderToolbar() {
     const el = $('#draw-toolbar');
-    const btn = (tool) => h(`button.btn${this.drawings.tool === tool ? '.active' : ''}`, {
-      title: `${TOOL_NAMES[tool]}${Object.entries(TOOL_KEYS).find(([, v]) => v === tool) ? ` (Alt+${['rect', 'long'].includes(tool) ? 'Shift+' : ''}${Object.entries(TOOL_KEYS).find(([, v]) => v === tool)[0].toUpperCase()})` : ''}`,
-      onclick: () => this.drawings.setTool(this.drawings.tool === tool ? 'cursor' : tool),
-    }, icon(tool));
-    el.replaceChildren(
-      ...TOOLS.slice(0, 1).map(btn), h('hr'),
-      ...TOOLS.slice(1, 8).map(btn), h('hr'),
-      ...TOOLS.slice(8).map(btn), h('hr'),
-      h(`button.btn${this.drawings.magnet ? '.active' : ''}`, { title: 'Mıknatıs: OHLC’ye yapış', onclick: () => { this.drawings.magnet = !this.drawings.magnet; this.settings.magnet = this.drawings.magnet; this.saveSettings(); this.renderToolbar(); } }, icon('magnet')),
-      h('button.btn', { title: 'Tüm çizimleri sil', onclick: async () => { if (this.drawings.drawings.length && await confirmBox('Çizimleri sil', 'Bu grafikteki tüm çizimler silinsin mi?', 'Sil', 'danger')) this.drawings.clear(); } }, icon('trash')),
+    const tool = this.drawings.tool;
+    const picks = this.settings.toolPicks || {};
+    let i = 0;
+    const tools = [];
+    for (const group of TOOL_GROUPS) {
+      if (!group) { tools.push(h('hr', { style: { '--i': i++ } })); continue; }
+      const shown = group.includes(tool) ? tool : group.includes(picks[group[0]]) ? picks[group[0]] : group[0];
+      const btn = h(`button.btn${group.includes(tool) ? '.active' : ''}${group.length > 1 ? '.has-more' : ''}`, {
+        type: 'button', style: { '--i': i++ },
+        title: `${TOOL_NAMES[shown]}${toolKey(shown) ? ` (${toolKey(shown)})` : ''}${group.length > 1 ? ' · diğerleri için köşeye tıkla ya da basılı tut' : ''}`,
+        onclick: (e) => {
+          if (group.length > 1 && e.target.closest('.tb-more')) { this.toolFlyout(btn, group); return; }
+          this.drawings.setTool(tool === shown ? 'cursor' : shown);
+        },
+        oncontextmenu: (e) => { if (group.length > 1) { e.preventDefault(); this.toolFlyout(btn, group); } },
+      }, toolIcon(shown), group.length > 1 ? h('span.tb-more', { 'aria-hidden': 'true' }) : null);
+      if (group.length > 1) {
+        // touch: hold for the rest of the group
+        let timer = null;
+        btn.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') timer = setTimeout(() => { timer = null; btn.dataset.held = '1'; this.toolFlyout(btn, group); }, 420); });
+        btn.addEventListener('pointerup', () => clearTimeout(timer));
+        btn.addEventListener('pointerleave', () => clearTimeout(timer));
+        btn.addEventListener('click', (e) => { if (btn.dataset.held) { delete btn.dataset.held; e.stopImmediatePropagation(); } }, true);
+      }
+      tools.push(btn);
+    }
+    tools.push(
+      h('hr', { style: { '--i': i++ } }),
+      h(`button.btn${this.drawings.magnet ? '.active' : ''}`, { style: { '--i': i++ }, title: 'Mıknatıs: OHLC’ye yapış', onclick: () => { this.drawings.magnet = !this.drawings.magnet; this.settings.magnet = this.drawings.magnet; this.saveSettings(); this.renderToolbar(); } }, icon('magnet')),
+      h(`button.btn${this.drawings.hideAll ? '.active' : ''}`, { style: { '--i': i++ }, title: 'Çizimleri gizle / göster (Ctrl+Alt+H)', onclick: () => { this.drawings.hideAll = !this.drawings.hideAll; this.drawings.select(null); this.drawings.redraw(); this.renderToolbar(); } }, icon('eye')),
+      h('button.btn', { style: { '--i': i++ }, title: 'Tüm çizimleri sil', onclick: async () => { if (this.drawings.drawings.length && await confirmBox('Çizimleri sil', 'Bu grafikteki tüm çizimler silinsin mi?', 'Sil', 'danger')) this.drawings.clear(); } }, icon('trash')),
       // phones: the indicator button lives here, the top bar has no room
-      h('hr.mobile-only'),
-      h('button.btn.mobile-only', { title: 'İndikatör ekle', onclick: () => { $('#draw-toolbar').classList.remove('show'); D.indicatorsDialog(this); } }, icon('indicator')));
+      h('hr.mobile-only', { style: { '--i': i++ } }),
+      h('button.btn.mobile-only', { style: { '--i': i++ }, title: 'İndikatör ekle', onclick: () => { $('#draw-toolbar').classList.remove('show'); D.indicatorsDialog(this); } }, icon('indicator')));
+    const collapsed = !!this.settings.drawbarCollapsed;
+    el.classList.toggle('collapsed', collapsed);
+    const logo = h('button.tb-logo', {
+      type: 'button', 'aria-expanded': String(!collapsed), 'aria-controls': 'draw-tools',
+      title: collapsed ? 'Çizim araçlarını aç' : 'Çizim araçlarını kapat',
+      onclick: () => {
+        const now = !el.classList.contains('collapsed');
+        el.classList.toggle('collapsed', now);
+        logo.setAttribute('aria-expanded', String(!now));
+        logo.title = now ? 'Çizim araçlarını aç' : 'Çizim araçlarını kapat';
+        this.settings.drawbarCollapsed = now; this.saveSettings();
+        if (now) this.closeToolFlyout();
+      },
+    }, brandMark(20));
+    el.replaceChildren(logo, h('div.tb-tools', { id: 'draw-tools' }, h('div.tb-inner', {}, tools)));
   }
+
+  /** The rest of a tool group, in a small menu beside its button. */
+  toolFlyout(anchor, group) {
+    this.closeToolFlyout();
+    const r = anchor.getBoundingClientRect();
+    const menu = h('div.tool-flyout.glass-pop', { role: 'menu' }, group.map((t) => h(`button.item${this.drawings.tool === t ? '.on' : ''}`, {
+      type: 'button', role: 'menuitem',
+      onclick: () => {
+        this.settings.toolPicks = { ...(this.settings.toolPicks || {}), [group[0]]: t }; this.saveSettings();
+        this.closeToolFlyout();
+        this.drawings.setTool(t);
+      },
+    }, toolIcon(t, 17), h('span', {}, TOOL_NAMES[t]), toolKey(t) ? h('kbd', {}, toolKey(t)) : null)));
+    document.body.append(menu);
+    const top = Math.max(8, Math.min(r.top - 6, innerHeight - menu.offsetHeight - 8));
+    menu.style.left = `${Math.min(r.right + 10, innerWidth - menu.offsetWidth - 8)}px`;
+    menu.style.top = `${top}px`;
+    const away = (e) => { if (!menu.contains(e.target) && !anchor.contains(e.target)) this.closeToolFlyout(); };
+    const esc = (e) => { if (e.key === 'Escape') this.closeToolFlyout(); };
+    setTimeout(() => { document.addEventListener('pointerdown', away, true); document.addEventListener('keydown', esc, true); });
+    this._flyout = () => { menu.remove(); document.removeEventListener('pointerdown', away, true); document.removeEventListener('keydown', esc, true); };
+  }
+
+  closeToolFlyout() { this._flyout?.(); this._flyout = null; }
 
   renderLegend(param) {
     const el = $('#legend');
@@ -1660,7 +1750,7 @@ class App {
       for (const it of items) add('İndikatör ekle', it.name, () => this.addIndicator(it.type, it.params), { sub: `${group} · ${it.desc}`, icon: 'plus' });
     }
     const keyOf = Object.fromEntries(Object.entries(TOOL_KEYS).map(([k, t]) => [t, k.toUpperCase()]));
-    for (const t of TOOLS) add('Çizim', TOOL_NAMES[t], () => this.drawings.setTool(t), { icon: t, kbd: keyOf[t] ? `Alt+${['rect', 'long'].includes(t) ? 'Shift+' : ''}${keyOf[t]}` : null });
+    for (const t of TOOLS) add('Çizim', TOOL_NAMES[t], () => this.drawings.setTool(t), { icon: TOOL_ICON[t] || t, kbd: keyOf[t] ? `Alt+${['rect', 'long'].includes(t) ? 'Shift+' : ''}${keyOf[t]}` : null });
     for (const p of PRESETS) {
       add('Tema', p.name, () => {
         Object.assign(this.settings.appearance, { preset: p.id, bg: p.bg, accent: p.accent, up: p.up, down: p.down, font: p.font });
@@ -1718,7 +1808,7 @@ class App {
         if (r) { const delta = (e.code === 'ArrowLeft' ? -1 : 1) * (mod ? (r.to - r.from) * .2 : 1); ts.setVisibleLogicalRange({ from: r.from + delta, to: r.to + delta }); } return;
       }
       if (mod && !e.altKey && ['KeyZ', 'KeyY'].includes(e.code)) { e.preventDefault(); this.drawings.historyStep(e.code === 'KeyY' || e.shiftKey ? 1 : -1); return; }
-      if (mod && e.altKey && e.code === 'KeyH') { e.preventDefault(); this.drawings.hideAll = !this.drawings.hideAll; this.drawings.select(null); this.drawings.redraw(); return; }
+      if (mod && e.altKey && e.code === 'KeyH') { e.preventDefault(); this.drawings.hideAll = !this.drawings.hideAll; this.drawings.select(null); this.drawings.redraw(); this.renderToolbar(); return; }
       if (e.altKey && !mod && e.code === 'KeyG') { e.preventDefault(); if (this.mode === 'replay') D.jumpDialog(this); return; }
       if (e.altKey && !mod && e.code === 'KeyR') { e.preventDefault(); if (e.shiftKey) this.drawings.setTool('rect'); else { this.chart.chart.timeScale().resetTimeScale(); this.chart.autoScale(); } return; }
       if (e.altKey && !mod && e.code === 'KeyI') { e.preventDefault(); const ps = this.chart.chart.priceScale('right'); ps.applyOptions({ invertScale: !ps.options().invertScale }); return; }

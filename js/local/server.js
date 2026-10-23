@@ -165,9 +165,8 @@ async function profileRow(db, pid) {
   return p;
 }
 async function profileJson(db, p) {
-  const { pin, cloud, ...d } = p;
+  const { pin, gid, ...d } = p;
   d.locked = !!pin;
-  d.cloud = cloud ? { name: cloud.name, last_sync: cloud.last_sync || null } : null;
   const photo = await db.get('photos', String(p.id));
   d.photo = photo ? `data:image/jpeg;base64,${photo}` : null;
   return d;
@@ -209,8 +208,9 @@ async function createProfile(db, body) {
   const count = (await db.all('profiles')).length;
   if (count >= MAX_PROFILES) throw bad(`en fazla ${MAX_PROFILES} profil açılabilir`);
   const t = now();
-  const p = { id: await db.nextId('profile'), name, color: body.color || PROFILE_COLORS[count % PROFILE_COLORS.length], avatar: String(body.avatar || '').slice(0, 8), pin: pin ? await hashPin(pin) : null, created_at: t, updated_at: t };
+  const p = { id: await db.nextId('profile'), gid: sync.newGid(), name, color: body.color || PROFILE_COLORS[count % PROFILE_COLORS.length], avatar: String(body.avatar || '').slice(0, 8), pin: pin ? await hashPin(pin) : null, created_at: t, updated_at: t };
   await db.put('profiles', String(p.id), p);
+  await sync.touch(db, p.id, 'profile');
   return profileJson(db, p);
 }
 
@@ -227,19 +227,18 @@ async function updateProfile(db, pid, body) {
   await db.put('profiles', String(pid), p);
   // changing your own PIN keeps you signed in on this device
   if (wasCurrent) await db.put('meta', 'current_pin', p.pin || '');
-  if (body.name != null || body.color != null || body.avatar != null) await sync.touch(db, pid, 'card', 'card');
+  await sync.touch(db, pid, 'profile');
   return profileJson(db, p);
 }
 
 async function deleteProfile(db, pid, pin) {
   await authorize(db, pid, pin);
   await profileRow(db, pid);
+  await sync.touch(db, pid, 'profile');
   for (const [k, s] of await db.all('sessions')) if (s.profile_id === pid) await db.del('sessions', k);
   await db.delPrefix('strategies', `${pid}:`);
   await db.delPrefix('kv', `${pid}:`);
   await db.del('photos', String(pid));
-  await db.delPrefix('outbox', `${pid}|`);
-  await db.delPrefix('stamps', `${pid}|`);
   await db.del('profiles', String(pid));
   if ((await db.get('meta', 'current_profile')) === pid) await db.del('meta', 'current_profile');
 }
@@ -252,7 +251,6 @@ async function selectProfile(db, pid, pin) {
   }
   await db.put('meta', 'current_profile', pid);
   await db.put('meta', 'current_pin', p.pin || '');
-  if (p.cloud) await Promise.race([sync.sync(db, pid).catch(() => 0), new Promise((r) => setTimeout(r, 5000))]);
   return { ok: true, profile: await profileJson(db, await profileRow(db, pid)) };
 }
 
@@ -355,14 +353,14 @@ route('PUT', '/profiles/{id}/photo', async (db, { p, query, body }) => {
   const u8 = new Uint8Array(body);
   if (!(u8[0] === 0xff && u8[1] === 0xd8 && u8[2] === 0xff)) throw bad('JPEG bekleniyor');
   await db.put('photos', String(pid), toBase64(body));
-  await sync.touch(db, pid, 'card', 'card');
+  await sync.touch(db, pid, 'profile');
   return ok(await profileJson(db, await profileRow(db, pid)));
 });
 route('DELETE', '/profiles/{id}/photo', async (db, { p, query }) => {
   const pid = Number(p.id);
   await authorize(db, pid, query.pin);
   await db.del('photos', String(pid));
-  await sync.touch(db, pid, 'card', 'card');
+  await sync.touch(db, pid, 'profile');
   return ok(await profileJson(db, await profileRow(db, pid)));
 });
 route('POST', '/profiles/{id}/select', async (db, { p, body }) => ok(await selectProfile(db, Number(p.id), json(body).pin)));
@@ -448,46 +446,18 @@ route('DELETE', '/strategies/{name}', async (db, { p }) => {
   return ok({ ok: true });
 });
 
-// ── cloud profiles (sync.js) ──────────────────────────────────────────────
-route('GET', '/cloud/status', async (db) => ok(await sync.status(db, await currentProfile(db))));
-route('GET', '/cloud/profiles', async (db) => {
-  const cards = await sync.cloudProfiles();
-  const here = new Map((await db.all('profiles')).map(([, p]) => [p.cloud?.uid, p.id]).filter(([uid]) => uid));
-  return ok({ profiles: cards.map(({ uid, name, color, avatar, photo, updated_at }) => ({ uid, name, color, avatar, photo: photo ? `data:image/jpeg;base64,${photo}` : null, updated_at, local_id: here.get(uid) ?? null })) });
-});
-route('POST', '/cloud/link', async (db, { body }) => {
-  const pid = await needProfile(db);
-  await sync.link(db, pid, json(body).password);
-  return ok(await sync.status(db, pid));
-});
-route('POST', '/cloud/login', async (db, { body }) => {
-  const { name, password } = json(body);
-  if (!String(name || '').trim()) throw bad('isim gerekli');
-  const { uid, session, card } = await sync.signIn(cleanName(name), password);
-  // this device may already know the profile; if not, it is made from its card
-  let p = (await db.all('profiles')).map(([, x]) => x).find((x) => x.cloud?.uid === uid);
-  if (!p) {
-    if ((await db.all('profiles')).length >= MAX_PROFILES) throw bad(`bu cihazda en fazla ${MAX_PROFILES} profil olabilir`);
-    const t = now();
-    p = { id: await db.nextId('profile'), name: card?.name || cleanName(name), color: card?.color || PROFILE_COLORS[0], avatar: card?.avatar || '', pin: null, created_at: t, updated_at: t };
-  }
-  p.cloud = { ...(p.cloud || {}), uid, name: cleanName(name), session, cursor: p.cloud?.cursor ?? null, error: null };
-  await db.put('profiles', String(p.id), p);
-  await db.put('meta', 'current_profile', p.id);
-  await db.put('meta', 'current_pin', p.pin || '');
-  await sync.sync(db, p.id);
-  return ok({ ok: true, profile: await profileJson(db, await profileRow(db, p.id)) });
+// ── the group's cloud (sync.js) ───────────────────────────────────────────
+route('GET', '/cloud/status', async (db) => ok(await sync.status(db)));
+route('POST', '/cloud/connect', async (db, { body }) => {
+  const { password, create } = json(body);
+  const changed = await sync.connect(db, String(password || ''), { create: !!create });
+  return ok({ ...(await sync.status(db)), changed: changed.length });
 });
 route('POST', '/cloud/sync', async (db) => {
-  const pid = await needProfile(db);
-  const changed = await sync.sync(db, pid);
-  return ok({ ...(await sync.status(db, pid)), changed: changed.length });
+  const changed = await sync.sync(db);
+  return ok({ ...(await sync.status(db)), changed: changed.length });
 });
-route('POST', '/cloud/unlink', async (db) => {
-  const pid = await needProfile(db);
-  await sync.unlink(db, pid);
-  return ok(await sync.status(db, pid));
-});
+route('POST', '/cloud/disconnect', async (db) => { await sync.disconnect(db); return ok(await sync.status(db)); });
 
 /** Answer one API request. `path` is without the /api prefix. */
 export async function handle(db, { method, path, query = {}, body }) {

@@ -106,7 +106,7 @@ async function boot() {
   // a reload, sessions are simply read again
   window.addEventListener('rv-synced', async (e) => {
     const kinds = new Set(e.detail.changed.map((c) => c.kind));
-    if (kinds.has('kv') || kinds.has('card')) { await flushStorage?.(); window.location.reload(); return; }
+    if (kinds.has('kv') || kinds.has('profile')) { await flushStorage?.(); window.location.reload(); return; }
     state.sessions = await api.sessions().catch(() => state.sessions);
     renderAll();
     toast('Diğer cihazdaki değişiklikler geldi', 'ok');

@@ -4,7 +4,7 @@
 // /api/... are answered here, on the device, from IndexedDB - so the rest of
 // the app works the same in both.
 import { IdbDb, persistStorage } from './db.js';
-import { currentProfile, handle } from './server.js';
+import { handle } from './server.js';
 import { resume } from './packs.js';
 import { flush, sync } from './sync.js';
 
@@ -26,21 +26,18 @@ export function localDb() {
 
 const SYNC_EVERY = 30_000;
 
-/** A cloud profile: bring what changed on other devices every half minute
- *  while the page is in view and when it comes back; send before leaving. */
+/** In the group's cloud: bring what changed on other devices every half
+ *  minute while the page is in view and when it comes back; send before
+ *  leaving. (Pages that need the latest at once ask /api/cloud/sync.) */
 function keepInSync(db) {
   const tick = async () => {
-    if (document.visibilityState !== 'visible') return;
-    const pid = await currentProfile(db).catch(() => null);
-    const p = pid != null ? await db.get('profiles', String(pid)) : null;
-    if (p?.cloud) sync(db, pid).catch(() => {});
+    if (document.visibilityState === 'visible' && (await db.get('meta', 'group'))) sync(db).catch(() => {});
   };
   setTimeout(tick, 4000);
   setInterval(tick, SYNC_EVERY);
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible') { tick(); return; }
-    const pid = await currentProfile(db).catch(() => null);
-    if (pid != null) flush(db, pid).catch(() => {});
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') tick();
+    else flush(db).catch(() => {});
   });
 }
 
