@@ -1,7 +1,7 @@
 // Runs a strategy test off the UI thread. The page can terminate() it to stop
 // runaway user code.
-import { runStrategy } from '../core/strategy.js?v=1f79c2a121';
-import { parseTf } from '../core/timeframes.js?v=1f79c2a121';
+import { runStrategy } from '../core/strategy.js?v=9692cc795b';
+import { parseTf } from '../core/timeframes.js?v=9692cc795b';
 
 self.onmessage = (e) => {
   const { code, base, tf, align, broker, from } = e.data;

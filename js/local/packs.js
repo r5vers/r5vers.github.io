@@ -3,12 +3,12 @@
 // straight into IndexedDB. A pack fetches only the years it lacks or that
 // changed, so pressing the button again tops it up, and a download cut short
 // (the page was closed) carries on where it stopped.
-import { emptyCols, parseFile } from './rtc.js?v=1f79c2a121';
-import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=1f79c2a121';
-import { parseTf } from '../core/timeframes.js?v=1f79c2a121';
-import { createDataset, datasetJson, listDatasets } from './server.js?v=1f79c2a121';
-import { storageEstimate } from './db.js?v=1f79c2a121';
-import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=1f79c2a121';
+import { emptyCols, parseFile } from './rtc.js?v=9692cc795b';
+import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=9692cc795b';
+import { parseTf } from '../core/timeframes.js?v=9692cc795b';
+import { createDataset, datasetJson, listDatasets } from './server.js?v=9692cc795b';
+import { storageEstimate } from './db.js?v=9692cc795b';
+import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=9692cc795b';
 
 export { DATA_URL, getManifest };
 export const YEARS = 15;
@@ -42,8 +42,11 @@ export const STREAMED = ['EURUSD'];
 /** The STREAMED packs as datasets at 1m, read from the site until they are
  *  downloaded (series.js, StreamRows): nothing to download before the first
  *  chart. Gives up after `wait` ms (offline): the datasets come next time. */
+let ensuring = null;
 export async function ensureStreams(db, wait = 0) {
-  const work = (async () => {
+  // one at a time: the dataset list and the Data tab ask together, and two
+  // runs would each add the same pack
+  const work = ensuring || (ensuring = (async () => {
     const m = await manifestOf(db);
     // downloads that stopped half way (any pack, any resolution) are marked:
     // the chart opens the same market from the site instead
@@ -73,7 +76,7 @@ export async function ensureStreams(db, wait = 0) {
         await db.put('datasets', String(ds.id), { ...now, ...next, meta: { ...now.meta, stream: true, complete }, series: now.series });
       }
     }
-  })();
+  })().finally(() => { ensuring = null; }));
   if (!wait) return work;
   return within(work, wait, '').catch(() => {});
 }
@@ -331,6 +334,6 @@ export async function status(db) {
 
 /** CSV upload, parsed on the device. */
 export async function importCsv(db, query, body) {
-  const { importCsvFile } = await import('./csvimport.js?v=1f79c2a121');
+  const { importCsvFile } = await import('./csvimport.js?v=9692cc795b');
   return importCsvFile(db, query, body);
 }

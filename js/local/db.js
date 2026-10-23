@@ -73,9 +73,16 @@ export class IdbDb {
       try {
         if (!this.idb) await (this._opening ||= this._open().finally(() => { this._opening = null; }));
         const t = this.idb.transaction(store, mode);
+        // listen for the commit before anything else: Safari can finish the
+        // transaction before code after the request's success runs, and a
+        // listener added then waits for good (writes hung on iPhone)
+        const committed = mode === 'readwrite' ? done(t) : null;
+        committed?.catch(() => {});
         const out = fn(t.objectStore(store));
         const value = await (out instanceof IDBRequest ? req(out) : out);
-        if (mode === 'readwrite') await done(t);
+        // and should the commit never be heard of, the write went through
+        // all the same (its request succeeded): no request hangs for it
+        if (committed) await Promise.race([committed, new Promise((r) => { const t = setTimeout(r, 8000); t?.unref?.(); })]);
         return value;
       } catch (e) {
         if (attempt || !lost(e)) throw e;

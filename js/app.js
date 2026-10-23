@@ -1,27 +1,27 @@
 // Replay Terminal - application controller.
-import { api } from './api.js?v=1f79c2a121';
-import { columnsToBars } from './core/aggregate.js?v=1f79c2a121';
-import { Broker } from './core/broker.js?v=1f79c2a121';
-import { computeStats } from './core/stats.js?v=1f79c2a121';
-import { bucket, parseTf } from './core/timeframes.js?v=1f79c2a121';
-import { TradingChart } from './chart/chart.js?v=1f79c2a121';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=1f79c2a121';
-import { configureICT } from './chart/sessions.js?v=1f79c2a121';
-import { INDICATORS } from './chart/indicators.js?v=1f79c2a121';
-import { TradeLines } from './chart/tradelines.js?v=1f79c2a121';
-import * as F from './format.js?v=1f79c2a121';
-import { ReplayEngine } from './replay.js?v=1f79c2a121';
-import * as D from './ui/dialogs.js?v=1f79c2a121';
-import { DataView } from './ui/dataview.js?v=1f79c2a121';
-import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=1f79c2a121';
-import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=1f79c2a121';
-import { openPalette, wirePalette } from './ui/palette.js?v=1f79c2a121';
-import { wireTooltips } from './ui/tooltip.js?v=1f79c2a121';
-import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=1f79c2a121';
-import { scrubWheel } from './ui/scrubwheel.js?v=1f79c2a121';
-import { StatsView } from './ui/statsview.js?v=1f79c2a121';
-import { StrategyView } from './ui/strategyview.js?v=1f79c2a121';
-import { Ticket } from './ui/ticket.js?v=1f79c2a121';
+import { api } from './api.js?v=9692cc795b';
+import { columnsToBars } from './core/aggregate.js?v=9692cc795b';
+import { Broker } from './core/broker.js?v=9692cc795b';
+import { computeStats } from './core/stats.js?v=9692cc795b';
+import { bucket, parseTf } from './core/timeframes.js?v=9692cc795b';
+import { TradingChart } from './chart/chart.js?v=9692cc795b';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=9692cc795b';
+import { configureICT } from './chart/sessions.js?v=9692cc795b';
+import { INDICATORS } from './chart/indicators.js?v=9692cc795b';
+import { TradeLines } from './chart/tradelines.js?v=9692cc795b';
+import * as F from './format.js?v=9692cc795b';
+import { ReplayEngine } from './replay.js?v=9692cc795b';
+import * as D from './ui/dialogs.js?v=9692cc795b';
+import { DataView } from './ui/dataview.js?v=9692cc795b';
+import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=9692cc795b';
+import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=9692cc795b';
+import { openPalette, wirePalette } from './ui/palette.js?v=9692cc795b';
+import { wireTooltips } from './ui/tooltip.js?v=9692cc795b';
+import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=9692cc795b';
+import { scrubWheel } from './ui/scrubwheel.js?v=9692cc795b';
+import { StatsView } from './ui/statsview.js?v=9692cc795b';
+import { StrategyView } from './ui/strategyview.js?v=9692cc795b';
+import { Ticket } from './ui/ticket.js?v=9692cc795b';
 
 const LW = window.LightweightCharts;
 const SPEEDS = [[1, '1x'], [2, '2x'], [4, '4x'], [8, '8x'], [16, '16x'], [40, '40x'], [0, 'Maks']];
@@ -194,8 +194,11 @@ class App {
     this._wireContextMenu();
     this.applyBottomSize();
 
-    // a side panel that cannot start must not keep the chart from opening
-    await Promise.allSettled([this.strategyView.init(), this.dataView.init()]);
+    // the side panels start alongside: the chart never waits for them
+    this.showMessage('Grafik açılıyor…');
+    const sides = Promise.allSettled([this.strategyView.init(), this.dataView.init()]).then(() => this.renderTab());
+    // a step that does not end is named on the screen, never a silent blank
+    const slow = setTimeout(() => { if (!this.ds) this.showMessage('Veri listesi bekleniyor… Uzun sürerse sayfayı yenile; düzelmezse r5vers.github.io/tani.html sayfasının ekran görüntüsünü gönder.'); }, 12000);
     // links from the home screen: /chart.html?ds=..&tf=.., ?session=.., ?backtest=.., ?tab=.., ?new=replay
     const q = new URLSearchParams(location.search);
     if (q.toString()) history.replaceState(null, '', location.pathname);
@@ -206,7 +209,10 @@ class App {
     } catch (err) {
       console.error(err);
       this.showMessage(`Grafik açılamadı: ${err.message || err}`);
+    } finally {
+      clearTimeout(slow);
     }
+    void sides;
 
     // a cloud profile changed on another device: a replay open here is left
     // alone (the page reload brings the other device's state)
@@ -251,7 +257,15 @@ class App {
 
   // ── datasets & browsing ────────────────────────────────────────────────
   async loadDatasets(selectId, { keep = false } = {}) {
-    try { this.datasets = await api.datasets(); } catch (err) { toast(`Sunucuya ulaşılamadı: ${err.message}`, 'err', 8000); return; }
+    try { this.datasets = await api.datasets(); } catch (err) {
+      // said on the chart, where it stays, with a way to try again
+      this.showMessage(`Veri listesi alınamadı: ${err.message || err}`);
+      const msg = $('#chart-msg');
+      msg.append(h('div', { style: { marginTop: '10px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' } },
+        h('button.btn.small.primary', { onclick: () => { this.showMessage('Grafik açılıyor…'); this.loadDatasets(selectId); } }, 'Tekrar dene'),
+        h('a.btn.small', { href: '/tani.html' }, 'Teşhis')));
+      return;
+    }
     this.renderInstrument();
     if (keep && this.mode === 'live') return;
     if (keep && this.ds && this.datasets.some((d) => d.id === this.ds.id)) {

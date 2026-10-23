@@ -3,9 +3,9 @@
 // files (Vercel, the installed app) the site has no server: requests to
 // /api/... are answered here, on the device, from IndexedDB - so the rest of
 // the app works the same in both.
-import { IdbDb, persistStorage } from './db.js?v=1f79c2a121';
-import { handle } from './server.js?v=1f79c2a121';
-import { flush, sync } from './sync.js?v=1f79c2a121';
+import { IdbDb, persistStorage } from './db.js?v=9692cc795b';
+import { handle } from './server.js?v=9692cc795b';
+import { flush, sync } from './sync.js?v=9692cc795b';
 
 export const LOCAL = typeof window !== 'undefined' && !window.RV_SERVER;
 // the page's scripts loaded and linked: the safety net in the page stands down

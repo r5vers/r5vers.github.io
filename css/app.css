@@ -1609,3 +1609,5 @@ a.wordmark-brand:hover .tile { background: none; }
    each of them again on every frame of a scroll costs more than it shows.
    The bars and menus that float over moving content keep their frost. */
 .page-home .home .glass { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.chart-msg { flex-direction: column; }
+.chart-msg button, .chart-msg a { pointer-events: auto; }

@@ -3,12 +3,12 @@
 //
 // handle(db, { method, path, query, body }) -> { status, json } | { status, bytes, headers }
 // `body` is the request body as an ArrayBuffer (or undefined).
-import { canAggregate, parseTf, CHART_TFS } from '../core/timeframes.js?v=1f79c2a121';
-import { aggregateCols, barRows } from './query.js?v=1f79c2a121';
-import { colsToRecords, toJsonColumns } from './rtc.js?v=1f79c2a121';
-import { ChunkRows, deleteSeries, deviceSource, readAll, replaceSeries } from './series.js?v=1f79c2a121';
-import * as packs from './packs.js?v=1f79c2a121';
-import * as sync from './sync.js?v=1f79c2a121';
+import { canAggregate, parseTf, CHART_TFS } from '../core/timeframes.js?v=9692cc795b';
+import { aggregateCols, barRows } from './query.js?v=9692cc795b';
+import { colsToRecords, toJsonColumns } from './rtc.js?v=9692cc795b';
+import { ChunkRows, deleteSeries, deviceSource, readAll, replaceSeries } from './series.js?v=9692cc795b';
+import * as packs from './packs.js?v=9692cc795b';
+import * as sync from './sync.js?v=9692cc795b';
 
 const MAX_BARS = 200_000;
 const MAX_BIN_BARS = 6_000_000;
@@ -35,7 +35,7 @@ async function getDs(db, id) {
   return ds;
 }
 export async function listDatasets(db) {
-  return (await db.all('datasets')).map(([, d]) => d).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  return (await db.all('datasets')).map(([, d]) => d).filter((d) => d && d.id != null && d.base_tf).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 }
 
 export function datasetJson(ds) {
@@ -320,8 +320,11 @@ route('GET', '/live', () => { throw new HttpError(501, 'canlı grafik bu sürüm
 
 route('GET', '/datasets', async (db) => {
   // every pack is there at once, read from the site until downloaded
-  await packs.ensureStreams(db, 4000);
-  return ok((await listDatasets(db)).map(datasetJson));
+  await packs.ensureStreams(db, 4000).catch(() => {});
+  // one record that cannot be read (a write cut short) never hides the rest
+  const out = [];
+  for (const ds of await listDatasets(db)) { try { out.push(datasetJson(ds)); } catch { /* skipped */ } }
+  return ok(out);
 });
 route('GET', '/datasets/{id}', async (db, { p }) => ok(datasetJson(await getDs(db, p.id))));
 route('PATCH', '/datasets/{id}', async (db, { p, body }) => ok(datasetJson(await patchDataset(db, Number(p.id), json(body)))));

@@ -1,17 +1,17 @@
 // Home screen: where everything starts after picking a profile. Markets,
 // the replay you left off, every saved replay session and strategy test with
 // its numbers, and one tap into the chart.
-import { EXTRA_WIDGETS, extraWidget, widgetSettings, refreshWidgetClocks } from './ui/homewidgets.js?v=1f79c2a121';
-import { api } from './api.js?v=1f79c2a121';
-import * as F from './format.js?v=1f79c2a121';
-import { avatar, brandMark, confirmBox, flushStorage, h, icon, sparkline, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=1f79c2a121';
-import { SESSION_SETS, configureICT } from './chart/sessions.js?v=1f79c2a121';
-import { nyOffset } from './core/timeframes.js?v=1f79c2a121';
-import { settingsDialog } from './ui/dialogs.js?v=1f79c2a121';
-import { openPalette, wirePalette } from './ui/palette.js?v=1f79c2a121';
-import { wireTooltips } from './ui/tooltip.js?v=1f79c2a121';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance, metalPicker, normalizeAppearance, paintLastLook, revealPage, rimControls, titleControls } from './ui/look.js?v=1f79c2a121';
-import { modal } from './ui/dom.js?v=1f79c2a121';
+import { EXTRA_WIDGETS, extraWidget, widgetSettings, refreshWidgetClocks } from './ui/homewidgets.js?v=9692cc795b';
+import { api } from './api.js?v=9692cc795b';
+import * as F from './format.js?v=9692cc795b';
+import { avatar, brandMark, confirmBox, flushStorage, h, icon, sparkline, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=9692cc795b';
+import { SESSION_SETS, configureICT } from './chart/sessions.js?v=9692cc795b';
+import { nyOffset } from './core/timeframes.js?v=9692cc795b';
+import { settingsDialog } from './ui/dialogs.js?v=9692cc795b';
+import { openPalette, wirePalette } from './ui/palette.js?v=9692cc795b';
+import { wireTooltips } from './ui/tooltip.js?v=9692cc795b';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance, metalPicker, normalizeAppearance, paintLastLook, revealPage, rimControls, titleControls } from './ui/look.js?v=9692cc795b';
+import { modal } from './ui/dom.js?v=9692cc795b';
 
 const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'NASDAQ 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'NASDAQ 100', USA500IDXUSD: 'S&P 500' };
 const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
