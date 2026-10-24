@@ -44,13 +44,58 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/fonts.css?v=64b6fa7342">
-  <link rel="stylesheet" href="css/app.css?v=64b6fa7342">
+  <link rel="stylesheet" href="css/fonts.css?v=0cf7763e2a">
+  <link rel="stylesheet" href="css/app.css?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/app.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/api.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/boot.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/db.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/server.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/core/timeframes.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/query.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/rtc.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/candles.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/series.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/net.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/packs.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/live.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/instruments.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/sync.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/cloud.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/local/firebase-config.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/core/aggregate.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/core/broker.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/core/stats.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/chart/chart.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/chart/indicators.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/core/indicators.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/chart/sessions.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/chart/drawings.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/chart/tradelines.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/format.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/replay.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/dialogs.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/dom.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/look.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/dataview.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/palette.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/tooltip.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/panels.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/scrubwheel.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/statsview.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/strategyview.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/core/backtests.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/core/fill.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="js/ui/ticket.js?v=0cf7763e2a">
+  <link rel="modulepreload" href="vendor/fflate.js?v=0cf7763e2a">
 </head>
 <body class="page-chart">
 <div id="app" class="mode-browse">
   <header class="topbar glass">
-    <a class="home-link" href="/home.html" title="Ana ekrana dön" aria-label="Ana ekrana dön"><span class="hl-ic" data-icon="home"></span><span class="hl-t">Home</span></a>
+    <a class="home-link" href="/home.html" title="Ana ekrana dön" aria-label="Ana ekrana dön">
+      <span class="hl-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="hl-roof" d="M3.4 11.2 12 4l8.6 7.2"/><path class="hl-house" d="M5.6 10.4V18a2.4 2.4 0 0 0 2.4 2.4h2.3v-4.6a1.7 1.7 0 0 1 3.4 0v4.6H16a2.4 2.4 0 0 0 2.4-2.4v-7.6L12 5.1Z"/></svg></span>
+      <span class="hl-t">Home</span>
+    </a>
     <button class="instrument" id="instrument-btn" type="button" title="Enstrüman ve veri seti" aria-haspopup="true">
       <span class="dot"></span>
       <span><span class="sym" id="instrument-sym">—</span><span class="sub" id="instrument-sub">veri seti seçin</span></span>
@@ -92,7 +137,7 @@
 <div id="modal-root"></div>
 <div id="toasts" aria-live="polite"></div>
 
-<script src="vendor/lightweight-charts.standalone.production.js?v=64b6fa7342"></script>
-<script type="module" src="js/app.js?v=64b6fa7342"></script>
+<script src="vendor/lightweight-charts.standalone.production.js?v=0cf7763e2a"></script>
+<script type="module" src="js/app.js?v=0cf7763e2a"></script>
 </body>
 </html>

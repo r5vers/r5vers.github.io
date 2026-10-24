@@ -175,6 +175,12 @@
        "sha256": "27e20d6ee9070455df805f1043833758e8e113341db8eff88f76b34bbcb53611",
        "gz_bytes": 1690536,
        "bars": 93612
+      },
+      "1D": {
+       "path": "EURUSD/1m/agg-1D.bin.gz",
+       "sha256": "6774e21ba1ae74c9b09598c7682c6abfdc8dd8f8c6143d60a3fee1ef6eb5c42f",
+       "gz_bytes": 83295,
+       "bars": 4004
       }
      }
     },
@@ -337,6 +343,12 @@
        "sha256": "0f9e534dbfc5c4a260020bd8b6cc561f431354cd21eaf7b25c08bd6a524b5ffe",
        "gz_bytes": 1670992,
        "bars": 93612
+      },
+      "1D": {
+       "path": "EURUSD/5m/agg-1D.bin.gz",
+       "sha256": "9bbde3b4008634b8174ebd4db30cef2c9d946d9fa5cc4f941ccd10a777f46ea3",
+       "gz_bytes": 82411,
+       "bars": 4004
       }
      }
     }
@@ -515,6 +527,12 @@
        "sha256": "473b1a2b45dd46c0784d920ef983b39068fc56a7ddd8115373cab2270fd66809",
        "gz_bytes": 1717938,
        "bars": 93570
+      },
+      "1D": {
+       "path": "GBPUSD/1m/agg-1D.bin.gz",
+       "sha256": "b32a6a8cae2fb8477a2ccdcad896d9e3bcf9af52e3044cce2826c2d651c677c1",
+       "gz_bytes": 84413,
+       "bars": 4005
       }
      }
     },
@@ -677,6 +695,12 @@
        "sha256": "d79aaab4568ed645c40c1419e8d5f7725f563e669b4fc86d6f92657b9de3cde2",
        "gz_bytes": 1698819,
        "bars": 93570
+      },
+      "1D": {
+       "path": "GBPUSD/5m/agg-1D.bin.gz",
+       "sha256": "087df50594ca0571dd89a65b7b983a61cecda2c1ea2d1635caf67b88cdea884c",
+       "gz_bytes": 83508,
+       "bars": 4005
       }
      }
     }
@@ -855,6 +879,12 @@
        "sha256": "181b54a07283d68ff1c085077d9736f20ef90165b4b48064611989107e3140d4",
        "gz_bytes": 1730607,
        "bars": 89246
+      },
+      "1D": {
+       "path": "NAS100/1m/agg-1D.bin.gz",
+       "sha256": "83109ac54eb842dd3547fd1e90f1e63597ab52a7c648558c36b7e828af290e7f",
+       "gz_bytes": 88144,
+       "bars": 3920
       }
      }
     },
@@ -1017,6 +1047,12 @@
        "sha256": "db4f522da35392981d4e0b39da1a094a93398059c9417a1fcc01eddfc10cd0e1",
        "gz_bytes": 1712095,
        "bars": 89246
+      },
+      "1D": {
+       "path": "NAS100/5m/agg-1D.bin.gz",
+       "sha256": "552018adc94868e224ba66ade5936825891a9761d730fe0c3789e9f92ec679b3",
+       "gz_bytes": 87386,
+       "bars": 3920
       }
      }
     }
@@ -1195,6 +1231,12 @@
        "sha256": "31112802500cc5a98701250b9e1ca034b4eb4cd3c2b379dca768638b5a1797ee",
        "gz_bytes": 1551607,
        "bars": 89242
+      },
+      "1D": {
+       "path": "SPX500/1m/agg-1D.bin.gz",
+       "sha256": "99a48e59172966f3363accf7d5defad96a11a6067ff390cbbf1f2b3a9ef6e5d4",
+       "gz_bytes": 83414,
+       "bars": 3922
       }
      }
     },
@@ -1357,6 +1399,12 @@
        "sha256": "3efca585c632f2ebe22b9230c11b425a8673d9442b8442ea841465883ff91ed7",
        "gz_bytes": 1534583,
        "bars": 89242
+      },
+      "1D": {
+       "path": "SPX500/5m/agg-1D.bin.gz",
+       "sha256": "c4ac68a107fd904fb4dff137cc310220c96c5ca3d9a2c4467a13e59442e7f16b",
+       "gz_bytes": 82743,
+       "bars": 3922
       }
      }
     }
@@ -1535,6 +1583,12 @@
        "sha256": "5a7a3a6563ed4ece89e8b323e38961f501bc3cd60f0cc04e58364021d7c781e8",
        "gz_bytes": 1682786,
        "bars": 93583
+      },
+      "1D": {
+       "path": "USDCAD/1m/agg-1D.bin.gz",
+       "sha256": "8a84cf180a2f3f67fdada4ce02b73c2f7922b9e91f0aacd3a8a03e7f3ca1f40a",
+       "gz_bytes": 83614,
+       "bars": 4025
       }
      }
     },
@@ -1697,6 +1751,12 @@
        "sha256": "ff468b841382336405cd27f697a43f0410e87590848feb34a2dd6539529a2b0f",
        "gz_bytes": 1663167,
        "bars": 93583
+      },
+      "1D": {
+       "path": "USDCAD/5m/agg-1D.bin.gz",
+       "sha256": "d07e69c729ebf4157eb1105ac94aab4a3c8ab05134ce73ec17577a3dd64acbc9",
+       "gz_bytes": 82784,
+       "bars": 4025
       }
      }
     }
@@ -1875,6 +1935,12 @@
        "sha256": "602b18b833dbb17cd1154f528f7972c6e3dab259240e022c41c159a25727cac3",
        "gz_bytes": 1901651,
        "bars": 89597
+      },
+      "1D": {
+       "path": "XAUUSD/1m/agg-1D.bin.gz",
+       "sha256": "17463e6f983ecc1e8facaa82897910bdf32d2836e7502bb5ceb4fb639749cb93",
+       "gz_bytes": 90559,
+       "bars": 3973
       }
      }
     },
@@ -2037,6 +2103,12 @@
        "sha256": "1bb439ebf334cbe2f8878a22be9fe5b6c05e0b14fef745a62d666bf6260b33af",
        "gz_bytes": 1882227,
        "bars": 89597
+      },
+      "1D": {
+       "path": "XAUUSD/5m/agg-1D.bin.gz",
+       "sha256": "7923c391ef0c78b92287d3d14870f60d8e62360df4f03cb28e2356da580a5d87",
+       "gz_bytes": 89734,
+       "bars": 3973
       }
      }
     }
