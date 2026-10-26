@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101317">
+<meta name="description" content="MYLO Labs gelişim takibi. Sürümlü, manuel güncellenen durum paneli.">
+<title>MYLO Labs · Control Room</title>
+<style>
+:root{color-scheme:dark;--bg:#101317;--pane:#171b20;--pane2:#1d2228;--line:#30363d;--muted:#97a1ad;--text:#e9edf1;--accent:#9bbaab;--blue:#9ab4c9;--gold:#d6bd85;--red:#d69595;--violet:#aaa3cb;--radius:14px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input{font:inherit}button{cursor:pointer}a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+.shell{max-width:1460px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+aside{border-right:1px solid var(--line);padding:28px 18px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.logo{display:flex;align-items:center;gap:12px;padding:0 8px 25px;border-bottom:1px solid var(--line)}.logoMark{width:32px;height:32px;border:1px solid #779789;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:18px;color:var(--accent)}.logoTitle{font-size:17px;letter-spacing:.1em;font-weight:750}.logoSub{font-size:10px;letter-spacing:.18em;color:var(--muted)}
+.sideLabel{margin:28px 12px 9px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.17em}.nav{display:flex;flex-direction:column;gap:5px}.nav button{width:100%;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:9px;text-align:left;padding:10px 12px;display:flex;align-items:center;gap:11px}.nav button:hover{color:var(--text);background:var(--pane)}.nav button.active{background:#26332e;color:#cbe1d5;border-color:#476153}.nav button span:first-child{font:600 11px ui-monospace,monospace;opacity:.75}.asideBottom{margin-top:auto;padding:15px 12px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}.asideBottom strong{display:block;color:var(--text);font-weight:600;margin-bottom:4px}
+main{min-width:0;padding:30px clamp(18px,3.4vw,54px) 80px}.masthead{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding-bottom:24px;border-bottom:1px solid var(--line)}.eyebrow{font-size:10px;font-weight:650;letter-spacing:.19em;color:var(--accent);text-transform:uppercase}.masthead h1{font-size:clamp(26px,3.2vw,43px);letter-spacing:-.055em;font-weight:640;margin:6px 0 4px;line-height:1.12}.sub{color:var(--muted);font-size:13px}.topMeta{display:flex;align-items:center;gap:9px;white-space:nowrap;font:11px ui-monospace,monospace;color:var(--muted)}.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}.pill{border:1px solid #485249;border-radius:6px;color:#bdd0c1;background:#243027;padding:5px 9px;font-size:10px;font-weight:650;letter-spacing:.06em;text-transform:uppercase}
+.section{padding-top:30px}.section[hidden]{display:none!important}.sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:0 0 16px}.sectionTitle h2{margin:0;font-size:15px;letter-spacing:-.01em;font-weight:650}.sectionTitle .meta{font:11px ui-monospace,monospace;color:var(--muted)}
+.grid{display:grid;gap:12px}.metrics{grid-template-columns:repeat(4,minmax(0,1fr))}.panel{border:1px solid var(--line);background:var(--pane);border-radius:var(--radius);min-width:0}.metric{padding:18px 19px;min-height:135px}.metric .key{font-size:11px;color:var(--muted)}.metric .value{font:500 clamp(28px,3.8vw,42px)/1.3 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:-.045em;margin:9px 0 3px}.metric .foot{font-size:11px;color:var(--muted)}.metric .value.accent{color:var(--accent)}.metric .value.gold{color:var(--gold)}.metric .value.blue{color:var(--blue)}
+.two{grid-template-columns:minmax(0,1.55fr) minmax(290px,1fr);align-items:stretch}.panelPad{padding:20px 22px}.tiny{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}h3{font-size:15px;font-weight:620;letter-spacing:-.012em;margin:8px 0 9px}p{margin:0 0 10px;color:#bdc5ce}.bars{margin-top:19px}.barRow{display:grid;grid-template-columns:124px 1fr 48px;gap:12px;align-items:center;margin:17px 0}.barName{font-size:12px;color:#cbd1d7}.rail{height:7px;background:#2b3036;border-radius:999px;overflow:hidden}.fill{height:100%;border-radius:999px}.barValue{font:12px ui-monospace,monospace;text-align:right;color:var(--muted)}.legend{display:flex;gap:15px;flex-wrap:wrap;padding-top:13px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}.legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px}
+.callout{border-left:2px solid var(--gold);padding:5px 0 5px 14px;font-size:12px;color:#d4d0c6;margin:15px 0}.callout strong{display:block;color:var(--gold);margin-bottom:4px}.small{font-size:11px;color:var(--muted)}.tag{font-size:10px;letter-spacing:.04em;border:1px solid #45505a;border-radius:5px;color:#aebbc5;padding:3px 7px;white-space:nowrap}.tag.ok{border-color:#50695a;color:#b3d0be;background:#24352b}.tag.warn{border-color:#79674a;color:#e1c68d;background:#342d22}.tag.no{border-color:#775153;color:#e5aaab;background:#37282a}.tag.draft{border-color:#56616e;color:#b5c7d5;background:#273038}
+.rows{display:flex;flex-direction:column}.item{padding:14px 0;display:flex;justify-content:space-between;gap:15px;align-items:flex-start;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0}.item b{font-size:12px;font-weight:620}.item p{font-size:11px;margin:3px 0 0;color:var(--muted)}.simGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.sim{padding:18px;min-height:205px;position:relative;overflow:hidden}.sim:before{content:"";position:absolute;top:0;left:0;width:38px;height:2px;background:var(--sim-accent,var(--accent))}.simHead{display:flex;justify-content:space-between;align-items:center}.simCode{font:650 21px ui-monospace,Consolas,monospace;letter-spacing:-.035em}.simName{font-size:11px;color:#c9d1d8;margin:11px 0 10px;font-weight:600}.simDetail{font-size:11px;color:var(--muted);min-height:47px;margin-bottom:12px}.simState{font-size:10px;line-height:1.45;color:var(--sim-accent,var(--accent))}.notice{margin:18px 0;padding:14px 18px;border:1px solid #59503b;border-radius:10px;background:#29261e;color:#d7cdb7;font-size:12px}
+.filterRow{display:flex;gap:7px;flex-wrap:wrap}.filter{padding:7px 11px;background:var(--pane);border:1px solid var(--line);color:var(--muted);border-radius:7px;font-size:11px}.filter.selected{background:#293b32;border-color:#66826f;color:#d7e8df}
+.roadmap{display:grid;grid-template-columns:36px minmax(0,1fr);gap:0 13px}.railSide{display:flex;flex-direction:column;align-items:center}.node{border:1px solid var(--line);background:#252b31;color:var(--muted);border-radius:50%;width:28px;height:28px;display:grid;place-items:center;font:11px ui-monospace,monospace;flex-shrink:0}.node.done{border-color:#557462;color:#c5ddcf;background:#29382f}.node.now{border-color:#927954;color:#e2cc9b;background:#3c3224}.connector{background:var(--line);width:1px;flex:1;min-height:22px}.roadItem{padding:0 0 23px}.roadItem h3{margin:2px 0 6px}.roadItem p{font-size:12px}.roadTags{display:flex;flex-wrap:wrap;gap:6px}.tableWrap{overflow-x:auto}.table{border-collapse:collapse;width:100%;min-width:650px;font-size:12px}.table th{text-transform:uppercase;font-size:10px;letter-spacing:.09em;color:var(--muted);font-weight:600;text-align:left;padding:13px 12px;border-bottom:1px solid var(--line)}.table td{border-bottom:1px solid #2b3036;padding:15px 12px;vertical-align:top}.table tr:last-child td{border-bottom:0}.table a{text-decoration:underline;text-decoration-color:#4f6058;text-underline-offset:3px}.table a:hover{color:#bcd7c7}.code{font:11px ui-monospace,Consolas,monospace;letter-spacing:-.01em}.search{background:#10151a;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--text);width:100%;max-width:270px}.search::placeholder{color:#6f7b87}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.blocker{padding:17px 20px}.blocker .id{font:11px ui-monospace,monospace;color:var(--gold)}.blocker h3{margin:8px 0}.blocker p{font-size:12px}.blocker .owner{font-size:11px;color:var(--muted)}
+.link{display:inline-flex;gap:7px;align-items:center;font-size:11px;color:#bcd1c4;text-decoration:none;border-bottom:1px solid #698272;padding-bottom:2px}.link:hover{color:#e2efe7}.fineprint{margin-top:35px;padding:21px 0;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
+.snapshot{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap}.snapshot strong{color:var(--text)}.empty{color:var(--muted);padding:26px}
+@media(max-width:1050px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.simGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}.shell{grid-template-columns:188px minmax(0,1fr)}}
+@media(max-width:690px){.shell{display:block}aside{height:auto;position:relative;border:0;border-bottom:1px solid var(--line);padding:13px 14px 10px}.logo{padding:0 0 12px;border:0}.logoMark{width:28px;height:28px}.sideLabel,.asideBottom{display:none}.nav{flex-direction:row;overflow-x:auto;gap:5px;padding-bottom:4px;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.nav button{width:auto;flex:none;white-space:nowrap;padding:8px 10px;font-size:11px}.nav button span:first-child{display:none}main{padding:22px 16px 60px}.masthead{padding-bottom:17px;flex-direction:column;gap:10px}.masthead h1{font-size:31px}.metrics{gap:9px}.metric{padding:14px;min-height:115px}.metric .value{font-size:30px}.two,.split{grid-template-columns:1fr}.panelPad{padding:17px}.simGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.sim{padding:14px;min-height:194px}.simDetail{min-height:56px}.barRow{grid-template-columns:100px 1fr 42px;gap:8px}.section{padding-top:24px}.sectionTitle{align-items:flex-start;flex-direction:column;gap:7px}.table{min-width:570px}}
+@media(prefers-reduced-motion:no-preference){.nav button,.filter,.sim{transition:background .18s,border-color .18s,transform .18s}.sim:hover{border-color:#4a5c52;transform:translateY(-1px)}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside>
+<div class="logo"><div class="logoMark">M</div><div><div class="logoTitle">MYLO</div><div class="logoSub">LABS / CONTROL</div></div></div>
+<div class="sideLabel">Workspace</div>
+<nav class="nav" aria-label="Bölümler">
+<button class="active" data-tab="overview" aria-current="page"><span>01</span> Genel bakış</button>
+<button data-tab="sims"><span>02</span> SIM sistemleri</button>
+<button data-tab="roadmap"><span>03</span> Yol haritası</button>
+<button data-tab="engineering"><span>04</span> Mühendislik</button>
+<button data-tab="decisions"><span>05</span> Kararlar</button>
+</nav>
+<div class="asideBottom"><strong>ENGINEERING SNAPSHOT</strong>26 Ekim 2026<br>Statik • Manuel güncelleme<br>Canlı broker / piyasa bağlantısı yok</div>
+</aside>
+<main>
+<header class="masthead">
+<div><div class="eyebrow">MYLO / RESEARCH & ENGINEERING</div><h1 id="pageTitle">Proje kontrol merkezi.</h1><div class="sub" id="pageSub">Araştırmadan güvenilir bir sinyal sistemine giden yol.</div></div>
+<div class="topMeta"><span class="dot" aria-hidden="true"></span> <span>26.10.2026</span><span class="pill">Snapshot</span></div>
+</header>
+<section class="section" id="overview">
+<div class="sectionTitle"><h2>Durum özeti</h2><span class="meta">DOĞRULANABİLİR İLERLEME</span></div>
+<div class="grid metrics">
+<div class="panel metric"><div class="key">Tanımlı uzman modüller</div><div class="value accent">08<span style="font-size:17px;color:#7a8b80"> / 08</span></div><div class="foot">Mimari kapsam tanımlı</div></div>
+<div class="panel metric"><div class="key">Açık mühendislik taslakları</div><div class="value blue">04</div><div class="foot">Birleştirilmiş: 0</div></div>
+<div class="panel metric"><div class="key">Son güvenli CI</div><div class="value accent">329</div><div class="foot">Test geçti · 0 hata · 0 atlanan</div></div>
+<div class="panel metric"><div class="key">Gerçek yürütme yetkisi</div><div class="value gold">KAPALI</div><div class="foot">Eğitim / canlı emir onayı yok</div></div>
+</div>
+<div class="section" style="padding-top:17px">
+<div class="grid two">
+<div class="panel panelPad"><div class="tiny">Gelişim haritası</div><h3>Mimari hazır, bilimsel kabul ayrı.</h3><p style="font-size:12px">Aşağıdaki göstergeler tamamlanma yüzdesi değil; birbirinden farklı doğrulama kapılarının durumudur.</p>
+<div class="bars">
+<div class="barRow"><div class="barName">SIM rol sözleşmeleri</div><div class="rail"><div class="fill" style="width:100%;background:var(--accent)"></div></div><div class="barValue">8 / 8</div></div>
+<div class="barRow"><div class="barName">Üretime kabul</div><div class="rail"><div class="fill" style="width:0;background:var(--gold)"></div></div><div class="barValue">0 / 8</div></div>
+<div class="barRow"><div class="barName">Birleştirilen PR</div><div class="rail"><div class="fill" style="width:0;background:var(--blue)"></div></div><div class="barValue">0 / 4</div></div>
+</div><div class="legend"><span><i style="background:var(--accent)"></i>Tanımlı</span><span><i style="background:var(--gold)"></i>Kabul bekliyor</span><span><i style="background:var(--blue)"></i>Birleşim kapısı</span></div>
+</div>
+<div class="panel panelPad"><div class="tiny">Bu haftanın odağı</div><h3>Bağımsız inceleme ve entegrasyon.</h3>
+<div class="rows">
+<div class="item"><div><b>VIRA araştırma kapısı</b><p>Sentetik kabul koşullu. Gerçek fit engelli.</p></div><span class="tag no">STOP</span></div>
+<div class="item"><div><b>8-SIM dikey dilimi</b><p>Sentetik paper akışı çalışıyor; ana PR taslak.</p></div><span class="tag draft">DRAFT</span></div>
+<div class="item"><div><b>Lex güvenlik yaması</b><p>NEO advisory ve NOLU onay şeması.</p></div><span class="tag ok">CI OK</span></div>
+<div class="item"><div><b>Codex iş bölümü</b><p>Protokol hazır; gerçek pilot bekliyor.</p></div><span class="tag warn">PILOT</span></div>
+</div></div></div>
+</div>
+<div class="sectionTitle" style="margin-top:27px"><h2>Öncelikli engeller</h2><span class="meta">KARAR / KANIT GEREKİYOR</span></div>
+<div class="grid split">
+<div class="panel blocker"><div class="id">GOV-01 / FOUNDER</div><h3>Mühürlü yıl erişim sınırı</h3><p>Eski testlerin gerçek XM geçmişini okuyabilen fixture'ı, güvenli test ortamından ayrıldı. Kalıcı veri erişim politikasının onayı gerekli.</p><span class="tag warn">KARAR BEKLİYOR</span></div>
+<div class="panel blocker"><div class="id">ARCH-02 / FOUNDER + REVIEW</div><h3>Akış sırası metninin uzlaştırılması</h3><p>Üst seviye mimari ile TAMB planı → NOLU onayı → MYLO sentezi sözleşmelerinin metinsel uyumu netleştirilmeli.</p><span class="tag warn">AÇIK</span></div>
+</div>
+</section>
+<section class="section" id="sims" hidden>
+<div class="sectionTitle"><h2>Sekiz uzman zekâ modülü</h2><span class="meta">MODEL EĞİTİMİ ≠ MÜHENDİSLİK</span></div>
+<div class="filterRow" style="margin-bottom:17px" role="group" aria-label="SIM filtreleri">
+<button class="filter selected" data-filter="all" aria-pressed="true">Tümü · 8</button><button class="filter" data-filter="research" aria-pressed="false">Araştırma</button><button class="filter" data-filter="prototype" aria-pressed="false">Prototip</button><button class="filter" data-filter="concept" aria-pressed="false">Konsept</button>
+</div>
+<div class="grid simGrid" id="simGrid"></div>
+<div class="notice"><strong>Önemli ayrım:</strong> Bir modülün şema, adaptör veya sentetik testi bulunması; canlı piyasada doğrulanmış ve kullanıma kabul edilmiş bir AI modelinin bulunduğu anlamına gelmez.</div>
+</section>
+<section class="section" id="roadmap" hidden>
+<div class="sectionTitle"><h2>İlerleme sırası</h2><span class="meta">GÜN TARİHİ DEĞİL, KABUL KAPILARI</span></div>
+<div class="panel panelPad"><div class="roadmap">
+<div class="railSide"><div class="node done">✓</div><div class="connector"></div></div><div class="roadItem"><h3>01. Mimari ve araştırma yönetişimi</h3><p>Sekiz SIM kimliği, görev sınırları, NEO konsepti, Founder karar süreçleri ve mühür ilkeleri kayda alındı. İlerleyen tasarım değişiklikleri ayrıca onaylanacak.</p><div class="roadTags"><span class="tag ok">KAVRAMSAL TEMEL</span></div></div>
+<div class="railSide"><div class="node done">✓</div><div class="connector"></div></div><div class="roadItem"><h3>02. Sentetik bütünleşik mühendislik</h3><p>Kanıt sözleşmeleri, paper risk, TAMB adaptörü, RYZO izleri ve MYLO senteziyle çalışan sınırlandırılmış dikey dilim hazırlandı. PR #2, #3 ve #4 henüz birleştirilmedi.</p><div class="roadTags"><span class="tag ok">SENTETİK TESTLİ</span><span class="tag draft">MERGE BEKLİYOR</span></div></div>
+<div class="railSide"><div class="node now">!</div><div class="connector"></div></div><div class="roadItem"><h3>03. Bağımsız kod ve mühür kabulü</h3><p>VIRA'nın F9-01 kapısı, yetkili immutable kanıtı, güvenli veri test sınırı; ayrıca PR #3/#4 için Claude incelemesi ve Founder kararları açık.</p><div class="roadTags"><span class="tag warn">ŞİMDİ</span><span class="tag no">GATE BLOCKED</span></div></div>
+<div class="railSide"><div class="node">4</div><div class="connector"></div></div><div class="roadItem"><h3>04. SIM çekirdeklerini gerçek sözleşmelerle büyütme</h3><p>KESH, NOLU, TAMB, RYZO ve MYLO için ayrı bilimsel hedef, özellik, metrik ve bütçe kararları; NEO için ilave tasarım değerlendirmesi.</p><div class="roadTags"><span class="tag">YENİ YETKİ GEREKİR</span></div></div>
+<div class="railSide"><div class="node">5</div><div class="connector"></div></div><div class="roadItem"><h3>05. Disiplinli Discovery değerlendirmesi</h3><p>Yalnız açık onayla gerçek fit, sürümlü metrik ve kaynak kanıtları; test / validation / holdout ayrımı korunacak.</p><div class="roadTags"><span class="tag">HENÜZ AÇIK DEĞİL</span></div></div>
+<div class="railSide"><div class="node">6</div></div><div class="roadItem" style="padding-bottom:0"><h3>06. Sinyal pilotu ve canlıya hazırlık</h3><p>İnsan onaylı, kural uyumlu sinyal değerlendirmesi ve risk denetimi. Canlı işlem veya gerçek emir yetkisi şu anda yok.</p><div class="roadTags"><span class="tag no">YETKİ YOK</span></div></div>
+</div></div>
+</section>
+<section class="section" id="engineering" hidden>
+<div class="sectionTitle"><h2>Mühendislik kayıtları</h2><span class="meta">SON DOĞRULANAN BRANCH DURUMU</span></div>
+<div class="panel" style="overflow:hidden"><div class="tableWrap"><table class="table"><thead><tr><th>Akış</th><th>Kapsam</th><th>CI</th><th>Durum</th></tr></thead><tbody id="prTable">
+<tr><td class="code">01 · VIRA</td><td>Bilimsel araştırma / fit kapısı</td><td>Koşullu sentetik kabul</td><td><span class="tag no">BLOCKED</span></td></tr>
+<tr><td class="code">02 · INTEGRATION</td><td>Claude / sentetik SIM orkestrasyonu</td><td>304 PASS</td><td><span class="tag draft">DRAFT</span></td></tr>
+<tr><td class="code">03 · RAIL GUARD</td><td>Lex / NOLU ve NEO sertleştirme</td><td>323 PASS</td><td><span class="tag draft">DRAFT</span></td></tr>
+<tr><td class="code">04 · AGENT PILOT</td><td>Lex / Claude–Codex–Work devir standardı</td><td>329 PASS</td><td><span class="tag draft">DRAFT</span></td></tr>
+</tbody></table></div></div>
+<div class="section" style="padding-top:25px"><div class="grid two">
+<div class="panel panelPad"><div class="tiny">Test politikasının özeti</div><h3>Veri olmadan test, veriyle bilimsel kabul değil.</h3><p style="font-size:12px">En yeni CI koşusunda piyasa veri dizini çalışma ortamına alınmadı. Önceden kullanılan gerçek veriye bağımlı tam testler bu ölçüme dahil değil.</p><div class="rows"><div class="item"><div><b>Sentetik testler</b><p>Son pilot dalında</p></div><span class="tag ok">329 PASS</span></div><div class="item"><div><b>Gerçek veriye bağımlı regresyon</b><p>Ayrı yetki ve güvenli kaynak kapsamı bekliyor</p></div><span class="tag warn">NOT RUN</span></div></div></div>
+<div class="panel panelPad"><div class="tiny">Geliştirici koordinasyonu</div><h3>Tek bir kod tabanı, izole sorumluluklar.</h3><p style="font-size:12px">Claude ana araştırma ve uygulamayı sürdürür. Lex bağımsız denetler; Codex izole yardımcı görevleri üstlenebilir; Work planlama ve kaynak araştırmasına destek olur. Üçlü üretim pilotu henüz gerçek teslimatla doğrulanmadı.</p><div class="callout"><strong>Pilot sınırı</strong>Ortak görev sözleşmesi mevcut. Gerçek Codex → Claude → Lex kabul zinciri henüz tamamlanmadı.</div></div>
+</div></div>
+</section>
+<section class="section" id="decisions" hidden>
+<div class="sectionTitle"><h2>Kararlar ve bekleyen işler</h2><input class="search" id="taskSearch" type="search" placeholder="Karar veya görev ara..." aria-label="Karar ara"></div>
+<div class="panel panelPad"><div class="rows" id="decisionList"></div><div class="empty" id="noTasks" hidden>Bu aramaya uygun görev bulunamadı.</div></div>
+<div class="notice">Bu kayıtlar plan değil, kontrol listesidir. Onay gerektiren kapsamların hiçbirini panel üzerinden otomatik açamazsın. Bilimsel kapıları yalnız proje yönetişim kayıtları belirler.</div>
+</section>
+<footer class="fineprint snapshot">
+<div><strong>MYLO Labs · Founder view</strong><div>Statik durum özeti. Son kaynak kontrolü 26 Ekim 2026. Canlı GitHub senkronizasyonu, gerçek piyasa verisi veya gizli depo erişimi yok.</div></div>
+<div>Public-safe snapshot · v1.0</div>
+</footer>
+</main>
+</div>
+<script>
+"use strict";
+const descriptions={
+ overview:["Proje kontrol merkezi.","Araştırmadan güvenilir bir sinyal sistemine giden yol."],
+ sims:["SIM sistemleri.","Sekiz uzman modülün araştırma, mühendislik ve yetki durumu."],
+ roadmap:["Yol haritası.","Teslimat sırası ile bilimsel kabul birbirinden ayrılır."],
+ engineering:["Mühendislik kayıtları.","Dallar, test kanıtı ve güvenli çalışma sınırları."],
+ decisions:["Açık kararlar.","Bir sonraki adımı belirleyen somut engeller ve görevler."]
+};
+const sims=[
+{code:"ODEN",name:"Fırsat ve volatilite",detail:"Donmuş Discovery araştırma ve eğitilmiş LightGBM-A soyuna ait kanıt mevcut.",state:"RESEARCH FROZEN",group:"research",color:"#a7c9b5",label:"Araştırma"},
+{code:"VIRA",name:"Yapı ve yön zekâsı",detail:"LightGBM araştırma altyapısı sentetik testli. Gerçek fit ve nihai kabul engelli.",state:"ACCEPTANCE BLOCKED",group:"research",color:"#d6bd85",label:"Engelli"},
+{code:"KESH",name:"Momentum ve güç",detail:"Nedensel geçmiş pencere betimleyicileri mevcut; eğitilmiş uzman model değil.",state:"SYNTHETIC CORE",group:"prototype",color:"#9db9d2",label:"Prototip"},
+{code:"NOLU",name:"Risk ve güvenlik",detail:"Plan hash'ine bağlı paper risk kapısı. Gerçek kurum kuralları değil.",state:"SYNTHETIC CORE",group:"prototype",color:"#9db9d2",label:"Prototip"},
+{code:"TAMB",name:"Plan ve simülasyon",detail:"Dondurulmuş plan ve kanonik sonuç motoruna bağlanan paper adaptörü.",state:"SYNTHETIC CORE",group:"prototype",color:"#9db9d2",label:"Prototip"},
+{code:"RYZO",name:"Kanıt ve hafıza",detail:"Bellek içi zaman damgalı hash zinciri; kalıcı WORM depo değil.",state:"SYNTHETIC CORE",group:"prototype",color:"#9db9d2",label:"Prototip"},
+{code:"MYLO",name:"Kanıt sentezi",detail:"Tipli orkestrasyon, fail-closed karar ve sentetik dikey dilim.",state:"SYNTHETIC CORE",group:"prototype",color:"#9db9d2",label:"Prototip"},
+{code:"NEO",name:"Zamansal olay zekâsı",detail:"Founder onaylı konsept. Danışmanlık stub'ı; uzman uygulama izni yok.",state:"CONCEPT ONLY",group:"concept",color:"#baa5d1",label:"Konsept"}
+];
+const tasks=[
+{id:"DATA-01",title:"Veri erişim politikası",desc:"Discovery-only fixture ve ayrı mühürlü yıl denetimi için Founder kararı.",owner:"FOUNDER + LEX",status:"KARAR"},
+{id:"ARCH-02",title:"TAMB → NOLU → MYLO sırası",desc:"Araştırma sözleşmeleriyle üst düzey mimari diyagramını uzlaştır.",owner:"FOUNDER + LEX",status:"KARAR"},
+{id:"VIRA-03",title:"VIRA nihai kabul kapanışı",desc:"F9-01, bağımsız immutable kanıt, yürütme yetkisi ve güvenli kaynak sınırı.",owner:"CLAUDE + LEX",status:"STOP"},
+{id:"CODE-04",title:"Lex PR #3 bağımsız inceleme",desc:"NEO advisory ve NOLU format kapısını Claude diff düzeyinde doğrulasın.",owner:"CLAUDE",status:"REVIEW"},
+{id:"AGENT-05",title:"Codex pilot deneyi",desc:"Kota yenilendiğinde izole sentetik NOLU–TAMB testi, manifest, Claude incelemesi.",owner:"CODEX + CLAUDE",status:"PAUSED"},
+{id:"MERGE-06",title:"PR #2 birleşim kararı",desc:"Bağımsız mühendislik kabulü ve Founder onayı olmadan merge yok.",owner:"FOUNDER",status:"KARAR"},
+{id:"NEO-07",title:"NEO tasarım yetkisi",desc:"Yeni model veya öğrenme sözleşmesi için ayrı Founder Design Review.",owner:"FOUNDER",status:"KAPALI"}
+];
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{
+const id=b.dataset.tab;document.querySelectorAll(".nav button").forEach(n=>{n.classList.toggle("active",n===b);n.removeAttribute("aria-current")});b.setAttribute("aria-current","page");
+document.querySelectorAll("main>section").forEach(s=>s.hidden=s.id!==id);
+document.getElementById("pageTitle").textContent=descriptions[id][0];
+document.getElementById("pageSub").textContent=descriptions[id][1];
+if(window.innerWidth<700)window.scrollTo({top:0,behavior:"auto"});
+}));
+function renderSims(group="all"){
+const grid=document.getElementById("simGrid");grid.replaceChildren();
+for(const x of sims.filter(s=>group==="all"||s.group===group)){
+const article=document.createElement("article");article.className="panel sim";article.style.setProperty("--sim-accent",x.color);
+const head=document.createElement("div");head.className="simHead";const code=document.createElement("span");code.className="simCode";code.textContent=x.code;const badge=document.createElement("span");badge.className="tag";badge.textContent=x.label;head.append(code,badge);
+const name=document.createElement("div");name.className="simName";name.textContent=x.name;const description=document.createElement("div");description.className="simDetail";description.textContent=x.detail;const state=document.createElement("div");state.className="simState";state.textContent=x.state;article.append(head,name,description,state);grid.append(article)
+}}
+document.querySelectorAll("[data-filter]").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll("[data-filter]").forEach(b=>{b.classList.toggle("selected",b===button);b.setAttribute("aria-pressed",String(b===button))});renderSims(button.dataset.filter)}));
+function renderTasks(q=""){let list=document.getElementById("decisionList");list.replaceChildren();let xs=tasks.filter(x=>[x.id,x.title,x.desc,x.owner,x.status].join(" ").toLocaleLowerCase("tr").includes(q.toLocaleLowerCase("tr")));for(const item of xs){const row=document.createElement("div");row.className="item";const left=document.createElement("div");const title=document.createElement("b");title.textContent=item.id+" · "+item.title;const desc=document.createElement("p");desc.textContent=item.desc;const owner=document.createElement("p");owner.textContent=item.owner;left.append(title,desc,owner);const badge=document.createElement("span");badge.className="tag "+(item.status==="STOP"?"no":"warn");badge.textContent=item.status;row.append(left,badge);list.append(row)}document.getElementById("noTasks").hidden=xs.length!==0;}
+document.getElementById("taskSearch").addEventListener("input",e=>renderTasks(e.target.value));
+renderSims();renderTasks();
+</script>
+</body></html>
