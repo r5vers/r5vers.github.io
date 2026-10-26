@@ -175,296 +175,43 @@ button.ol-chip { cursor: pointer; }
   .side-main { opacity: 1; }
 }
 
-/* ══ Alltra × RV: the chart page ══════════════════════════════════════
-   A black ground, panels a step above it with a hairline edge, controls as
-   pills that sit on the black on their own (no bar around them), large
-   soft corners. The candles stay the only colour; the accent marks what is
-   chosen. FX Replay's order of the foot: trade on the left, the replay in
-   the middle, the account on the right, under the charts rather than over
-   them. */
-:root:not([data-style="brutal"]) body.page-chart {
-  --cp-bg: #000;
-  --cp-panel: #0b0b0d;
-  --cp-raised: #151517;
-  --cp-hover: rgba(255, 255, 255, .055);
-  --cp-active: rgba(255, 255, 255, .09);
-  --cp-line: rgba(255, 255, 255, .07);
-  --cp-line-2: rgba(255, 255, 255, .12);
-  --cp-shadow: 0 0 0 1px var(--cp-line);
-  --strip-h: 54px;
-  --pill: 999px;
-}
-:root[data-theme="light"]:not([data-style="brutal"]) body.page-chart {
-  --cp-bg: #f2f2f5; --cp-panel: #fff; --cp-raised: #fff; --cp-line: rgba(20, 24, 40, .08); --cp-line-2: rgba(20, 24, 40, .14);
-  --cp-shadow: 0 0 0 1px var(--cp-line), 0 10px 26px -20px rgba(20, 24, 40, .4);
-}
-
-/* top bar: no panel, the controls are pills on the black */
-:root:not([data-style="brutal"]) .page-chart .topbar.glass { background: transparent; box-shadow: none; padding: 2px 2px 0; gap: 8px; overflow: visible; }
-:root:not([data-style="brutal"]) .page-chart .topbar { contain: none; }
-:root:not([data-style="brutal"]) .page-chart :is(.topbar .instrument, .topbar .tf-group, .topbar .mode-switch, .topbar .legs, .topbar .profile-chip, .topbar .search-btn) {
-  background: var(--cp-panel); box-shadow: 0 0 0 1px var(--cp-line); border-radius: var(--pill);
-}
-:root:not([data-style="brutal"]) .page-chart .topbar .home-link { width: 42px; height: 42px; padding: 0; justify-content: center; border-radius: 50%; background: var(--cp-panel); box-shadow: 0 0 0 1px var(--cp-line); }
-:root:not([data-style="brutal"]) .page-chart .topbar .home-link .hl-t { display: none; }
-:root:not([data-style="brutal"]) .page-chart .topbar .instrument { height: 42px; padding: 0 16px 0 14px; }
-:root:not([data-style="brutal"]) .page-chart .topbar :is(.tf-group, .mode-switch, .legs) { padding: 4px; height: 42px; align-items: center; }
-:root:not([data-style="brutal"]) .page-chart .topbar :is(.tf-group .btn, .tf-group select.more, .mode-switch button) { height: 34px; border-radius: var(--pill); }
-:root:not([data-style="brutal"]) .page-chart .topbar :is(.tf-group .btn.active, .tf-group select.more.on, .mode-switch button.on) { background: var(--cp-raised); box-shadow: 0 0 0 1px var(--cp-line-2); }
-:root:not([data-style="brutal"]) .page-chart .topbar .mode-switch button.on { background: color-mix(in srgb, var(--accent) 22%, var(--cp-raised)); color: var(--text); }
-:root:not([data-style="brutal"]) .page-chart .topbar .btn.icon { width: 42px; height: 42px; border-radius: 50%; background: var(--cp-panel); box-shadow: 0 0 0 1px var(--cp-line); color: var(--text-2); }
-:root:not([data-style="brutal"]) .page-chart .topbar .btn.icon:hover { background: var(--cp-raised); color: var(--text); }
-:root:not([data-style="brutal"]) .page-chart .topbar .btn.icon.active { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--cp-panel)); }
-:root:not([data-style="brutal"]) .page-chart .topbar #btn-indicators { height: 42px; padding: 0 16px; border-radius: var(--pill); background: var(--cp-panel); box-shadow: 0 0 0 1px var(--cp-line); }
-:root:not([data-style="brutal"]) .page-chart .topbar .search-btn { height: 42px; padding: 0 8px 0 14px; }
-:root:not([data-style="brutal"]) .page-chart .topbar .search-btn kbd { border-radius: var(--pill); padding: 2px 8px; }
-:root:not([data-style="brutal"]) .page-chart .topbar .profile-chip { height: 42px; padding: 0 14px 0 4px; }
-:root:not([data-style="brutal"]) .page-chart .topbar .profile-chip .avatar.sm { border-radius: 50%; width: 34px; height: 34px; }
-:root:not([data-style="brutal"]) .page-chart .topbar .legs .leg { border-radius: var(--pill); height: 34px; }
-
-/* the drawing bar: a floating column of soft squares */
-:root:not([data-style="brutal"]) .page-chart #draw-toolbar { border-radius: 22px; background: var(--cp-panel); box-shadow: 0 0 0 1px var(--cp-line); padding: 6px 5px; }
-:root:not([data-style="brutal"]) .page-chart #draw-toolbar .btn { border-radius: 12px; }
-:root:not([data-style="brutal"]) .page-chart #draw-toolbar .btn.active { background: color-mix(in srgb, var(--accent) 18%, transparent); box-shadow: none; }
-
-/* the charts' card, and the strip at its foot */
-:root:not([data-style="brutal"]) .page-chart .chart-area.glass { border-radius: 22px; background: var(--cp-panel); box-shadow: 0 0 0 1px var(--cp-line); }
-.page-chart .panes { bottom: var(--strip-h, 54px); }
-.page-chart #chart-msg { bottom: var(--strip-h, 54px); }
-.ctrl-strip { position: absolute; left: 0; right: 0; bottom: 0; height: var(--strip-h, 54px); z-index: 8; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 0 10px;
-  border-top: 1px solid var(--cp-line, var(--line)); background: color-mix(in srgb, var(--cp-panel, #0b0b0d) 70%, var(--cp-bg, #000)); }
-.ctrl-strip .cs-left { justify-self: start; display: flex; align-items: center; gap: 8px; min-width: 0; }
-.ctrl-strip .cs-right { justify-self: end; display: flex; align-items: center; gap: 8px; min-width: 0; }
-.page-chart .ctrl-strip .replay-dock { position: static; transform: none; max-width: none; z-index: auto; justify-self: center; padding: 0; gap: 4px; background: transparent !important; box-shadow: none !important; border-radius: 0; }
-.page-chart .ctrl-strip .replay-dock::before, .page-chart .ctrl-strip .replay-dock::after { display: none; }
-.page-chart.page-chart .mode-browse .ctrl-strip .replay-dock { top: auto; right: auto; padding: 0; }
-.page-chart .ctrl-strip .replay-dock .btn { height: 36px; min-width: 36px; padding: 0 9px; border-radius: var(--pill, 999px); color: var(--text-2); }
-.page-chart .ctrl-strip .replay-dock .btn:hover { background: var(--cp-hover, var(--fill)); color: var(--text); }
-.page-chart .ctrl-strip .replay-dock .btn.play { width: 44px; height: 40px; color: #fff; background: var(--accent); box-shadow: 0 6px 20px -8px color-mix(in srgb, var(--accent) 80%, transparent); }
-.page-chart .ctrl-strip .replay-dock .btn.play:hover { background: color-mix(in srgb, var(--accent), #fff 12%); color: #fff; }
-.page-chart .ctrl-strip .replay-dock select.ctl.sm { height: 34px; border-radius: var(--pill, 999px); background-color: var(--cp-raised, var(--fill)); border: 0; box-shadow: 0 0 0 1px var(--cp-line, var(--line)); padding-left: 12px; }
-.page-chart .ctrl-strip .replay-dock .vr { background: var(--cp-line, var(--line)); height: 20px; }
-.page-chart .ctrl-strip .replay-dock .clock { padding: 0 12px; height: 34px; display: inline-flex; align-items: center; border-radius: var(--pill, 999px); background: var(--cp-raised, var(--fill)); box-shadow: 0 0 0 1px var(--cp-line, var(--line)); }
-.page-chart .ctrl-strip .replay-dock .btn.small.primary { height: 36px; padding: 0 16px; border-radius: var(--pill, 999px); background: var(--accent); color: #fff; }
-.page-chart .ctrl-strip .trade-bar { position: static; display: none; box-shadow: none; background: transparent; padding: 0; gap: 6px; }
-.page-chart .ctrl-strip .trade-bar.on { display: flex; }
-.page-chart .ctrl-strip .trade-bar .tb-size { background: var(--cp-raised, var(--fill)); box-shadow: 0 0 0 1px var(--cp-line, var(--line)); margin: 0; }
-.page-chart .scrub { bottom: calc(var(--strip-h, 54px) + 8px); }
-.cs-acct { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: var(--pill, 999px); background: var(--cp-raised, var(--fill)); box-shadow: 0 0 0 1px var(--cp-line, var(--line)); font-size: 12.5px; white-space: nowrap; }
-.cs-acct[hidden] { display: none; }
-.cs-acct .cs-bal { color: var(--text); font-weight: 600; }
-.cs-acct .cs-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); }
-.cs-acct .cs-dot.up { background: var(--nx-tp); } .cs-acct .cs-dot.down { background: var(--nx-sell); }
-.cs-acct .cs-open { color: var(--muted); } .cs-acct .cs-open.up { color: var(--nx-tp); } .cs-acct .cs-open.down { color: var(--nx-sell); }
-#app:not(.mode-browse) #drawing-props { bottom: calc(var(--strip-h, 54px) + 12px); }
-
-/* the order ticket and the panel under the charts: cards and pills */
-:root:not([data-style="brutal"]) .page-chart .sidepanel.glass { border-radius: 22px; background: var(--cp-panel); box-shadow: 0 0 0 1px var(--cp-line); }
-:root:not([data-style="brutal"]) .page-chart .sidepanel .card { border-radius: 18px; background: var(--cp-raised); border-color: transparent; box-shadow: 0 0 0 1px var(--cp-line); }
-:root:not([data-style="brutal"]) .page-chart .sidepanel .quote button { border-radius: 16px; }
-:root:not([data-style="brutal"]) .page-chart .sidepanel .quote .buy { background: var(--nx-buy); color: #fff; box-shadow: none; }
-:root:not([data-style="brutal"]) .page-chart .sidepanel .quote .sell { background: var(--nx-sell); color: #fff; box-shadow: none; }
-:root:not([data-style="brutal"]) .page-chart .sidepanel .seg { border-radius: var(--pill); }
-:root:not([data-style="brutal"]) .page-chart .sidepanel .seg button { border-radius: var(--pill); }
-:root:not([data-style="brutal"]) .page-chart #app #bottom { border-radius: 22px; background: var(--cp-panel); box-shadow: 0 0 0 1px var(--cp-line); }
-:root:not([data-style="brutal"]) .page-chart #bottom .tabs { gap: 6px; padding: 0 8px; border-bottom-color: var(--cp-line); }
-:root:not([data-style="brutal"]) .page-chart #bottom .tabs .tab { height: 32px; border-radius: var(--pill); padding: 0 14px; }
-:root:not([data-style="brutal"]) .page-chart #bottom .tabs .tab.on { background: var(--cp-raised); box-shadow: 0 0 0 1px var(--cp-line-2); }
-:root:not([data-style="brutal"]) .page-chart #bottom:not(.collapsed) .tabs .tab.on::after { display: none; }
-:root:not([data-style="brutal"]) .page-chart #bottom .tabs .tab .count { border-radius: var(--pill); }
-
-/* menus: raised black cards with large corners */
-:root:not([data-style="brutal"]) .page-chart :is(.popover, .context-menu, .tool-flyout) { border-radius: 20px; background: #121214; box-shadow: 0 0 0 1px var(--cp-line-2), 0 24px 60px -20px rgba(0, 0, 0, .85); }
-:root[data-theme="light"]:not([data-style="brutal"]) .page-chart :is(.popover, .context-menu, .tool-flyout) { background: #fff; }
-:root:not([data-style="brutal"]) .page-chart .popover .item { border-radius: 12px; }
-:root:not([data-style="brutal"]) .page-chart .floating { border-radius: 18px; }
-
+/* ── the draft order: what confirming does, with confirm and cancel ──── */
+.draft-bar { position: absolute; z-index: 12; left: 50%; bottom: calc(var(--strip-h, 54px) + 44px); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 14px; max-width: calc(100% - 24px);
+  border-radius: 16px; background: var(--nx-chip-bg); box-shadow: 0 0 0 1px var(--line-2), 0 16px 40px rgba(0, 0, 0, .55);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); font: 500 12.5px/1.2 var(--font); color: var(--text); }
+.draft-bar[hidden] { display: none; }
+.draft-bar .db-head { display: grid; gap: 2px; padding-right: 12px; border-right: 1px solid var(--line); }
+.draft-bar .db-head b { font: 700 13px/1 var(--font); letter-spacing: .04em; }
+.draft-bar.buy .db-head b { color: var(--nx-buy); }
+.draft-bar.sell .db-head b { color: var(--nx-sell); }
+.draft-bar .db-head span { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.draft-bar .db-items { display: flex; gap: 16px; }
+.draft-bar .db-item { display: grid; gap: 3px; white-space: nowrap; }
+.draft-bar .db-k { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.draft-bar .db-v { font: 600 12.5px/1 var(--mono); }
+.draft-bar .db-item.muted .db-v { color: var(--muted); font-weight: 500; }
+.draft-bar .db-item.up .db-v { color: var(--nx-tp); }
+.draft-bar .db-why { font-size: 12px; color: var(--nx-sl); max-width: 220px; line-height: 1.3; }
+.draft-bar .db-actions { display: flex; gap: 6px; margin-left: auto; }
+.draft-bar button { height: 36px; padding: 0 14px; border: 0; border-radius: 10px; cursor: pointer; font: 600 13px/1 var(--font); white-space: nowrap; }
+.draft-bar .db-cancel { background: var(--fill-2); color: var(--text); }
+.draft-bar .db-cancel:hover { background: var(--fill-3, var(--fill-2)); }
+.draft-bar .db-go { min-width: 92px; color: #fff; }
+.draft-bar.buy .db-go { background: var(--nx-buy); }
+.draft-bar.sell .db-go { background: var(--nx-sell); }
+.draft-bar .db-go:disabled { opacity: .4; cursor: not-allowed; }
+.ol-draft.ol-entry .ol-type { color: var(--text); }
+.ol-draft.ol-entry.buy .ol-type { color: var(--nx-buy); }
+.ol-draft.ol-entry.sell .ol-type { color: var(--nx-sell); }
+.ol-add { animation: ol-nudge 1.6s ease-in-out 2; }
+@keyframes ol-nudge { 50% { transform: translateY(-2px); box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 25%, transparent); } }
 @media (max-width: 760px) {
-  /* phones: Alltra's top (a round home, the market in a pill, round
-     buttons) and a foot of two rows: the replay, then Buy · lot · Sell */
-  :root:not([data-style="brutal"]) .page-chart .topbar { gap: 6px; padding: 0; }
-  :root:not([data-style="brutal"]) .page-chart .topbar .home-link { display: inline-flex !important; width: 40px; height: 40px; }
-  :root:not([data-style="brutal"]) .page-chart .topbar .instrument { height: 40px; padding: 0 14px; flex: 1 1 auto; }
-  :root:not([data-style="brutal"]) .page-chart .topbar #tf-select { height: 40px; border-radius: var(--pill); background-color: var(--cp-panel); box-shadow: 0 0 0 1px var(--cp-line); border: 0; }
-  :root:not([data-style="brutal"]) .page-chart .topbar :is(.mode-switch, .legs) { height: 40px; }
-  :root:not([data-style="brutal"]) .page-chart .topbar .mode-switch button { height: 32px; padding: 0 9px; }
-  :root:not([data-style="brutal"]) .page-chart .topbar .btn.icon { width: 40px; height: 40px; }
-  :root:not([data-style="brutal"]) .page-chart .topbar .profile-chip { width: 40px; height: 40px; padding: 0; justify-content: center; background: var(--cp-panel); }
-  :root:not([data-style="brutal"]) .page-chart .topbar .profile-chip .pname { display: none; }
-  :is(#btn-layout, #btn-shot) { display: none !important; }
-  .page-chart #app:is(.mode-replay) { --strip-h: 108px; }
-  .ctrl-strip { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; align-content: center; gap: 6px; padding: 6px 8px; }
-  .ctrl-strip .cs-left { grid-row: 2; justify-self: stretch; }
-  .ctrl-strip .cs-right { display: none; }
-  .page-chart .ctrl-strip .replay-dock { grid-row: 1; justify-self: stretch; overflow-x: auto; justify-content: flex-start; }
-  .page-chart .ctrl-strip .trade-bar { flex: 1; display: none; }
-  .page-chart .ctrl-strip .trade-bar.on { display: flex; width: 100%; padding: 4px; border-radius: var(--pill); background: var(--cp-raised); box-shadow: 0 0 0 1px var(--cp-line); }
-  .page-chart .ctrl-strip .trade-bar .tb-size { background: transparent; box-shadow: none; }
-  .page-chart .ctrl-strip .trade-bar button { height: 40px; }
-  .page-chart .ctrl-strip .replay-dock .btn { height: 38px; min-width: 38px; }
-  .page-chart .ctrl-strip .replay-dock .clock { font-size: 10.5px; padding: 0 8px; }
-  .page-chart .ctrl-strip .replay-dock .lbl { display: none; }
-}
-/* the strip: the sides keep their size, the replay in the middle gives way */
-.ctrl-strip { grid-template-columns: auto minmax(0, 1fr) auto; }
-.page-chart .ctrl-strip .replay-dock { justify-self: center; max-width: 100%; overflow-x: auto; }
-.page-chart .ctrl-strip .replay-dock .btn.small.active { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
-@media (max-width: 1180px) { .page-chart .ctrl-strip .trade-bar .tb-p { display: none; } }
-@media (max-width: 760px) {
-  /* one mode button (a tap offers the others); the order panel lives in the foot */
-  :root:not([data-style="brutal"]) .page-chart .topbar .mode-switch button:not(.on) { display: none; }
-  :root:not([data-style="brutal"]) .page-chart .topbar .mode-switch { padding: 3px; }
-  :root:not([data-style="brutal"]) .page-chart .topbar .mode-switch button.on { width: 34px; padding: 0; justify-content: center; }
-  :root:not([data-style="brutal"]) .page-chart .topbar :is(.home-link, .btn.icon, .profile-chip) { width: 38px; height: 38px; }
-  :root:not([data-style="brutal"]) .page-chart .topbar .instrument { height: 38px; min-width: 0; overflow: hidden; }
-  :root:not([data-style="brutal"]) .page-chart .topbar :is(.mode-switch, #tf-select) { height: 38px; }
-  :root:not([data-style="brutal"]) .page-chart .topbar #tf-select { width: 62px; flex: none; }
-  #btn-panel { display: none !important; }
-  /* two notes at most over the chart */
-  #toasts .toast:nth-last-child(n+3) { display: none; }
-}
-.page-chart .ctrl-strip .replay-dock select.ctl.sm { padding-right: 26px; }
-.page-chart .ctrl-strip .replay-dock select.unit { max-width: 112px; }
-/* the replay's time: beside the account on a wide screen, in the dock on a phone */
-.cs-clock { display: inline-flex; align-items: center; height: 36px; padding: 0 12px; border-radius: 999px; font-size: 11.5px; color: var(--text-2); white-space: nowrap; }
-.cs-clock[hidden] { display: none; }
-@media (min-width: 761px) { .page-chart #app.mode-replay .ctrl-strip .replay-dock .clock { display: none; } }
-/* the strip makes room as it narrows (the order panel open, a small laptop) */
-.ctrl-strip { container-type: inline-size; container-name: strip; }
-.page-chart .ctrl-strip .replay-dock select.unit { max-width: 96px; }
-@container strip (max-width: 1180px) {
-  .trade-bar .tb-p { display: none; }
-  .trade-bar .tb-size.risk::before { display: none; }
-}
-@container strip (max-width: 980px) {
-  .cs-clock { padding: 0 6px; font-size: 11px; }
-  .trade-bar button { padding: 0 11px; }
-}
-@container strip (max-width: 860px) {
-  .cs-clock { display: none !important; }
-  .page-chart #app.mode-replay .ctrl-strip .replay-dock .clock { display: inline-flex; }
-}
-/* on a wide screen "Grafik" in the top bar leaves the replay */
-@media (min-width: 761px) { .page-chart .ctrl-strip .replay-dock .dock-exit { display: none; } }
-
-/* ══ Alltra × RV: the home screen ═════════════════════════════════════
-   The look the trader chose stays the ground; on it Alltra's language:
-   panels a step above with a hairline edge and big soft corners, actions
-   as pills, numbers large and calm, rings for rates. On phones the dock
-   floats as one pill at the foot. */
-:root:not([data-style="brutal"]) body.page-home {
-  --hp-panel: color-mix(in srgb, #0b0b0d 86%, transparent);
-  --hp-raised: color-mix(in srgb, #151517 92%, transparent);
-  --hp-line: rgba(255, 255, 255, .075);
-  --hp-line-2: rgba(255, 255, 255, .13);
-  --hp-r: 22px;
-}
-:root[data-theme="light"]:not([data-style="brutal"]) body.page-home {
-  --hp-panel: color-mix(in srgb, #fff 90%, transparent); --hp-raised: #fff;
-  --hp-line: rgba(20, 24, 40, .08); --hp-line-2: rgba(20, 24, 40, .14);
-}
-:root:not([data-style="brutal"]) .page-home :is(.home .glass, .home .action, .home .market, .nx-tile, .nx-resume) {
-  background: var(--hp-panel); box-shadow: 0 0 0 1px var(--hp-line); border-radius: var(--hp-r);
-}
-:root:not([data-style="brutal"]) .page-home .home-bar.glass { border-radius: 999px; background: var(--hp-panel); box-shadow: 0 0 0 1px var(--hp-line), 0 18px 40px -28px rgba(0, 0, 0, .8); padding: 6px 6px 6px 12px; }
-:root:not([data-style="brutal"]) .page-home .home-bar :is(.btn, .profile-chip) { border-radius: 999px; }
-:root:not([data-style="brutal"]) .page-home .home-bar .btn.primary { padding-inline: 16px; }
-
-/* hero: a large card, the greeting and the three ways in, resume on the right */
-.nx-hero { position: relative; display: grid !important; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 22px !important; padding: 34px 34px 28px !important; margin-top: 18px; overflow: hidden; isolation: isolate;
-  border-radius: 28px; background: var(--hp-panel, var(--surface)); box-shadow: 0 0 0 1px var(--hp-line, var(--line)); }
-.nx-hero::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accent) 26%, transparent) 0%, transparent 55%),
-    radial-gradient(90% 120% at 100% 100%, color-mix(in srgb, #a855f7 22%, transparent) 0%, transparent 60%); }
-.nx-hero-l { display: grid; gap: 6px; min-width: 0; }
-.nx-hero h1 { font-size: clamp(30px, 4.6vw, 54px); }
-.nx-hero-sub { margin: 4px 0 0; max-width: 560px; color: var(--text-2); font-size: 15px; line-height: 1.5; }
-.nx-hero-cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-.nx-pill { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px 0 13px; border: 0; border-radius: 999px; cursor: pointer; font: 600 13.5px/1 var(--font);
-  color: var(--text); background: rgba(var(--light, 255, 255, 255), .07); box-shadow: inset 0 0 0 1px var(--hp-line-2, var(--line)); transition: background .15s, transform .15s; }
-.nx-pill:hover { background: rgba(var(--light, 255, 255, 255), .12); }
-.nx-pill:active { transform: scale(.97); }
-.nx-pill.primary { color: #fff; background: linear-gradient(135deg, #a855f7, color-mix(in srgb, #a855f7 55%, var(--accent))); box-shadow: 0 10px 26px -12px #a855f7; }
-.nx-pill.primary:hover { filter: brightness(1.08); }
-.nx-hero .sessions-now { margin-top: 12px; }
-.nx-hero .lead { font-size: 12.5px; color: var(--muted); }
-.nx-resume { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; width: 300px; padding: 14px 18px 14px 14px; border: 0; cursor: pointer; text-align: left; color: var(--text);
-  background: var(--hp-raised, var(--surface-strong)) !important; transition: transform .2s cubic-bezier(.2,.8,.2,1); }
-.nx-resume:hover { transform: translateY(-2px); }
-.nx-play { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #a855f7, var(--accent)); box-shadow: 0 12px 28px -12px #a855f7; }
-.nx-play .ico { transform: translateX(1px); }
-.nx-resume-t { display: grid; gap: 3px; min-width: 0; }
-.nx-resume-t small { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
-.nx-resume-t b { font-size: 15px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nx-resume-t span { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nx-resume-net { position: absolute; right: 14px; top: 12px; font: 600 12px/1 var(--mono); }
-.nx-hero.w-compact .nx-hero-sub, .nx-hero.w-compact .nx-hero-cta { display: none; }
-.nx-hero.w-compact { padding: 22px 24px !important; }
-
-/* analytics tiles */
-.nx-sub { font-size: 12px; color: var(--muted); }
-.nx-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-.nx-tile { position: relative; display: grid; align-content: start; gap: 5px; padding: 18px 20px; min-width: 0; overflow: hidden; }
-.nx-tile.wide { grid-column: span 2; grid-row: span 2; align-content: space-between; }
-.nx-tiles > .nx-tile:nth-child(n+2) { min-height: 104px; }
-.nx-tile .k { font-size: 12.5px; color: var(--muted); font-weight: 500; }
-.nx-tile .v { font: 600 24px/1.1 var(--mono); font-stretch: var(--mono-stretch); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.nx-tile .v.big { font-size: clamp(30px, 3.6vw, 44px); }
-.nx-tile .s { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.nx-tile-spark .spark, .nx-tile-spark svg { display: block; width: 100%; height: 46px; }
-.nx-tile.ring { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
-.nx-ring svg { display: block; }
-.nx-ring-t { display: grid; gap: 5px; min-width: 0; }
-.nx-ring .ring-fg.none { display: none; }
-.nx-ring .ring-bg { stroke: rgba(var(--light, 255, 255, 255), .08); }
-.nx-ring .ring-fg { stroke: var(--up, #2fd282); transition: stroke-dasharray .6s cubic-bezier(.2,.8,.2,1); }
-.nx-ring.low .ring-fg { stroke: var(--down, #ff5a76); }
-.nx-perf.w-compact .nx-tile.wide { grid-row: auto; }
-.nx-perf.w-compact .nx-tile-spark { display: none; }
-
-/* session filter chips */
-.nx-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
-.nx-chip { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border: 0; border-radius: 999px; cursor: pointer; font: 600 12.5px/1 var(--font); color: var(--text-2);
-  background: var(--hp-panel, var(--fill)); box-shadow: inset 0 0 0 1px var(--hp-line, var(--line)); }
-.nx-chip small { font: 500 11px/1 var(--mono); color: var(--muted); }
-.nx-chip:hover:not(:disabled) { color: var(--text); }
-.nx-chip.on { color: var(--text); background: color-mix(in srgb, var(--accent) 16%, var(--hp-panel, transparent)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); }
-.nx-chip:disabled { opacity: .4; cursor: default; }
-.nx-none { padding: 18px; color: var(--muted); font-size: 13px; text-align: center; }
-:root:not([data-style="brutal"]) .page-home .list .row { border-radius: 16px; }
-:root:not([data-style="brutal"]) .page-home .list .row + .row { box-shadow: inset 0 1px 0 var(--hp-line); }
-:root:not([data-style="brutal"]) .page-home .list .row .btn { border-radius: 999px; }
-:root:not([data-style="brutal"]) .page-home .action-ic { border-radius: 50%; }
-:root:not([data-style="brutal"]) .page-home .sec-head .btn { border-radius: 999px; }
-
-/* the dock floats as one pill */
-:root:not([data-style="brutal"]) .page-home .home-dock { gap: 6px; padding: 7px; border-radius: 999px; background: color-mix(in srgb, #111114 88%, transparent); box-shadow: 0 0 0 1px var(--hp-line-2), 0 20px 50px -18px rgba(0, 0, 0, .9);
-  -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4); }
-:root:not([data-style="brutal"]) .page-home .dock-app { width: 50px; height: 50px; border-radius: 50%; background: transparent; box-shadow: none; color: var(--text-2); }
-:root:not([data-style="brutal"]) .page-home .dock-cell:first-child .dock-app { color: #fff; background: linear-gradient(135deg, #a855f7, var(--accent)); }
-:root:not([data-style="brutal"]) .page-home .dock-app:hover { color: var(--text); background: rgba(255, 255, 255, .07); transform: none; }
-
-@media (max-width: 960px) {
-  .nx-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .nx-tile.wide { grid-row: auto; }
-}
-@media (max-width: 760px) {
-  .nx-hero { grid-template-columns: 1fr; padding: 24px 20px 20px !important; border-radius: 24px; margin-top: 8px; }
-  .nx-hero-sub { font-size: 14px; }
-  .nx-hero-cta .nx-pill:not(.primary):last-child { display: none; }
-  .nx-resume { width: auto; }
-  .nx-tile { padding: 15px 16px; }
-  .nx-tile .v { font-size: 20px; }
-  .nx-tile.ring svg { width: 52px; height: 52px; }
-}
-
-/* profiles: the same panels and pills */
-:root:not([data-style="brutal"]) .page-profiles .cloud-zone { border-radius: 22px; background: color-mix(in srgb, #0b0b0d 82%, transparent); box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); }
-:root:not([data-style="brutal"]) .page-profiles .cloud-zone .cloud-title .ico { color: #a855f7; }
-:root:not([data-style="brutal"]) .page-profiles .profile-actions .btn { border-radius: 999px; }
-:root:not([data-style="brutal"]) .page-profiles .profile-tile .avatar.lg.plus { border-radius: 50%; }
-@media (max-width: 760px) {
-  .nx-hero .sessions-now { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -20px; padding-inline: 20px; }
-  .nx-hero .sessions-now::-webkit-scrollbar { display: none; }
-  .nx-hero .sess { flex: none; }
+  .draft-bar { left: 8px; right: 8px; transform: none; max-width: none; flex-wrap: wrap; gap: 8px 12px; padding: 10px; bottom: calc(var(--nx-dock-h, 74px) + 10px); }
+  .draft-bar .db-head { border-right: 0; padding-right: 0; }
+  .draft-bar .db-items { gap: 12px; flex: 1; justify-content: flex-end; }
+  .draft-bar .db-why { flex-basis: 100%; max-width: none; order: 3; }
+  .draft-bar .db-actions { flex-basis: 100%; order: 4; }
+  .draft-bar .db-actions button { flex: 1; height: 44px; }
+  .ol-chip { height: 28px; min-width: 28px; font-size: 12px; }
 }

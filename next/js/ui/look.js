@@ -1,7 +1,7 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=f80c737c90';
-import { field, h, icon } from './dom.js?v=f80c737c90';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=379181f731';
+import { field, h, icon } from './dom.js?v=379181f731';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -10,6 +10,9 @@ const MIN_APPEARANCE_VERSION = 5;
 
 /** Type pairings: display (headings), ui (text) and data (numbers, chart). */
 export const FONT_PAIRS = {
+  sistem: { name: 'Sistem', note: 'cihazın kendi yazısı (iPhone’da SF, Android’de Roboto) · Inter gibi',
+    display: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto", ui: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', Roboto", mono: "ui-monospace, 'SF Mono', 'Roboto Mono', Menlo",
+    dWeight: 650, dTrack: '-0.02em', dCase: 'none', dStretch: '100%', dSettings: 'normal', monoStretch: '100%', uiSize: '14px' },
   nokta: { name: 'Nokta', note: 'Doto (nokta matris) · Instrument Sans · Azeret Mono',
     display: "'Doto'", ui: "'Instrument Sans'", mono: "'Azeret Mono'",
     dWeight: 800, dTrack: '0.01em', dCase: 'none', dStretch: '100%', dSettings: '"ROND" 100', monoStretch: '100%', uiSize: '13.5px' },
@@ -49,6 +52,7 @@ export const FONT_PAIRS = {
  *  so the glass has something to refract. `light` ones switch the UI to
  *  dark-on-light. */
 export const BACKGROUNDS = {
+  onyx: { name: 'Oniks', light: false, css: '#000' },
   obsidian: { name: 'Obsidyen', light: false,
     css: 'radial-gradient(1100px 700px at 88% -12%, rgba(198,255,61,0.13), transparent 62%), radial-gradient(900px 640px at -8% 112%, rgba(46,230,166,0.12), transparent 60%), linear-gradient(180deg, #08090c, #050608)' },
   matte: { name: 'Mat siyah', light: false,
@@ -177,6 +181,7 @@ const shade = (hex, f) => {
 
 /** One-click looks: background, accent, candles and a type pairing. */
 export const PRESETS = [
+  { id: 'onyx', name: 'Oniks', bg: 'onyx', accent: '#a855f7', up: '#26a69a', down: '#ef5350', font: 'sistem' },
   { id: 'bulut', name: 'Bulutsu', bg: 'nebula', accent: '#9fa8ff', up: '#8fa8ff', down: '#c77dff', font: 'atolye' },
   { id: 'neon', name: 'Neon', bg: 'obsidian', accent: '#c6ff3d', up: '#c6ff3d', down: '#a855f7', font: 'atolye' },
   { id: 'obsidian', name: 'Obsidyen', bg: 'obsidian', accent: '#c6ff3d', up: '#2ee6a6', down: '#ff4d6d', font: 'atolye' },
@@ -209,28 +214,28 @@ export const PRESETS = [
 
 export const DEFAULT_APPEARANCE = {
   v: APPEARANCE_VERSION,
-  preset: 'bulut', bg: 'nebula', accent: '#9fa8ff', font: 'atolye',
+  preset: 'onyx', bg: 'onyx', accent: '#a855f7', font: 'sistem', nxOnyx: 1,
   custom: { type: 'mesh', c1: '#0e1016', c2: '#3a2a5e', c3: '#0f4c5c', angle: 150 },
-  design: 'studio',        // studio (lights, motion, boards) | classic (the earlier, plainer look)
+  design: 'classic',       // studio (lights, motion, boards) | classic (the earlier, plainer look)
   style: 'glass',          // glass | brutal (hard edges and offset shadows)
-  radius: 'soft',          // sharp | soft | round (round: pill-shaped controls)
+  radius: 'round',         // sharp | soft | round (round: pill-shaped controls)
   density: 'normal',       // compact | normal | airy
   textSize: 'normal',      // small | normal | large
   glass: 0.27,             // clear (0.2) .. tinted (0.95)
   blur: 9,                 // backdrop blur, px
   sheen: 0.3,              // rim highlight and pointer light, 0..1
   texture: 'none',         // grid | lines | dots | none, sharp between panels, frosted behind them
-  pointerLight: true,      // the rim lights up where the pointer is
+  pointerLight: false,     // the rim lights up where the pointer is
   motion: false,           // slowly drifting background light
-  grain: 0.03,
+  grain: 0,
   ...DEFAULT_LOOK,
-  up: '#8fa8ff', down: '#c77dff',
+  up: '#26a69a', down: '#ef5350',
   // the home screen's own colours (null: the same as the chart)
   homeAccent: null, homeUp: null, homeDown: null,
   // chart details (null: follow the theme)
   gridColor: null, textColor: null, crossColor: null, volOpacity: 26, markOpacity: 4,
   // the RV metal, and how headings are written: metal | solid | gradient | plain
-  metal: 'silver', titleStyle: 'metal', titleColor: '#ffffff', titleStops: ['#e6e9ff', '#8fa8ff', '#c77dff'], titleAngle: 135, titleShine: 0,
+  metal: 'silver', titleStyle: 'plain', titleColor: '#ffffff', titleStops: ['#e6e9ff', '#8fa8ff', '#c77dff'], titleAngle: 135, titleShine: 0,
   cardRim: 'soft',         // soft | metal (a fine metal edge on the home boards)
 };
 
@@ -257,6 +262,13 @@ export function normalizeAppearance(saved) {
     const p = PRESETS.find((x) => x.id === 'bulut');
     Object.assign(a, { preset: p.id, bg: p.bg, accent: p.accent, up: p.up, down: p.down });
   }
+  // RV Next: the clean Onyx look (black, the device's own type, one purple
+  // accent, classic candles) once over whatever was copied from the main site
+  if (!saved.nxOnyx) {
+    const p = PRESETS.find((x) => x.id === 'onyx');
+    Object.assign(a, { preset: p.id, bg: p.bg, accent: p.accent, up: p.up, down: p.down, font: p.font, design: 'classic', style: 'glass', radius: 'round', titleStyle: 'plain', titleColor: '#ffffff', homeAccent: null, homeUp: null, homeDown: null, texture: 'none', motion: false, pointerLight: false, grain: 0 });
+  }
+  a.nxOnyx = 1;
   if (!BACKGROUNDS[a.bg]) a.bg = DEFAULT_APPEARANCE.bg;
   if (!FONT_PAIRS[a.font]) a.font = DEFAULT_APPEARANCE.font;
   if (!METALS[a.metal]) a.metal = DEFAULT_APPEARANCE.metal;

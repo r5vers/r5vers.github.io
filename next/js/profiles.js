@@ -1,11 +1,11 @@
 // Profile screen: pick who is trading, add / edit / lock profiles.
-import { api } from './api.js?v=f80c737c90';
-import { LOCAL } from './local/boot.js?v=f80c737c90';
-import { pushExport } from './local/sync.js?v=f80c737c90';
+import { api } from './api.js?v=379181f731';
+import { LOCAL } from './local/boot.js?v=379181f731';
+import { pushExport } from './local/sync.js?v=379181f731';
 
 const NEW_SITE = 'https://r5vers.github.io';
-import { AVATAR_PATTERNS, avatar as avatarEl, brandMark, confirmBox, field, h, icon, modal, toast } from './ui/dom.js?v=f80c737c90';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance } from './ui/look.js?v=f80c737c90';
+import { AVATAR_PATTERNS, avatar as avatarEl, brandMark, confirmBox, field, h, icon, modal, toast } from './ui/dom.js?v=379181f731';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance } from './ui/look.js?v=379181f731';
 
 const COLORS = [
   '#8b7cf6', '#5e5ce6', '#4f8fd9', '#0a84ff', '#40c8e0', '#3fb39b', '#30d158', '#8fae5a', '#c6ff3d', '#d9a441',

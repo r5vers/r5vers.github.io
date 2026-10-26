@@ -1,6 +1,6 @@
 // Small DOM helpers: element builder, toasts, modals, icons.
-import '../local/boot.js?v=f80c737c90';
-import { escapeHtml } from '../format.js?v=f80c737c90';
+import '../local/boot.js?v=379181f731';
+import { escapeHtml } from '../format.js?v=379181f731';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -248,6 +248,9 @@ const ICONS = {
   sessions: '<path d="M4.5 6.5h15M4.5 12h15M4.5 17.5h9"/>',
   panel: '<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M14.5 4.5v15"/>',
   draw: '<path d="M4.5 19.5l1-4.5 10-10 3.5 3.5-10 10z"/>',
+  copy: '<rect x="8.5" y="8.5" width="11" height="11" rx="2.6"/><path d="M15.5 8.5V6.6a2.1 2.1 0 0 0-2.1-2.1H6.6a2.1 2.1 0 0 0-2.1 2.1v6.8a2.1 2.1 0 0 0 2.1 2.1h1.9"/>',
+  apps: '<g fill="currentColor" stroke="none"><circle cx="6" cy="6" r="1.9"/><circle cx="12" cy="6" r="1.9"/><circle cx="18" cy="6" r="1.9"/><circle cx="6" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="18" cy="12" r="1.9"/><circle cx="6" cy="18" r="1.9"/><circle cx="12" cy="18" r="1.9"/><circle cx="18" cy="18" r="1.9"/></g>',
+  more: '<circle cx="5.5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.7" fill="currentColor" stroke="none"/>',
   stepback: '<path d="M18 6v12l-9-6z" fill="currentColor" stroke="none"/><path d="M6.5 6v12" stroke-width="2"/>',
   rewind: '<path d="M20.5 6.5v11L13 12zM12 6.5v11L4.5 12z" fill="currentColor" stroke="none"/>',
   tostart: '<path d="M19 6v12l-9-6z" fill="currentColor" stroke="none"/><path d="M6 6v12" stroke-width="2"/><path d="M8.5 6v12" stroke-width="0"/>',

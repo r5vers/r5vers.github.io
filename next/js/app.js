@@ -1,30 +1,30 @@
 // Replay Terminal - application controller.
-import { api } from './api.js?v=f80c737c90';
-import { columnsToBars } from './core/aggregate.js?v=f80c737c90';
-import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=f80c737c90';
-import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=f80c737c90';
-import { computeStats } from './core/stats.js?v=f80c737c90';
-import { bucket, parseTf } from './core/timeframes.js?v=f80c737c90';
-import { TradingChart } from './chart/chart.js?v=f80c737c90';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=f80c737c90';
-import { configureICT } from './chart/sessions.js?v=f80c737c90';
-import { INDICATORS } from './chart/indicators.js?v=f80c737c90';
-import { TradeLines } from './chart/tradelines.js?v=f80c737c90';
-import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=f80c737c90';
-import * as F from './format.js?v=f80c737c90';
-import { ReplayEngine } from './replay.js?v=f80c737c90';
-import * as D from './ui/dialogs.js?v=f80c737c90';
-import { DataView } from './ui/dataview.js?v=f80c737c90';
-import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=f80c737c90';
-import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=f80c737c90';
-import { openPalette, wirePalette } from './ui/palette.js?v=f80c737c90';
-import { wireTooltips } from './ui/tooltip.js?v=f80c737c90';
-import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=f80c737c90';
-import { scrubWheel } from './ui/scrubwheel.js?v=f80c737c90';
-import { StatsView } from './ui/statsview.js?v=f80c737c90';
-import { StrategyView } from './ui/strategyview.js?v=f80c737c90';
-import { Ticket } from './ui/ticket.js?v=f80c737c90';
-import { SidePane } from './ui/sidepane.js?v=f80c737c90';
+import { api } from './api.js?v=379181f731';
+import { columnsToBars } from './core/aggregate.js?v=379181f731';
+import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=379181f731';
+import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=379181f731';
+import { computeStats } from './core/stats.js?v=379181f731';
+import { bucket, parseTf } from './core/timeframes.js?v=379181f731';
+import { TradingChart } from './chart/chart.js?v=379181f731';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=379181f731';
+import { configureICT } from './chart/sessions.js?v=379181f731';
+import { INDICATORS } from './chart/indicators.js?v=379181f731';
+import { TradeLines } from './chart/tradelines.js?v=379181f731';
+import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=379181f731';
+import * as F from './format.js?v=379181f731';
+import { ReplayEngine } from './replay.js?v=379181f731';
+import * as D from './ui/dialogs.js?v=379181f731';
+import { DataView } from './ui/dataview.js?v=379181f731';
+import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=379181f731';
+import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=379181f731';
+import { openPalette, wirePalette } from './ui/palette.js?v=379181f731';
+import { wireTooltips } from './ui/tooltip.js?v=379181f731';
+import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=379181f731';
+import { scrubWheel } from './ui/scrubwheel.js?v=379181f731';
+import { StatsView } from './ui/statsview.js?v=379181f731';
+import { StrategyView } from './ui/strategyview.js?v=379181f731';
+import { Ticket } from './ui/ticket.js?v=379181f731';
+import { SidePane } from './ui/sidepane.js?v=379181f731';
 
 const LW = window.LightweightCharts;
 const SPEEDS = [[1, '1x'], [2, '2x'], [4, '4x'], [8, '8x'], [16, '16x'], [40, '40x'], [0, 'Maks']];
@@ -42,7 +42,7 @@ const DEFAULT_SETTINGS = {
   volume: true,
   magnet: false,
   speed: 4,
-  stepUnit: 'base',
+  stepUnit: 'bar',
   pauseOnFill: true,
   account: { balance: 10000, spreadPips: 0.8, commission: 0, sameBar: 'path' },
   // no stop or target of its own: the trader drags them out on the chart, and
@@ -151,6 +151,8 @@ class App {
     // RV Next: orders go in without a stop or target of their own (they are
     // dragged out on the chart) and are sized to a % risk by default
     if ((this.settings.ticket.v || 1) < 2) Object.assign(this.settings.ticket, { slOn: false, tpOn: false, sizeMode: 'risk', riskPct: this.settings.ticket.riskPct || 1, v: 2 });
+    // ⏭ moves one candle of the chart (Alltra's), once over a copied setting
+    if (!this.settings.nxStep) { this.settings.stepUnit = 'bar'; this.settings.nxStep = 1; }
     if (configureICT(this.settings)) this.saveSettings();
     // first visit on this phone: give the chart the room
     if (!device && window.innerWidth < 760) this.settings.bottomCollapsed = true;
@@ -173,7 +175,7 @@ class App {
       requestText: (initial, submit) => this.textDrawingDialog(initial, submit),
       onChange: () => this.saveDrawings(),
       onSelect: (d) => this.renderDrawingProps(d),
-      onToolChange: () => this.renderToolbar(),
+      onToolChange: () => { this.renderToolbar(); this.renderMobile(); },
       format: {
         price: (p) => F.price(p, this.ds ? this.ds.decimals : 5),
         pips: (d) => F.num(Math.abs(d) / (this.ds ? this.ds.pip_size : 0.0001), 1),
@@ -198,12 +200,14 @@ class App {
     // the chips beside the lines: TP / SL to drag out, lot, P&L, close
     this.orderLayer = new OrderLayer(this.chart, {
       getBroker: () => (this.mode === 'replay' ? this.broker : null),
+      getDraft: () => this._draftView(),
       money: (x) => F.signedMoney(x, this.broker ? this.broker.cfg.currency : 'USD'),
-      preview: (kind, item, field, price) => this._stopPreview(kind, item, field, price),
-      onStop: (kind, id, field, price) => this.setStop(kind, id, field, price),
-      onPrice: (id, price) => this.modifyOrder(id, { price: Number(price.toFixed(this.ds.decimals)) }),
-      onClose: (kind, id) => (kind === 'pos' ? this.closePosition(id) : this.cancelOrder(id)),
-      onMenu: (kind, id, anchor) => this.tradeMenu(kind, id, anchor),
+      num: (x, d) => F.num(x, d),
+      preview: (kind, item, field, price) => (kind === 'draft' ? this._draftPreview(field, price) : this._stopPreview(kind, item, field, price)),
+      onStop: (kind, id, field, price) => (kind === 'draft' ? this.setDraftStop(field, price) : this.setStop(kind, id, field, price)),
+      onPrice: (id, price) => (id === 'draft' ? this.setDraftPrice(price) : this.modifyOrder(id, { price: Number(price.toFixed(this.ds.decimals)) })),
+      onClose: (kind, id) => (kind === 'draft' ? this.cancelDraft() : kind === 'pos' ? this.closePosition(id) : this.cancelOrder(id)),
+      onMenu: (kind, id, anchor) => (kind === 'draft' ? this.sizeMenu(anchor) : this.tradeMenu(kind, id, anchor)),
       onDrag: (spec, price) => this.tradeLines.moveLine(spec.role === 'entry' ? `o${spec.item.id}:price` : `${spec.kind === 'pos' ? 'p' : 'o'}${spec.item.id}:${spec.role}`, price),
       hint: (text) => toast(text, 'info', 2600),
     });
@@ -403,6 +407,7 @@ class App {
   closePopover() {
     this._popover?.remove();
     this._popover = null;
+    if (this._popOff) { document.removeEventListener('pointerdown', this._popOff, true); this._popOff = null; }
   }
 
   popover(anchor, content, { align = 'left' } = {}) {
@@ -420,7 +425,9 @@ class App {
     el.classList.toggle('above', !below);
     this._popover = el;
     setTimeout(() => {
-      const off = (e) => { if (!el.contains(e.target) && !anchor.contains(e.target)) { this.closePopover(); document.removeEventListener('pointerdown', off, true); } };
+      if (this._popover !== el) return;
+      const off = (e) => { if (!el.contains(e.target) && !anchor.contains(e.target)) this.closePopover(); };
+      this._popOff = off;
       document.addEventListener('pointerdown', off, true);
     }, 0);
     return el;
@@ -664,6 +671,7 @@ class App {
     this.saveSettings();
     this.chart.setFormat({ tf: this.tf });
     this.renderTfButtons();
+    this.renderMobile();
     if (this.mode === 'replay') {
       this.chart.setBars(await this.engine.setTf(id), { fit: true });
       this.updateMarkers();
@@ -831,6 +839,8 @@ class App {
   sessionsDialog() { D.sessionsDialog(this); }
 
   _useLeg(leg) {
+    // a draft belongs to the market it was made on
+    if (this.draft && this.leg !== leg) { this.draft = null; this._draftChanged(); }
     this.leg = leg;
     this.ds = leg.ds;
     this.engine = leg.engine;
@@ -1047,6 +1057,7 @@ class App {
 
   async exitReplay(save = true, reload = true) {
     this.pause();
+    if (this.draft) { this.draft = null; this._draftChanged(); }
     if (save && this.session) await this.save();
     this.settings.resume = null;
     this.saveSettings();
@@ -1269,13 +1280,20 @@ class App {
     if (!r.count && !force) return;
     this._rewindTick(r);
     if (r.count) {
-      if (r.trimmed || r.count > 400) this.chart.setBars(this.engine.bars, { keepLogical: this.chart.chart.timeScale().getVisibleLogicalRange() });
-      else this.chart.updateFrom(r.firstChanged);
+      if (r.trimmed || r.count > 400) {
+        // a long jump: the view stays where it was, unless it was following the last bar
+        const ts = this.chart.chart.timeScale();
+        const range = ts.getVisibleLogicalRange();
+        const shown = this.chart.candles.data().length;
+        this.chart.setBars(this.engine.bars, { keepLogical: range });
+        if (range && range.to >= shown - 1.5 && !r.trimmed) ts.scrollToRealTime();
+      } else this.chart.updateFrom(r.firstChanged);
     }
     const tradeEvents = r.events.length > 0;
     if (!quiet) for (const e of r.events.slice(-4)) this._eventToast(e);
     this._autoBreakeven();
     this.tradeLines.sync();
+    if (this.draft) this.renderDraftBar();
     this.ticket.update();
     this.updateTradeBar();
     this.renderClock();
@@ -1292,7 +1310,7 @@ class App {
     const ccy = b.cfg.currency, dec = ds.decimals, pre = e.leg ? `${ds.symbol} · ` : '';
     if (e.type === 'open' && e.position.orderId != null) {
       const p = e.position;
-      toast(`${pre}Emir doldu: ${p.side === 'buy' ? 'LONG' : 'SHORT'} ${p.qty} @ ${F.price(p.entryPrice, dec)}`, 'ok');
+      toast(`${pre}Emir doldu: ${p.side === 'buy' ? 'alış' : 'satış'} ${F.num(p.qty, 2)} lot @ ${F.price(p.entryPrice, dec)}`, 'ok');
     } else if (e.type === 'close' && e.trade && ['sl', 'tp', 'strategy'].includes(e.trade.reason)) {
       const t = e.trade;
       toast(`${pre}${REASON_TEXT[t.reason]}: ${F.signedMoney(t.pnl, ccy)} (${F.signed(t.pips, 1)} pip)`, t.pnl >= 0 ? 'ok' : 'err');
@@ -1560,6 +1578,8 @@ class App {
       }
       this.engine = this.leg ? this.leg.engine : legs[0].engine;
       this.chart.setBars(this.engine.bars, range ? { keepLogical: range } : { fit: true });
+      // the view ran past the new last bar: back onto it
+      if (range && range.to > this.engine.bars.length + 3) this.chart.chart.timeScale().scrollToRealTime();
       this._paneUpdate();
       this.updateMarkers();
       this.tradeLines.sync();
@@ -1570,6 +1590,7 @@ class App {
       this._scheduleTab(true);
       this.renderLegend(null);
       this.markDirty(true);
+      if (this.draft) this._draftChanged();
       if (!quiet) toast(`Geri sarıldı: ${F.dateTime(this.engine.cursor, this.settings.tz)}`, 'ok', 2200);
       return true;
     } catch (err) {
@@ -1664,7 +1685,7 @@ class App {
     if (!r.ok) { toast(r.error, 'err'); return null; }
     this._log(this.leg, 'place', params);
     const dec = this.ds.decimals;
-    if (r.position) toast(`${r.position.side === 'buy' ? 'LONG' : 'SHORT'} ${r.position.qty} @ ${F.price(r.position.entryPrice, dec)}`, 'ok');
+    if (r.position) toast(`${r.position.side === 'buy' ? 'Alış' : 'Satış'} ${F.num(r.position.qty, 2)} lot @ ${F.price(r.position.entryPrice, dec)}`, 'ok');
     else toast(`${r.order.side === 'buy' ? 'Alış' : 'Satış'} ${r.order.type === 'limit' ? 'limit' : 'stop'} emri: ${r.order.qty} @ ${F.price(r.order.price, dec)}`, 'ok');
     this._afterTrade();
     return r;
@@ -1814,7 +1835,7 @@ class App {
       const p = b.positions.find((x) => x.id === id);
       if (!p) return;
       this.popover(anchor, [
-        h('h5', {}, `${p.side === 'buy' ? 'LONG' : 'SHORT'} ${p.qty} lot · ${F.price(p.entryPrice, this.ds.decimals)}`),
+        h('h5', {}, `${p.side === 'buy' ? 'Alış' : 'Satış'} ${F.num(p.qty, 2)} lot · ${F.price(p.entryPrice, this.ds.decimals)}`),
         h('div.rw-grid.three', {}, [25, 50, 75].map((pc) => h('button.chip', { type: 'button', onclick: go(() => this.closePosition(id, pc / 100)) }, `%${pc} kapat`))),
         h('button.item', { onclick: go(() => this.breakeven(id)) }, icon('shield', 16), h('span', {}, h('span.t.plain', {}, 'Başabaş'), h('span.s', {}, 'stop giriş fiyatına'))),
         h('button.item', { onclick: go(() => this.closePosition(id)) }, icon('close', 16), h('span.t.plain', {}, 'Pozisyonu kapat')),
@@ -1827,7 +1848,7 @@ class App {
     const apply = () => { const q = Number(input.value); if (q > 0) { this.closePopover(); this.modifyOrder(id, { qty: q }); } };
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') apply(); });
     this.popover(anchor, [
-      h('h5', {}, `${o.side === 'buy' ? 'BUY' : 'SELL'} ${o.type === 'limit' ? 'LIMIT' : 'STOP'} · ${F.price(o.price, this.ds.decimals)}`),
+      h('h5', {}, `${o.side === 'buy' ? 'Al' : 'Sat'} ${o.type === 'limit' ? 'limit' : 'stop'} · ${F.price(o.price, this.ds.decimals)}`),
       h('div.pop-row', {}, h('span.muted', {}, 'Lot'), input, h('button.btn.small.primary', { onclick: apply }, 'Uygula')),
       o.autoRisk ? h('p.muted.rw-note', {}, `SL koyunca lot %${F.num(o.autoRisk, 2)} riske göre ayarlanır.`) : null,
       h('button.item', { onclick: go(() => this.cancelOrder(id)) }, icon('close', 16), h('span.t.plain', {}, 'Emri iptal et')),
@@ -1872,18 +1893,175 @@ class App {
     return t.sizeMode === 'risk' ? `%${F.num(t.riskPct, 2)} risk · SL koyunca lot ayarlanır` : `${F.num(t.lots, 2)} lot`;
   }
 
-  quickOrder(side) {
-    if (this.mode !== 'replay') return;
-    const mode = this.ticket.mode;
-    this.ticket.mode = 'market';
-    try { this.ticket.submit(side); } finally { this.ticket.mode = mode; this.ticket.update(); }
+  /** Buy / Sell (bar, keys, phone sheet): a draft at the market, not a trade yet. */
+  quickOrder(side) { this.startDraft(side); }
+
+  /** "+" at the axis: a draft limit or stop at that price. */
+  orderAtPrice(side, price) { this.startDraft(side, { type: 'pending', price }); }
+
+  // ── the draft order (TradingView's order preview) ──────────────────────
+  // Buy / Sell puts only the entry line on the chart. The trader drags the
+  // TP and SL chips out of it; with the stop the lot is worked out (% risk
+  // of the balance, or the fixed lot), and only "confirm" trades. Nothing is
+  // placed on its own.
+
+  /** Start (or turn round) a draft: `type` market, or 'pending' at `price`. */
+  startDraft(side, { type = 'market', price = null } = {}) {
+    if (this.mode !== 'replay' || !this.broker) { toast('İşlem için önce replay başlatın', 'err'); return; }
+    if (this.engine?.atEnd) { toast('Verinin sonuna gelindi: işlem açılamaz', 'warn'); return; }
+    const dec = this.ds.decimals;
+    const prev = this.draft;
+    const d = { side, type: type === 'market' ? 'market' : 'pending', price: type === 'market' ? null : Number(price.toFixed(dec)), sl: null, tp: null };
+    const t = this.settings.ticket;
+    const entry = this._draftEntry(d);
+    // the same side keeps the stops already dragged out; the other side
+    // takes them mirrored round the entry (as TradingView does)
+    if (prev && prev.side === side) { d.sl = prev.sl; d.tp = prev.tp; }
+    else if (prev && entry != null) {
+      const old = this._draftEntry(prev);
+      for (const k of ['sl', 'tp']) if (prev[k] != null && old != null) d[k] = Number((entry + (old - prev[k])).toFixed(dec));
+    }
+    const pip = this.ds.pip_size, dir = side === 'buy' ? 1 : -1;
+    // stops come only from the trader: the ones set in the size menu on purpose
+    if (d.sl == null && t.slOn && t.slPips > 0) d.sl = Number((entry - dir * t.slPips * pip).toFixed(dec));
+    if (d.tp == null && t.tpOn && t.tpPips > 0) d.tp = Number((entry + dir * t.tpPips * pip).toFixed(dec));
+    this.draft = d;
+    this.plus?.hide();
+    // the trader sees the price being traded
+    if (d.type === 'market') this.chart.chart.timeScale().scrollToRealTime();
+    this._draftChanged();
   }
 
-  orderAtPrice(side, price) {
-    const prev = [this.ticket.mode, this.ticket.pendingPrice];
-    this.ticket.mode = 'pending';
-    this.ticket.pendingPrice = Number(price.toFixed(this.ds.decimals));
-    try { this.ticket.submit(side); } finally { [this.ticket.mode, this.ticket.pendingPrice] = prev; this.ticket.update(); }
+  /** The draft's entry: the market's side now, or its own price. */
+  _draftEntry(d = this.draft) {
+    const b = this.broker;
+    if (!d || !b) return null;
+    return d.type === 'market' ? (d.side === 'buy' ? b.ask() : b.bid()) : d.price;
+  }
+
+  /** What confirming would do: the order, its lot, risk and reward, or why it cannot go yet. */
+  _draftPlan(d = this.draft) {
+    const b = this.broker;
+    if (!d || !b) return null;
+    const t = this.settings.ticket;
+    const entry = this._draftEntry(d);
+    const buy = d.side === 'buy';
+    let type = 'market';
+    if (d.type !== 'market') type = buy ? (entry < b.ask() ? 'limit' : 'stop') : (entry > b.bid() ? 'limit' : 'stop');
+    let why = null;
+    const slOk = d.sl == null || (buy ? d.sl < entry : d.sl > entry);
+    const tpOk = d.tp == null || (buy ? d.tp > entry : d.tp < entry);
+    if (!slOk) why = buy ? 'SL girişin altında olmalı' : 'SL girişin üstünde olmalı';
+    else if (!tpOk) why = buy ? 'TP girişin üstünde olmalı' : 'TP girişin altında olmalı';
+    let qty = null;
+    if (t.sizeMode === 'risk') {
+      if (d.sl != null && slOk) qty = this._lotsFor(b, entry, d.sl, t.riskPct);
+      else if (!why) why = `Lot için SL’yi sürükleyip koy (%${F.num(t.riskPct, 2)} risk)`;
+    } else qty = Number(t.lots) > 0 ? Number(t.lots) : null;
+    if (!why && !(qty > 0)) why = 'Lot geçersiz';
+    const comm = b.cfg.commission * (qty || 0) * 2;
+    const risk = d.sl != null && qty ? -(b.pnlAt({ side: d.side, entryPrice: entry, qty }, d.sl)) + comm : null;
+    const reward = d.tp != null && qty ? b.pnlAt({ side: d.side, entryPrice: entry, qty }, d.tp) - comm : null;
+    const r = risk > 0 && reward != null ? reward / risk : null;
+    return { side: d.side, type, entry, qty, sl: d.sl, tp: d.tp, slOk, tpOk, risk, riskPct: risk != null ? (risk / b.balance) * 100 : null, reward, r, ok: !why, why };
+  }
+
+  /** The draft as the order layer shows it. */
+  _draftView() {
+    const d = this.draft;
+    if (!d || this.mode !== 'replay' || !this.broker) return null;
+    const p = this._draftPlan(d);
+    return { id: 'draft', side: d.side, type: p.type, entry: p.entry, qty: p.qty, sl: d.sl, tp: d.tp };
+  }
+
+  /** A stop of the draft dragged to `price`: money, R and the lot it gives. */
+  _draftPreview(field, price) {
+    const d = this.draft;
+    if (!d || price == null) return null;
+    const p = this._draftPlan({ ...d, [field]: price });
+    const b = this.broker;
+    const qty = p.qty || (this.settings.ticket.sizeMode === 'lots' ? Number(this.settings.ticket.lots) : 0);
+    // no lot yet (a target before the stop): the distance in pips says enough
+    if (!qty) {
+      const pips = (d.side === 'buy' ? price - p.entry : p.entry - price) / this.ds.pip_size;
+      return { label: `${field.toUpperCase()} ${F.signed(pips, 1)} pip` };
+    }
+    const pnl = b.pnlAt({ side: d.side, entryPrice: p.entry, qty }, price) - b.cfg.commission * qty * 2;
+    const r = field === 'tp' && p.risk > 0 ? pnl / p.risk : null;
+    return { qty, pnl, r, resized: field === 'sl' && this.settings.ticket.sizeMode === 'risk' && qty > 0 };
+  }
+
+  setDraftStop(field, price) {
+    if (!this.draft) return;
+    this.draft[field] = price == null ? null : Number(price.toFixed(this.ds.decimals));
+    this._draftChanged();
+  }
+
+  setDraftPrice(price) {
+    if (!this.draft) return;
+    const dec = this.ds.decimals;
+    const old = this._draftEntry();
+    const np = Number(price.toFixed(dec));
+    // the stops move with the entry, as on TradingView
+    const shift = old != null ? np - old : 0;
+    this.draft.type = 'pending';
+    this.draft.price = np;
+    for (const k of ['sl', 'tp']) if (this.draft[k] != null) this.draft[k] = Number((this.draft[k] + shift).toFixed(dec));
+    this._draftChanged();
+  }
+
+  cancelDraft() {
+    if (!this.draft) return;
+    this.draft = null;
+    this._draftChanged();
+  }
+
+  confirmDraft() {
+    const p = this._draftPlan();
+    if (!p) return;
+    if (!p.ok) { toast(p.why, 'warn'); return; }
+    const r = this.placeOrder({ side: p.side, type: p.type, qty: p.qty, price: p.type === 'market' ? null : p.entry, sl: p.sl, tp: p.tp });
+    if (r) { this.draft = null; this._draftChanged(); }
+  }
+
+  _draftChanged() {
+    this.orderLayer?.sync();
+    this.renderDraftBar();
+    if (this.mode === 'replay') this.ticket?.update();
+  }
+
+  /** The bar that says what the draft will do, with confirm and cancel. */
+  renderDraftBar() {
+    let bar = this._draftBar;
+    const p = this.mode === 'replay' ? this._draftPlan() : null;
+    if (!p) { if (bar) bar.hidden = true; document.body.classList.remove('has-draft'); return; }
+    if (!bar) {
+      bar = this._draftBar = h('div.draft-bar', { role: 'group', 'aria-label': 'Emir taslağı' });
+      $('#chart-area').append(bar);
+    }
+    bar.hidden = false;
+    document.body.classList.add('has-draft');
+    const ccy = this.broker.cfg.currency, dec = this.ds.decimals;
+    const buy = p.side === 'buy';
+    const typeName = { market: 'Piyasa', limit: 'Limit', stop: 'Stop' }[p.type];
+    const sig = JSON.stringify([p.side, p.type, p.entry, p.qty, p.sl, p.tp, p.why, Math.round(p.risk ?? 0), Math.round(p.reward ?? 0), this.settings.ticket.sizeMode]);
+    if (sig === this._draftSig && bar.firstChild) return;
+    this._draftSig = sig;
+    bar.className = `draft-bar ${buy ? 'buy' : 'sell'}${p.ok ? '' : ' blocked'}`;
+    const item = (k, v, cls = '') => h(`div.db-item${cls}`, {}, h('span.db-k', {}, k), h('span.db-v', {}, v));
+    bar.replaceChildren(
+      h('div.db-head', {}, h('b', {}, buy ? 'AL' : 'SAT'), h('span', {}, `${typeName}${p.type === 'market' ? '' : ` · ${F.price(p.entry, dec)}`}`)),
+      h('div.db-items', {},
+        item('Lot', p.qty ? F.num(p.qty, 2) : '—'),
+        item('Risk', p.sl != null && !p.slOk ? 'yanlış taraf' : p.risk != null ? `${F.money(p.risk, ccy)} · %${F.num(p.riskPct, 2)}` : p.sl != null ? `${F.num(Math.abs(p.entry - p.sl) / this.ds.pip_size, 1)} pip` : 'SL yok', p.sl != null && !p.slOk ? '.bad' : p.risk != null ? '' : '.muted'),
+        item('Hedef', p.tp != null && !p.tpOk ? 'yanlış taraf' : p.reward != null ? `${F.money(p.reward, ccy)}${p.r != null ? ` · ${F.num(p.r, 2)}R` : ''}` : p.tp != null ? `${F.num(Math.abs(p.tp - p.entry) / this.ds.pip_size, 1)} pip` : 'TP yok', p.tp != null && !p.tpOk ? '.bad' : p.reward != null ? '.up' : '.muted')),
+      h('div.db-compact', {}, p.why ? h('span.db-cwhy', {}, p.why)
+        : [h('b', {}, `${F.num(p.qty, 2)} lot`), h('span', {}, ` · ${F.money(p.risk, ccy)} risk`), p.r != null ? h('span', {}, ` · ${F.num(p.r, 2)}R`) : null]),
+      ...(p.why ? [h('div.db-why', {}, p.why)] : []),
+      h('div.db-actions', {},
+        h('button.db-cancel', { type: 'button', title: 'Taslağı sil (Esc)', onclick: () => this.cancelDraft() }, 'İptal'),
+        h('button.db-go', { type: 'button', disabled: !p.ok, title: p.ok ? 'Emri gönder (Enter)' : p.why, onclick: () => this.confirmDraft() },
+          `${buy ? 'Al' : 'Sat'}${p.qty ? ` ${F.num(p.qty, 2)}` : ''}`)));
   }
 
   orderFromTool(d) {
@@ -2069,7 +2247,7 @@ class App {
       text ? h('button.btn.icon.small', { title: 'Metni düzenle', onclick: () => this.textDrawingDialog(d.text || '', text => this.drawings.update(d.id, { text })) }, icon('edit', 14)) : null,
       ['rect', 'fib'].includes(d.type) ? h(`button.btn.icon.small${d.extend ? '.active' : ''}`, { title: 'Sağa uzat', onclick: () => this.drawings.update(d.id, { extend: !d.extend }) }, icon('extend', 15)) : null,
       d.type === 'long' || d.type === 'short' ? h('button.btn.small.primary', { onclick: () => this.orderFromTool(d) }, 'Emir ver') : null,
-      h(`button.btn.small${d.locked ? '.active' : ''}`, { title: 'Kilitle', onclick: () => this.drawings.update(d.id, { locked: !d.locked }) }, icon('lock', 14)),
+      h(`button.btn.small.dp-lock${d.locked ? '.active' : ''}`, { title: 'Kilitle', onclick: () => this.drawings.update(d.id, { locked: !d.locked }) }, icon('lock', 14)),
       h('button.btn.small.danger', { title: 'Sil (Delete)', onclick: () => this.drawings.remove(d.id) }, icon('trash', 14)),
     ].filter(Boolean));
   }
@@ -2228,8 +2406,8 @@ class App {
     const on = this.mode === 'replay' && !!this.broker;
     el.classList.toggle('on', on);
     if (!on) { el.replaceChildren(); this._tb = null; this.renderAccount(); return; }
-    const buy = h('button.tb-buy', { type: 'button', title: 'Piyasadan al (Shift+B)', onclick: () => this.quickOrder('buy') }, icon('buy', 16), h('span.tb-k', {}, 'Buy'), h('span.tb-p', {}));
-    const sell = h('button.tb-sell', { type: 'button', title: 'Piyasadan sat (Shift+S)', onclick: () => this.quickOrder('sell') }, icon('sell', 16), h('span.tb-k', {}, 'Sell'), h('span.tb-p', {}));
+    const buy = h('button.tb-buy', { type: 'button', title: 'Piyasadan al (Shift+B)', onclick: () => this.quickOrder('buy') }, icon('buy', 16), h('span.tb-k', {}, 'Al'), h('span.tb-p', {}));
+    const sell = h('button.tb-sell', { type: 'button', title: 'Piyasadan sat (Shift+S)', onclick: () => this.quickOrder('sell') }, icon('sell', 16), h('span.tb-k', {}, 'Sat'), h('span.tb-p', {}));
     const size = h('button.tb-size', { type: 'button', title: 'Lot / % risk, hazır SL-TP, otomatik başabaş', onclick: (e) => this.sizeMenu(e.currentTarget) });
     el.replaceChildren(buy, size, sell);
     this._tb = { buy, sell, size };
@@ -2273,7 +2451,7 @@ class App {
   sizeMenu(anchor) {
     if (this._popover) { this.closePopover(); return; }
     const t = this.settings.ticket;
-    const save = () => { this.saveSettings(); this.updateTradeBar(); this.ticket.render(); };
+    const save = () => { this.saveSettings(); this.updateTradeBar(); this.ticket.render(); if (this.draft) this._draftChanged(); };
     const paint = () => {
       const risk = t.sizeMode === 'risk';
       const value = h('input.ctl.sm.mono', { type: 'number', step: risk ? 0.05 : 0.01, min: risk ? 0.05 : 0.01, value: risk ? t.riskPct : t.lots, 'aria-label': risk ? 'Risk yüzdesi' : 'Lot',
@@ -2287,7 +2465,7 @@ class App {
         h('div.seg.pop-seg', {}, [['risk', '% Risk'], ['lots', 'Lot']].map(([v, l]) => h(`button${t.sizeMode === v ? '.on' : ''}`, { type: 'button', onclick: () => { t.sizeMode = v; save(); paint(); } }, l))),
         h('div.pop-row', {}, value, h('span.muted', {}, risk ? 'bakiyenin yüzdesi' : 'lot')),
         h('div.rw-grid.four', {}, presets),
-        h('p.muted.rw-note', {}, risk ? `Al / Sat yalnızca giriş çizgisini koyar. SL’yi çizgiden sürükleyip koyunca lot, bakiyenin %${F.num(t.riskPct, 2)}’i riske girecek şekilde ayarlanır.` : 'Her emir bu lotla girer; SL / TP’yi çizgiden sürükleyip koyarsın.'),
+        h('p.muted.rw-note', {}, risk ? `Al / Sat önce taslak açar. SL’yi çizgiden sürükleyince lot, bakiyenin %${F.num(t.riskPct, 2)}’i riske girecek şekilde hesaplanır; onaylayınca işleme girer.` : 'Al / Sat önce taslak açar; SL / TP’yi çizgiden sürükleyip onaylayınca bu lotla girer.'),
         h('hr'),
         toggle('slOn', 'Hazır SL', `her emre ${F.num(t.slPips, 1)} pip stop`, t.slOn ? pips('slPips') : null),
         toggle('tpOn', 'Hazır TP', `her emre ${F.num(t.tpPips, 1)} pip hedef`, t.tpOn ? pips('tpPips') : null),
@@ -2304,6 +2482,7 @@ class App {
 
   renderReplayControls() {
     this.renderTradeBar();
+    this.renderMobile();
     const el = $('#replay-controls');
     if (!this.scrubEl) {
       this.scrubEl = scrubWheel({ getLook: () => this.chart.look || {}, onSteps: (n) => this.scrubSteps(n), onStart: () => { if (this.playing) this.pause(); } });
@@ -2353,7 +2532,143 @@ class App {
     this.renderClock();
   }
 
+  // ── phones: Alltra's chart (a pill of actions at the top, one floating
+  // bar at the foot: trade · the replay · draw) ─────────────────────────
+  renderMobile() {
+    const acts = $('#m-acts'), info = $('#m-info'), bar = $('#m-bar');
+    if (!acts || !bar) return;
+    // the round RV mark and the search pill with the price (Alltra's top)
+    const hl = $('.home-link');
+    if (hl && !hl.querySelector('.hl-mark')) hl.append(h('span.hl-mark', { 'aria-hidden': 'true' }, brandMark(24)));
+    const ib = $('#instrument-btn');
+    if (ib && !ib.querySelector('.m-ic')) { ib.prepend(h('span.m-ic', { 'aria-hidden': 'true' }, icon('search', 20))); ib.append(h('span.m-px.rv-num', { id: 'instrument-px' })); }
+    const replay = this.mode === 'replay' && !!this.engine;
+    const btn = (ic, label, onclick, cls = '') => h(`button.m-btn${cls}`, { type: 'button', title: label, 'aria-label': label, onclick }, icon(ic, 20));
+    acts.replaceChildren(
+      btn('indicator', 'İndikatör ekle', () => D.indicatorsDialog(this)),
+      btn(replay ? 'rewind' : 'replay', replay ? 'Zamanda git: geri / ileri sar' : 'Replay', (e) => (replay ? this.rewindMenu(e.currentTarget) : this.replayStartMenu(e.currentTarget))),
+      btn('more', 'Diğer', (e) => this.mobileMoreMenu(e.currentTarget)));
+    // the timeframe and the replay's time over the bar
+    this.mClock = h('span.m-clock.mono');
+    info.replaceChildren(h('button.m-tf', { type: 'button', title: 'Zaman dilimi', onclick: (e) => this.tfMenu(e.currentTarget) }, this.tfId || '—'), this.mClock);
+    const round = (ic, label, onclick, cls = '') => h(`button.m-round${cls}`, { type: 'button', title: label, 'aria-label': label, onclick }, icon(ic, 22));
+    const draw = round('draw', 'Çizim araçları', () => this.drawSheet(), this.drawings?.tool && this.drawings.tool !== 'cursor' ? '.on' : '');
+    if (this.mode === 'live') {
+      bar.replaceChildren(round('swap', 'Başka sembol', () => D.liveDialog(this)),
+        h('div.m-pill', {}, h('span.m-live', {}, h('i'), 'Canlı'), h('button.m-pbtn', { type: 'button', title: 'Canlıdan çık', 'aria-label': 'Canlıdan çık', onclick: () => this.exitLive() }, icon('close', 20))), draw);
+    } else if (!replay) {
+      const ok = !!this.ds?.bar_count;
+      bar.replaceChildren(round('sessions', 'Kayıtlı oturumlar', () => this.sessionsDialog()),
+        h('div.m-pill', {},
+          h('button.m-pbtn.wide', { type: 'button', disabled: !ok, onclick: () => this.newSessionDialog() }, icon('play', 18), h('span', {}, 'Replay başlat')),
+          h('span.m-sep'),
+          h('button.m-pbtn', { type: 'button', disabled: !ok, title: 'Grafikte bir bara dokunarak başla', 'aria-label': 'Grafikten başlangıç seç', onclick: () => this.pickReplayStart() }, icon('scissors', 19))),
+        draw);
+    } else {
+      const open = this._allLegs().reduce((n, l) => n + l.broker.positions.length, 0);
+      const trade = round('swap', 'Al / Sat', (e) => this.tradeSheet(e.currentTarget), open ? '.badge' : '');
+      if (open) trade.dataset.n = String(open);
+      bar.replaceChildren(trade,
+        h('div.m-pill', {},
+          h('button.m-pbtn', { type: 'button', title: 'Geri', 'aria-label': 'Geri', onclick: () => this.stepBack() }, icon('stepback', 20)),
+          h('span.m-sep'),
+          h('button.m-pbtn.play', { type: 'button', title: this.playing ? 'Duraklat' : 'Oynat', 'aria-label': this.playing ? 'Duraklat' : 'Oynat', onclick: () => this.togglePlay() }, icon(this.playing ? 'pause' : 'play', 22)),
+          h('span.m-sep'),
+          h('button.m-pbtn', { type: 'button', title: 'İleri', 'aria-label': 'İleri', onclick: () => this.step() }, icon('step', 20)),
+          h('span.m-sep'),
+          h('button.m-pbtn', { type: 'button', title: 'Hız ve adım', 'aria-label': 'Hız ve adım', onclick: (e) => this.replayMoreMenu(e.currentTarget) }, icon('more', 20))),
+        draw);
+    }
+    document.body.classList.toggle('m-replay', replay);
+    this.renderClock();
+  }
+
+  /** Phones: the timeframes as a grid. */
+  tfMenu(anchor) {
+    if (this._popover) { this.closePopover(); return; }
+    if (!this.ds) return;
+    this.popover(anchor, [h('h5', {}, 'Zaman dilimi'), h('div.rw-grid.four', {}, this.ds.timeframes.map((t) => h(`button.chip${t === this.tfId ? '.on' : ''}`, { type: 'button', onclick: () => { this.closePopover(); this.setTf(t); } }, t)))], { align: 'left' });
+  }
+
+  /** Not in a replay: the ways to start one. */
+  replayStartMenu(anchor) {
+    if (this._popover) { this.closePopover(); return; }
+    const go = (fn) => () => { this.closePopover(); fn(); };
+    this.popover(anchor, [
+      h('button.item', { onclick: go(() => this.newSessionDialog()) }, icon('play', 16), h('span', {}, h('span.t.plain', {}, 'Yeni replay'), h('span.s', {}, 'bir tarih seçip başla'))),
+      h('button.item', { onclick: go(() => this.pickReplayStart()) }, icon('scissors', 16), h('span', {}, h('span.t.plain', {}, 'Grafikten seç'), h('span.s', {}, 'bir bara dokun, oradan başlasın'))),
+      h('button.item', { onclick: go(() => this.sessionsDialog()) }, icon('sessions', 16), h('span', {}, h('span.t.plain', {}, 'Kayıtlı oturumlar'), h('span.s', {}, 'kaldığın yerden devam et'))),
+    ], { align: 'right' });
+  }
+
+  /** Phones: everything the top bar of a wide screen holds. */
+  mobileMoreMenu(anchor) {
+    if (this._popover) { this.closePopover(); return; }
+    const go = (fn) => () => { this.closePopover(); fn(); };
+    const item = (ic, t, sub, fn) => h('button.item', { onclick: go(fn) }, icon(ic, 16), h('span', {}, h('span.t.plain', {}, t), sub ? h('span.s', {}, sub) : null));
+    this.popover(anchor, [
+      h('div.seg.pop-seg', {}, MODES.map(([mode, label]) => h(`button${this.mode === mode ? '.on' : ''}`, { type: 'button', onclick: go(() => this.switchMode(mode)) }, label))),
+      item('panel', 'Pozisyonlar ve geçmiş', 'emirler, istatistik, veri', () => this.openTab(this.mode === 'replay' ? 'positions' : (this.settings.bottomTab || 'data'))),
+      this.mode === 'replay' ? item('layouts', 'Ekranı böl', 'iki grafik alt alta', () => this.layoutMenu(anchor)) : null,
+      item('sessions', 'Kayıtlı oturumlar', null, () => this.sessionsDialog()),
+      item('search', 'Ara', 'sembol, zaman dilimi, komut', () => openPalette(() => this._paletteItems())),
+      item('sliders', 'Ayarlar ve görünüm', null, () => D.settingsDialog(this)),
+      this.mode === 'replay' ? item('stop', 'Replay’den çık', 'oturum kaydedilir', () => this.exitReplay()) : null,
+      item('home', 'Ana ekran', null, () => { window.location.href = 'home.html'; }),
+    ].filter(Boolean), { align: 'right' });
+  }
+
+  /** Phones: speed, step and the stops of the replay. */
+  replayMoreMenu(anchor) {
+    if (this._popover) { this.closePopover(); return; }
+    const save = () => { this.saveSettings(); if (this.playing) { this.pause(); this.play(); } };
+    const paint = () => {
+      pop.replaceChildren(
+        h('h5', {}, 'Hız'),
+        h('div.rw-grid.four', {}, SPEEDS.map(([v, l]) => h(`button.chip${this.settings.speed === v ? '.on' : ''}`, { type: 'button', onclick: () => { this.settings.speed = v; save(); paint(); } }, l))),
+        h('h5', {}, 'Adım'),
+        h('div.seg.pop-seg', {}, [['base', `${this.ds.base_tf} adım`], ['bar', `${this.tfId} bar`]].map(([v, l]) => h(`button${this.settings.stepUnit === v ? '.on' : ''}`, { type: 'button', onclick: () => { this.settings.stepUnit = v; this.saveSettings(); paint(); } }, l))),
+        h('label.pop-toggle', {}, h('span', {}, h('span.t', {}, 'Dolunca dur'), h('span.s', {}, 'emir dolunca ya da pozisyon kapanınca duraklat')),
+          h('input', { type: 'checkbox', checked: !!this.settings.pauseOnFill, onchange: (e) => { this.settings.pauseOnFill = e.target.checked; this.saveSettings(); } })),
+        h('hr'),
+        h('button.item', { onclick: (e) => { this.closePopover(); this.rewindMenu(anchor); } }, icon('rewind', 16), h('span.t.plain', {}, 'Zamanda git')),
+        h('button.item', { onclick: () => { this.closePopover(); this.exitReplay(); } }, icon('stop', 16), h('span', {}, h('span.t.plain', {}, 'Replay’den çık'), h('span.s', {}, 'oturum kaydedilir'))));
+    };
+    const pop = this.popover(anchor, [], { align: 'right' });
+    pop.classList.add('size-pop');
+    paint();
+    const r = anchor.getBoundingClientRect();
+    pop.style.top = `${Math.max(8, r.top - 10 - pop.offsetHeight)}px`;
+  }
+
+  /** Phones: Buy and Sell with their prices and the size; a tap opens a draft. */
+  tradeSheet(anchor) {
+    if (this._popover) { this.closePopover(); return; }
+    const b = this.broker;
+    if (!b) return;
+    const dec = this.ds.decimals, t = this.settings.ticket;
+    const go = (side) => () => { this.closePopover(); this.startDraft(side); };
+    const open = b.positions.length, pend = b.orders.filter((o) => o.type !== 'next').length;
+    const pop = this.popover(anchor, [
+      h('div.ts-row', {},
+        h('button.ts-sell', { type: 'button', disabled: !!this.engine?.atEnd, onclick: go('sell') }, h('span', {}, 'Sat'), h('b.mono', {}, F.price(b.bid(), dec))),
+        h('button.ts-buy', { type: 'button', disabled: !!this.engine?.atEnd, onclick: go('buy') }, h('span', {}, 'Al'), h('b.mono', {}, F.price(b.ask(), dec)))),
+      h('button.item', { onclick: () => { this.closePopover(); this.sizeMenu(anchor); } }, icon('sliders', 16), h('span', {}, h('span.t.plain', {}, t.sizeMode === 'risk' ? `Risk %${F.num(t.riskPct, 2)}` : `${F.num(t.lots, 2)} lot`), h('span.s', {}, 'işlem büyüklüğü, otomatik başabaş'))),
+      h('button.item', { onclick: () => { this.closePopover(); this.openTab('positions'); } }, icon('panel', 16), h('span', {}, h('span.t.plain', {}, 'Pozisyonlar'), h('span.s', {}, `${open} açık · ${pend} bekleyen emir`))),
+      h('p.muted.rw-note', {}, 'Al / Sat taslak açar: TP ve SL’yi çizgiden sürükle, sonra onayla.'),
+    ], { align: 'left' });
+    pop.classList.add('trade-pop');
+    const r = anchor.getBoundingClientRect();
+    pop.style.top = `${Math.max(8, r.top - 10 - pop.offsetHeight)}px`;
+  }
+
   renderClock() {
+    const px = document.getElementById('instrument-px');
+    if (px) {
+      const last = this.mode === 'replay' && this.broker ? this.broker.bid() : this.chart?.bars?.[this.chart.bars.length - 1]?.close;
+      px.textContent = last != null && this.ds ? F.price(last, this.ds.decimals) : '';
+    }
+    if (this.mClock) this.mClock.textContent = this.mode === 'replay' && this.engine ? F.clock(this.engine.cursor, this.settings.tz) : '';
     if (this.clockWide) {
       const on = this.mode === 'replay' && !!this.engine;
       this.clockWide.hidden = !on;
@@ -2880,6 +3195,8 @@ class App {
       }
       if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); this.shortcutsDialog(); return; }
       if (e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && e.code === 'KeyF') { e.preventDefault(); this.toggleFullscreen(); return; }
+      if (e.key === 'Escape' && this.draft) { this.cancelDraft(); return; }
+      if (e.key === 'Enter' && this.draft && !e.target.closest?.('input, textarea, select, button')) { e.preventDefault(); this.confirmDraft(); return; }
       if (e.key === 'Escape') { this.cancelPick(); this.drawings.cancel(); this.drawings.select(null); $('#context-menu').classList.add('hidden'); this.closePopover(); return; }
       if ((e.key === 'Delete' || e.key === 'Backspace') && this.drawings.selected) { e.preventDefault(); this.drawings.remove(this.drawings.selected.id); return; }
       const letter = e.code.startsWith('Key') ? e.code.slice(3).toLowerCase() : '';

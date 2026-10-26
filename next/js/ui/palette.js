@@ -1,6 +1,6 @@
 // Command palette (Ctrl+K, "/", or start typing on the chart): one search box
 // for symbols, timeframes, screens and actions. Arrow keys move, Enter runs.
-import { h, icon } from './dom.js?v=f80c737c90';
+import { h, icon } from './dom.js?v=379181f731';
 
 let open = null;
 

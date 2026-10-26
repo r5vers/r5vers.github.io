@@ -1,6 +1,6 @@
 // Bottom-panel tables: open positions, pending orders, trade journal.
-import * as F from '../format.js?v=f80c737c90';
-import { download, h } from './dom.js?v=f80c737c90';
+import * as F from '../format.js?v=379181f731';
+import { download, h } from './dom.js?v=379181f731';
 
 const sideLabel = (s) => (s === 'buy' ? 'AL' : 'SAT');
 const REASONS = { sl: 'Stop', tp: 'Hedef', manual: 'Manuel', partial: 'Kısmi', strategy: 'Strateji', end: 'Test sonu' };

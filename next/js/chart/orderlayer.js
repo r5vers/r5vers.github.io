@@ -7,6 +7,11 @@
 // (tradelines.js); the chips are HTML over the chart, kept on their prices
 // as the chart scrolls and zooms.
 //
+// A draft (TradingView's order preview): Buy / Sell only puts the entry
+// line; TP and SL are dragged out of it, the lot follows from the stop, and
+// nothing is traded until the trader confirms (app.js). Its lines are drawn
+// here, the entry one long-dashed.
+//
 // PlusButton: the "+" at the price axis that follows the crosshair (as on
 // TradingView): a click offers orders and a line at that price.
 
@@ -23,6 +28,8 @@ export class OrderLayer {
   /**
    * tc: TradingChart. hooks:
    *   getBroker()                         the broker on the chart (or null)
+   *   getDraft()                          the order being prepared (or null):
+   *                                       { id, side, type, entry, qty, sl, tp }
    *   money(x), price(p)                  text for amounts and prices
    *   preview(kind, item, field, price)   { qty, pnl, r } a stop at `price` would mean
    *   onStop(kind, id, field, price)      set (price) or remove (null) a stop
@@ -39,7 +46,8 @@ export class OrderLayer {
     this.rows = new Map();
     this.drag = null;
     this._raf = 0;
-    this.colors = { entry: '#3d7bff', sl: '#ff9f2e', tp: '#2fd282', order: '#3d7bff' };
+    this.colors = { entry: '#3d7bff', sl: '#ff9f2e', tp: '#2fd282', order: '#3d7bff', buy: '#3d7bff', sell: '#ff5a76' };
+    this._dl = {};
   }
 
   /** The broker changed (a fill, a step, a modify): rebuild the chips. */
@@ -59,6 +67,13 @@ export class OrderLayer {
         if (o.tp != null) specs.push({ key: `o${o.id}:tp`, kind: 'ord', role: 'tp', item: o, price: o.tp });
       }
     }
+    const d = b ? this.h.getDraft?.() : null;
+    if (d) {
+      specs.push({ key: 'd', kind: 'draft', role: 'entry', item: d, price: d.entry });
+      if (d.sl != null) specs.push({ key: 'd:sl', kind: 'draft', role: 'sl', item: d, price: d.sl });
+      if (d.tp != null) specs.push({ key: 'd:tp', kind: 'draft', role: 'tp', item: d, price: d.tp });
+    }
+    this._draftLines(d);
     const seen = new Set();
     for (const s of specs) {
       seen.add(s.key);
@@ -78,18 +93,31 @@ export class OrderLayer {
     this._kick();
   }
 
-  clear() { for (const row of this.rows.values()) row.el.remove(); this.rows.clear(); }
+  clear() { for (const row of this.rows.values()) row.el.remove(); this.rows.clear(); this._draftLines(null); }
+
+  /** The draft's own price lines: the entry long-dashed in its side's colour, the stops dashed. */
+  _draftLines(d) {
+    for (const k of ['entry', 'sl', 'tp']) {
+      const price = d ? (k === 'entry' ? d.entry : d[k]) : null;
+      const line = this._dl[k];
+      if (price == null) { if (line) { try { this.tc.candles.removePriceLine(line); } catch { /* chart gone */ } delete this._dl[k]; } continue; }
+      if (this.drag?.key === (k === 'entry' ? 'd' : `d:${k}`)) continue;
+      const color = k === 'entry' ? this.colors[d.side] : this.colors[k];
+      if (!line) this._dl[k] = this.tc.candles.createPriceLine({ price, color, lineStyle: k === 'entry' ? 3 : 2, lineWidth: k === 'entry' ? 2 : 1, axisLabelVisible: true, title: '' });
+      else line.applyOptions({ price, color });
+    }
+  }
 
   /** Which chips a row has (a row is rebuilt when that changes). */
   _shape(s) {
     const it = s.item;
     if (s.role !== 'entry') return s.role;
-    return `${s.kind}:${it.side}:${it.tp == null ? 'T' : ''}${it.sl == null ? 'S' : ''}`;
+    return `${s.kind}:${it.side}:${s.kind === 'draft' ? it.type : ''}:${it.tp == null ? 'T' : ''}${it.sl == null ? 'S' : ''}`;
   }
 
   _build(s) {
     const it = s.item;
-    const row = el('div', `ol-row ol-${s.role} ol-${s.kind}${s.kind === 'ord' ? ' ol-pending' : ''} ${it.side}`);
+    const row = el('div', `ol-row ol-${s.role} ol-${s.kind}${s.kind !== 'pos' ? ' ol-pending' : ''} ${it.side}`);
     row.dataset.key = s.key;
     if (s.role === 'entry') {
       if (it.tp == null) row.append(this._addChip(s, 'tp'));
@@ -98,12 +126,13 @@ export class OrderLayer {
       qty.type = 'button';
       qty.addEventListener('click', (e) => this.h.onMenu(s.kind, it.id, e.currentTarget));
       row.append(qty);
-      if (s.kind === 'ord') {
+      if (s.kind === 'ord' || (s.kind === 'draft' && it.type !== 'market')) {
         const lab = el('span', 'ol-chip ol-type ol-grab');
         lab.title = 'Emri taşımak için sürükle';
         this._grab(lab, () => this.rows.get(s.key), (price) => this.h.onPrice(it.id, price));
         row.append(lab);
-      } else row.append(el('span', 'ol-chip ol-pnl'));
+      } else if (s.kind === 'draft') row.append(el('span', 'ol-chip ol-type'));
+      else row.append(el('span', 'ol-chip ol-pnl'));
     } else {
       const lab = el('span', `ol-chip ol-stop-label ol-grab ${s.role}`);
       lab.title = `${s.role === 'sl' ? 'Stop' : 'Hedef'}: taşımak için sürükle`;
@@ -112,7 +141,7 @@ export class OrderLayer {
     }
     const x = el('button', 'ol-chip ol-x', '×');
     x.type = 'button';
-    x.title = s.role === 'entry' ? (s.kind === 'pos' ? 'Pozisyonu kapat' : 'Emri iptal et') : `${s.role === 'sl' ? 'Stop' : 'Hedef'} kaldır`;
+    x.title = s.role === 'entry' ? ({ pos: 'Pozisyonu kapat', ord: 'Emri iptal et', draft: 'Taslağı sil' })[s.kind] : `${s.role === 'sl' ? 'Stop' : 'Hedef'} kaldır`;
     x.addEventListener('click', () => {
       if (s.role === 'entry') this.h.onClose(s.kind, it.id);
       else this.h.onStop(s.kind, it.id, s.role, null);
@@ -126,10 +155,11 @@ export class OrderLayer {
     const s = row.spec, it = s.item;
     const q = row.el.querySelector('.ol-qty');
     if (q) {
-      q.textContent = String(it.qty);
-      const sizing = it.autoRisk && it.sl == null;
+      const sizing = s.kind === 'draft' ? it.qty == null : it.autoRisk && it.sl == null;
+      q.textContent = it.qty == null ? 'lot ?' : this._n(it.qty, 2);
       q.classList.toggle('ol-pending-size', !!sizing);
-      q.title = sizing ? `Lot: SL’yi koyunca %${it.autoRisk} riske göre ayarlanır` : 'Lot · kısmi kapat, başabaş';
+      q.title = s.kind === 'draft' ? (sizing ? 'Lot: SL’yi sürükleyip koyunca riske göre hesaplanır' : 'Lot · büyüklük ayarları')
+        : sizing ? `Lot: SL’yi koyunca %${it.autoRisk} riske göre ayarlanır` : 'Lot · kısmi kapat, başabaş';
     }
     if (s.role === 'entry' && s.kind === 'pos') {
       const pnl = b.unrealized(it);
@@ -139,7 +169,10 @@ export class OrderLayer {
       c.classList.toggle('down', pnl < 0);
     }
     if (s.role === 'entry' && s.kind === 'ord') {
-      row.el.querySelector('.ol-type').textContent = `${it.side === 'buy' ? 'BUY' : 'SELL'} ${it.type === 'limit' ? 'LIMIT' : 'STOP'}`;
+      row.el.querySelector('.ol-type').textContent = `${it.side === 'buy' ? 'AL' : 'SAT'} ${it.type === 'limit' ? 'LİMİT' : 'STOP'}`;
+    }
+    if (s.role === 'entry' && s.kind === 'draft') {
+      row.el.querySelector('.ol-type').textContent = `${it.side === 'buy' ? 'AL' : 'SAT'} · ${({ market: 'PİYASA', limit: 'LİMİT', stop: 'STOP' })[it.type]}`;
     }
     if (s.role !== 'entry' && this.drag?.key !== s.key) this._stopLabel(row, row.price);
   }
@@ -149,7 +182,8 @@ export class OrderLayer {
     const v = this.h.preview(s.kind, s.item, s.role, price);
     const lab = row.el.querySelector('.ol-stop-label');
     if (!lab || !v) return;
-    lab.textContent = `${s.role.toUpperCase()} ${this.h.money(v.pnl)}${v.r != null ? ` · ${v.r >= 0 ? '' : '−'}${Math.abs(v.r).toFixed(2)}R` : ''}${v.resized ? ` · ${v.qty} lot` : ''}`;
+    if (v.label) { lab.textContent = v.label; return; }
+    lab.textContent = `${s.role.toUpperCase()} ${this.h.money(v.pnl)}${v.r != null ? ` · ${v.r >= 0 ? '' : '−'}${this._n(Math.abs(v.r), 2)}R` : ''}${v.resized ? ` · ${this._n(v.qty, 2)} lot` : ''}`;
   }
 
   /** A TP or SL chip on the entry line: drag it out to place the stop. */
@@ -175,7 +209,8 @@ export class OrderLayer {
         ghost.price = price;
         line.applyOptions({ price });
         const v = this.h.preview(s.kind, it, field, price);
-        if (v) ghost.el.firstChild.textContent = `${field.toUpperCase()} ${this.h.money(v.pnl)}${v.r != null ? ` · ${Math.abs(v.r).toFixed(2)}R` : ''}${v.resized ? ` · ${v.qty} lot` : ''}`;
+        if (v?.label) ghost.el.firstChild.textContent = v.label;
+        else if (v) ghost.el.firstChild.textContent = `${field.toUpperCase()} ${this.h.money(v.pnl)}${v.r != null ? ` · ${this._n(Math.abs(v.r), 2)}R` : ''}${v.resized ? ` · ${this._n(v.qty, 2)} lot` : ''}`;
         this._place();
       };
       const up = () => {
@@ -219,7 +254,8 @@ export class OrderLayer {
         if (price == null) return;
         row.price = price;
         if (row.spec.role !== 'entry') this._stopLabel(row, price);
-        this.h.onDrag?.(row.spec, price);
+        if (row.spec.kind === 'draft') this._dl[row.spec.role]?.applyOptions({ price });
+        else this.h.onDrag?.(row.spec, price);
         this._place();
       };
       const up = () => {
@@ -236,6 +272,8 @@ export class OrderLayer {
       window.addEventListener('pointercancel', up, true);
     });
   }
+
+  _n(x, d) { return this.h.num ? this.h.num(x, d) : x.toFixed(d); }
 
   _y(e) { return e.clientY - this.tc.el.getBoundingClientRect().top; }
 

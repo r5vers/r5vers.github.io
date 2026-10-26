@@ -1,7 +1,7 @@
 // Order ticket + account summary (right side panel).
-import { lotsForRisk } from '../core/broker.js?v=f80c737c90';
-import * as F from '../format.js?v=f80c737c90';
-import { h, icon } from './dom.js?v=f80c737c90';
+import { lotsForRisk } from '../core/broker.js?v=379181f731';
+import * as F from '../format.js?v=379181f731';
+import { h, icon } from './dom.js?v=379181f731';
 
 export class Ticket {
   constructor(el, app) {
@@ -95,9 +95,6 @@ export class Ticket {
         h('div.inline', {},
           this._seg([['lots', 'Lot'], ['risk', '% Risk']], t.sizeMode, (v) => { t.sizeMode = v; this._save(); this.render(); }),
           t.sizeMode === 'lots' ? num('lots', 0.01) : num('riskPct', 0.1))),
-      // % risk needs a stop: without one the order goes in at a fixed lot
-      t.sizeMode === 'risk' && !(t.slOn && t.slPips > 0)
-        ? h('div.field', {}, h('label', { title: 'SL olmadan risk hesaplanamaz' }, 'SL yok → lot'), h('div.inline', {}, num('lots', 0.01))) : null,
       h('div.field', {}, h('span'), this.sizeHint),
       h('div.field', {}, h('label', {}, check('slOn'), 'SL pip'), h('div.inline', {}, num('slPips', 0.1))),
       this.slHint,
@@ -144,7 +141,7 @@ export class Ticket {
     let note = null;
     if (t.sizeMode === 'risk') {
       if (sl == null) {
-        note = `SL’yi grafikte koyunca lot %${F.num(t.riskPct, 2)} riske göre ayarlanır (o zamana dek ${F.num(t.lots, 2)} lot)`;
+        note = `Al / Sat taslak açar: SL’yi grafikte sürükleyip koy, lot %${F.num(t.riskPct, 2)} riske göre hesaplanır, sonra onayla`;
       } else {
         qty = lotsForRisk({ balance: b.balance, riskPct: t.riskPct, entry, sl, contractSize: b.cfg.contractSize, quoteConv: b.cfg.quoteConv, lotStep: step });
         // a very tight stop would ask for an absurd size: keep it sane
@@ -160,9 +157,9 @@ export class Ticket {
   submit(side) {
     const p = this.plan(side);
     if (p.error) { this.app.toast(p.error, 'err'); return; }
-    // sized to a % risk without a stop yet: the lot is set when the stop is placed
-    const autoRisk = this.t.sizeMode === 'risk' && p.sl == null && this.t.riskPct > 0 ? this.t.riskPct : null;
-    this.app.placeOrder({ side, type: p.type, qty: p.qty, price: p.type === 'market' ? null : p.entry, sl: p.sl, tp: p.tp, ...(autoRisk ? { autoRisk } : {}) });
+    // every order starts as a draft on the chart (the SL / TP pips, when
+    // ticked, place its stops): the trader checks it and confirms
+    this.app.startDraft(side, p.type === 'market' ? {} : { type: 'pending', price: p.entry });
   }
 
   update() {
@@ -205,7 +202,19 @@ export class Ticket {
     // the calculator: lot, risk and reward in money and in % of the balance
     if (this.calc) {
       const cell = (k, v, c = '') => h('div.calc-cell', {}, h('span.k', {}, k), h(`span.v${c ? `.${c}` : ''}`, {}, v));
-      if (!buy.qty) { this.calc.replaceChildren(); } else {
+      // a draft on the chart: the panel shows what confirming it does
+      const dp = app.draft ? app._draftPlan() : null;
+      if (dp) {
+        const pct = (x) => F.pct(x / b.balance, 2);
+        this.calc.replaceChildren(
+          cell('Taslak', `${dp.side === 'buy' ? 'Al' : 'Sat'} · ${({ market: 'piyasa', limit: 'limit', stop: 'stop' })[dp.type]}`),
+          cell('Lot', dp.qty ? F.num(dp.qty, 2) : '—'),
+          cell('Risk', dp.risk != null ? `${F.money(dp.risk, ccy)} · ${pct(dp.risk)}` : '—', 'down'),
+          cell('Kazanç', dp.reward != null ? `${F.money(dp.reward, ccy)} · ${pct(dp.reward)}` : '—', 'up'),
+          cell('R:R', dp.r != null ? `1 : ${F.num(dp.r, 2)}` : '—'),
+          cell('Durum', dp.ok ? 'onaya hazır' : dp.why, dp.ok ? 'up' : ''));
+        this.sizeHint.textContent = dp.ok ? 'Taslak hazır: grafikteki çubuktan onayla (Enter)' : `Taslak: ${dp.why}`;
+      } else if (!buy.qty) { this.calc.replaceChildren(); } else {
         const risk = buy.sl != null ? b.riskAmount('buy', buy.entry, buy.sl, buy.qty) : null;
         const reward = buy.tp != null ? b.toAccount((buy.tp - buy.entry) * b.units(buy.qty), buy.entry) : null;
         const pipValue = b.toAccount(this.ds.pip_size * b.units(buy.qty), buy.entry);

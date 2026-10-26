@@ -11,8 +11,8 @@
 // sticker lets taps through to what is under it; in the home screen's edit
 // mode it can be picked, changed and unlocked again. They are kept with the
 // profile (rt:stickers), apart for phones and laptops like the layout.
-import { h, icon, modal, storage, store } from './dom.js?v=f80c737c90';
-import { paperArt } from './paper.js?v=f80c737c90';
+import { h, icon, modal, storage, store } from './dom.js?v=379181f731';
+import { paperArt } from './paper.js?v=379181f731';
 
 // the art files sit beside the pages (the test copy lives under /next/)
 function art(file) { return new URL(`../../stickers/${file}`, import.meta.url).href; }
