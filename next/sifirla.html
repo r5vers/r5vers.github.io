@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>RV Next · Test sürümünü sıfırla</title>
+  <style>
+    body { margin: 0; padding: 20px 16px; background: #000; color: #f2f2f5; font: 15px/1.5 -apple-system, system-ui, sans-serif; }
+    .box { max-width: 460px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 6px 0 8px; }
+    p { color: #9a9aa3; margin: 8px 0; }
+    p b { color: #f2f2f5; }
+    button, a.btn { display: block; width: 100%; box-sizing: border-box; margin-top: 14px; padding: 15px; border: 0; border-radius: 999px; background: #a855f7; color: #fff; font: 600 16px -apple-system, system-ui, sans-serif; text-align: center; text-decoration: none; }
+    button[disabled] { opacity: .5; }
+    #log { margin-top: 14px; font-size: 13px; color: #b8b8c2; }
+    #log div::before { content: '• '; color: #a855f7; }
+    .ok { color: #30d158; } .err { color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Test sürümünü sıfırla</h1>
+    <p>Test sürümü (RV Next) ana sitenin verilerine dokunmaz: ilk açılışta profilleri, oturumları ve ayarları <b>bir kez kopyalar</b>, sonra kendi kopyasıyla çalışır.</p>
+    <p>Bu düğme yalnızca test sürümünün kopyasını siler. Sonra açılınca ana sitenin <b>güncel</b> verileri yeniden kopyalanır. Test sürümünde yapılan değişiklikler gider; ana site olduğu gibi kalır.</p>
+    <button id="go">Test sürümünü sıfırla</button>
+    <div id="log"></div>
+  </div>
+  <script>
+    // Plain script, nothing from the site itself: it must work when the
+    // site's own code or storage does not. Only the test copy's things go:
+    // the database "rv-next" and the localStorage keys under "nx".
+    var log = document.getElementById('log');
+    function say(text, cls) { var d = document.createElement('div'); d.textContent = text; if (cls) d.className = cls; log.appendChild(d); }
+    function step(name, fn) {
+      return Promise.race([
+        Promise.resolve().then(fn).then(function (r) { say(name + (typeof r === 'string' && r ? ': ' + r : ''), 'ok'); }, function (e) { say(name + ': ' + ((e && e.message) || e), 'err'); }),
+        new Promise(function (res) { setTimeout(function () { say(name + ': 10 sn içinde bitmedi, devam ediliyor', 'err'); res(); }, 10000); })
+      ]);
+    }
+    document.getElementById('go').onclick = function () {
+      var btn = this; btn.disabled = true; btn.textContent = 'Sıfırlanıyor…';
+      step('Test veritabanı silindi', function () {
+        return new Promise(function (ok, no) {
+          var r = indexedDB.deleteDatabase('rv-next');
+          r.onsuccess = function () { ok(); };
+          r.onerror = function () { no(r.error); };
+          r.onblocked = function () { say('Test sürümünün açık olduğu başka sekmeler varsa kapat; bekleniyor…'); };
+        });
+      }).then(function () {
+        return step('Test kayıtları temizlendi', function () {
+          var keys = [];
+          for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^nx[:-]/.test(k)) keys.push(k); }
+          keys.forEach(function (k) { localStorage.removeItem(k); });
+          return keys.length + ' kayıt';
+        });
+      }).then(function () {
+        say('Tamam. Test sürümü açılınca ana sitenin verileri yeniden kopyalanır.', 'ok');
+        btn.style.display = 'none';
+        var a = document.createElement('a'); a.className = 'btn'; a.href = 'profiles.html?r=' + Date.now(); a.textContent = 'Test sürümünü aç';
+        log.appendChild(a);
+      });
+    };
+  </script>
+</body>
+</html>

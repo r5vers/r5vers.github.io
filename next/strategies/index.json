@@ -1,0 +1,6 @@
+[
+  { "file": "ema-cross.js", "name": "EMA kesişimi" },
+  { "file": "rsi-reversion.js", "name": "RSI dönüş (trend filtreli)" },
+  { "file": "donchian-breakout.js", "name": "Donchian kırılımı + iz süren stop" },
+  { "file": "asia-sweep.js", "name": "Asya süpürmesi (Londra)" }
+]
