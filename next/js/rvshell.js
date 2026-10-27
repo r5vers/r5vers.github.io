@@ -3,13 +3,13 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=efec4daadb';
-import * as F from './format.js?v=efec4daadb';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=efec4daadb';
-import { configureICT } from './chart/sessions.js?v=efec4daadb';
-import { settingsDialog } from './ui/dialogs.js?v=efec4daadb';
-import { openPalette } from './ui/palette.js?v=efec4daadb';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=efec4daadb';
+import { api } from './api.js?v=44e476acc5';
+import * as F from './format.js?v=44e476acc5';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=44e476acc5';
+import { configureICT } from './chart/sessions.js?v=44e476acc5';
+import { settingsDialog } from './ui/dialogs.js?v=44e476acc5';
+import { openPalette } from './ui/palette.js?v=44e476acc5';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=44e476acc5';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };
@@ -153,42 +153,62 @@ export function appFrame({ current, sections = null, section = null, crumbs = []
 let openSheet = null;
 export function closeSheet() { openSheet?.close(); }
 
-/** A sheet from the foot on a phone, a panel from the right on a wide screen. */
-export function sheet({ title, body, banner = null, cls = '', tabs = null }) {
+/**
+ * A sheet from the foot on a phone, a panel from the right on a wide screen.
+ * The title sits in the middle (Alltra's sheets), `lead` to its left (a back
+ * button), and `banner: true` lays the theme's light behind the top.
+ */
+export function sheet({ title, body, banner = null, cls = '', tabs = null, lead = null }) {
   closeSheet();
   const wide = WIDE.matches;
   const back = h(`div.rv-sheet-back${wide ? '.drawer' : ''}`);
+  const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
   const close = () => {
+    document.removeEventListener('keydown', onKey, true);
     if (!back.isConnected) return;
     back.classList.add('out');
     setTimeout(() => back.remove(), 220);
     if (openSheet?.box === box) openSheet = null;
   };
-  const head = h('header.rv-sheet-head', {},
-    tabs || (title ? h('h2', {}, title) : h('span')),
-    h('button.rv-icon-btn', { type: 'button', title: 'Kapat', 'aria-label': 'Kapat', onclick: close }, icon('close', 18)));
+  const titleEl = tabs || h('h2', {}, title || '');
+  const leadEl = h('span.rv-sheet-lead', {}, lead);
+  const head = h('header.rv-sheet-head', {}, leadEl, titleEl,
+    h('button.rv-icon-btn.rv-close', { type: 'button', title: 'Kapat', 'aria-label': 'Kapat', onclick: close }, icon('close', 18)));
   const box = h(`div.rv-sheet${cls ? `.${cls}` : ''}`, { role: 'dialog', 'aria-modal': 'true', 'aria-label': title || 'Panel' },
-    wide ? null : h('div.rv-grip'), head, h('div.rv-sheet-body', {}, banner, body));
+    banner ? h('div.rv-sheet-banner', { 'aria-hidden': 'true' }, banner instanceof Node ? banner : null) : null,
+    wide ? null : h('div.rv-grip'), head, h('div.rv-sheet-body', {}, body));
   back.append(box);
+  box.addEventListener('scroll', () => box.classList.toggle('scrolled', box.scrollTop > 6), { passive: true });
+  document.addEventListener('keydown', onKey, true);
   back.addEventListener('pointerdown', (e) => { if (e.target === back) close(); });
   document.body.append(back);
   openSheet = { close, box };
-  return { close, el: box };
+  return {
+    close, el: box,
+    setTitle: (t) => { if (!tabs) titleEl.textContent = t; box.setAttribute('aria-label', t); },
+    setLead: (n) => leadEl.replaceChildren(...(n ? [n] : [])),
+  };
 }
 
-/** A card of rows (iOS grouped list): icon, title, a line under it, a chevron. */
-export function group(rows, title = null) {
+/** A card of rows (iOS grouped list): icon, title, a line under it, a chevron.
+ *  `mono`: plain white icons on the glass (Alltra's account list). */
+export function group(rows, title = null, { mono = false } = {}) {
   return h('section.rv-group-wrap', {}, title ? h('h4.rv-group-title', {}, title) : null,
-    h('div.rv-group', {}, rows.filter(Boolean).map((r) => h(`button.rv-row${r.danger ? '.danger' : ''}${r.on ? '.on' : ''}`, { type: 'button', onclick: r.onclick, disabled: !!r.disabled },
-      h(`span.rv-row-ic.c-${r.tone || 'accent'}`, {}, icon(r.icon, 18)),
+    h(`div.rv-group${mono ? '.mono' : ''}`, {}, rows.filter(Boolean).map((r) => h(`button.rv-row${r.danger ? '.danger' : ''}${r.on ? '.on' : ''}`, { type: 'button', onclick: r.onclick, disabled: !!r.disabled },
+      h(`span.rv-row-ic.c-${r.tone || 'accent'}`, {}, icon(r.icon, mono ? 22 : 18)),
       h('span.rv-row-t', {}, h('b', {}, r.title), r.sub ? h('small', {}, r.sub) : null),
       r.value != null ? h('span.rv-row-v', {}, r.value) : null,
       h('span.rv-row-go', {}, icon('chevron', 15))))));
 }
 
-// ── appearance (theme carousel, accent cards, candle colours) ─────────────
-export const ACCENTS = [['#5b8cff', 'Mavi'], ['#a855f7', 'Mor'], ['#ec4899', 'Pembe'], ['#f43f5e', 'Kırmızı'], ['#f97316', 'Turuncu'], ['#eab308', 'Altın'], ['#22c55e', 'Yeşil'], ['#14b8a6', 'Turkuaz'], ['#a1a1aa', 'Platin']];
-export const CANDLES = [['Klasik', '#26a69a', '#ef5350'], ['Zümrüt / gül', '#34d399', '#fb7185'], ['Gök / gül', '#38bdf8', '#f43f5e'], ['Sade', '#e5e7eb', '#6b7280']];
+// ── appearance: theme, colour, type, chart ───────────────────────────────
+export const ACCENTS = [['#a855f7', 'Mor'], ['#8b5cf6', 'Menekşe'], ['#6366f1', 'Çivit'], ['#3b82f6', 'Mavi'], ['#0ea5e9', 'Gök'], ['#22d3ee', 'Buz'],
+  ['#14b8a6', 'Turkuaz'], ['#10b981', 'Zümrüt'], ['#22c55e', 'Yeşil'], ['#84cc16', 'Lime'], ['#eab308', 'Altın'], ['#f59e0b', 'Kehribar'],
+  ['#f97316', 'Turuncu'], ['#ef4444', 'Kırmızı'], ['#f43f5e', 'Gül'], ['#ec4899', 'Pembe'], ['#d946ef', 'Fuşya'], ['#e4e4e7', 'Platin']];
+export const CANDLES = [['Klasik', '#26a69a', '#ef5350'], ['Zümrüt / gül', '#34d399', '#fb7185'], ['Gök / gül', '#38bdf8', '#f43f5e'], ['Yeşil / kırmızı', '#22c55e', '#ef4444'],
+  ['Lavanta', '#8fa8ff', '#c77dff'], ['Neon', '#2ee6a6', '#ff4d6d'], ['Altın / mor', '#facc15', '#a855f7'], ['Sade', '#e5e7eb', '#6b7280']];
+// money made / lost on the app pages; the first is the default (null)
+const MONEY = [['Zümrüt / gül', '#34d399', '#fb7185'], ['Yeşil / kırmızı', '#22c55e', '#ef4444'], ['Turkuaz / mercan', '#2dd4bf', '#fb923c'], ['Gök / gül', '#38bdf8', '#f43f5e'], ['Lime / mor', '#a3e635', '#c084fc']];
 
 export const homeLook = {
   get a() { return shell.settings.appearance; },
@@ -196,27 +216,120 @@ export const homeLook = {
   save() { host.saveSettings(); },
 };
 
+// form parts of the look panes
+const field = (label, control, sub = null) => h('div.rv-field', {}, h('span.rv-field-t', {}, h('b', {}, label), sub ? h('small', {}, sub) : null), control);
+const form = (title, rows) => h('section.rv-group-wrap', {}, title ? h('h4.rv-group-title', {}, title) : null, h('div.rv-group.rv-form', {}, rows.filter(Boolean)));
+const segCtl = (opts, val, pick) => h('div.rv-seg.sm', {}, opts.map(([v, l]) => h(`button${String(v) === String(val) ? '.on' : ''}`, { type: 'button', onclick: () => pick(v) }, l)));
+const toggle = (on, flip, label) => h(`button.rv-toggle${on ? '.on' : ''}`, { type: 'button', role: 'switch', 'aria-checked': String(!!on), 'aria-label': label, onclick: flip }, h('i'));
+function swatch(val, live, done, label) {
+  const inp = h('input', { type: 'color', value: val, 'aria-label': label });
+  const el = h('label.rv-swatch', { style: { '--c': val }, title: label }, inp);
+  inp.addEventListener('input', () => { el.style.setProperty('--c', inp.value); live(inp.value); });
+  inp.addEventListener('change', () => done(inp.value));
+  return el;
+}
+function range(min, max, step, val, live, done, fmt, label) {
+  const pct = (v) => `${(((v - min) / (max - min)) * 100).toFixed(1)}%`;
+  const out = h('output.rv-range-v', {}, fmt(val));
+  const inp = h('input.rv-range', { type: 'range', min, max, step, value: val, 'aria-label': label, style: { '--p': pct(val) } });
+  inp.addEventListener('input', () => { const v = +inp.value; out.textContent = fmt(v); inp.style.setProperty('--p', pct(v)); live(v); });
+  inp.addEventListener('change', () => done(+inp.value));
+  return h('div.rv-range-wrap', {}, inp, out);
+}
+
+/** A small chart in the look's own colours: ground, grid, candles, volume. */
+function chartPreview(a) {
+  const W = 320, H = 150, bars = [[46, 62, 40, 58], [58, 70, 52, 54], [54, 60, 38, 42], [42, 50, 30, 47], [47, 78, 45, 74], [74, 86, 66, 70], [70, 74, 52, 56], [56, 66, 50, 64], [64, 96, 60, 92], [92, 100, 78, 82], [82, 90, 70, 88], [88, 112, 84, 108]];
+  const y = (v) => H - 22 - (v - 26) * 1.15;
+  const ground = a.chartBg === 'solid' ? a.chartColor : a.chartBg === 'gradient' ? 'url(#pg)' : 'rgba(255,255,255,.03)';
+  const grid = a.gridColor || 'rgba(255,255,255,.07)';
+  const lines = [];
+  if (a.grid !== 'none') for (let i = 1; i < 4; i++) lines.push(`<line x1="0" x2="${W}" y1="${(H / 4) * i}" y2="${(H / 4) * i}" stroke="${grid}"/>`);
+  if (a.grid === 'both') for (let i = 1; i < 6; i++) lines.push(`<line y1="0" y2="${H}" x1="${(W / 6) * i}" x2="${(W / 6) * i}" stroke="${grid}"/>`);
+  const cw = 15, gap = W / (bars.length + 1);
+  const candles = bars.map(([o, hi, lo, c], i) => {
+    const up = c >= o, x = gap * (i + 0.6), col = up ? a.up : a.down;
+    const body = (up ? a.bodyUp : a.bodyDown) || col, edge = (up ? a.borderUp : a.borderDown) || col, wick = (up ? a.wickUp : a.wickDown) || (a.wick === 'match' ? col : a.wickColor || col);
+    const top = y(Math.max(o, c)), bot = y(Math.min(o, c));
+    const vol = `<rect x="${x - cw / 2}" y="${H - 6 - (i % 4 + 2) * 3.2}" width="${cw}" height="${(i % 4 + 2) * 3.2}" fill="${col}" opacity="${(a.volOpacity ?? 26) / 100}"/>`;
+    return `${a.volOpacity ? vol : ''}<line x1="${x}" x2="${x}" y1="${y(hi)}" y2="${y(lo)}" stroke="${wick}" stroke-width="1.5"/><rect x="${x - cw / 2}" y="${top}" width="${cw}" height="${Math.max(2, bot - top)}" rx="2" fill="${a.hollow && up ? 'transparent' : body}" stroke="${a.border || a.hollow ? edge : 'none'}" stroke-width="1.5"/>`;
+  }).join('');
+  const el = h('div.rv-preview');
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a.chartColor}"/><stop offset="1" stop-color="${a.chartColor2}"/></linearGradient></defs><rect width="${W}" height="${H}" fill="${ground}"/>${lines.join('')}${a.lastLine ? `<line x1="0" x2="${W}" y1="${y(108)}" y2="${y(108)}" stroke="${a.up}" stroke-dasharray="3 3" opacity=".8"/>` : ''}${candles}</svg>`;
+  return el;
+}
+
 function lookPane(ctx, state, repaint) {
   const a = ctx.a;
   const set = (patch) => { Object.assign(a, patch); ctx.apply(a); ctx.save(); repaint(); };
-  const tabs = h('div.rv-seg', { role: 'tablist' }, [['theme', 'Tema'], ['accent', 'Vurgu'], ['candles', 'Grafik']].map(([k, l]) =>
+  const live = (patch) => { Object.assign(a, patch); ctx.apply(a); };
+  const tabs = h('div.rv-seg.rv-look-tabs', { role: 'tablist' }, [['theme', 'Tema'], ['accent', 'Renk'], ['type', 'Yazı'], ['chart', 'Grafik']].map(([k, l]) =>
     h(`button${state.tab === k ? '.on' : ''}`, { type: 'button', role: 'tab', onclick: () => { state.tab = k; repaint(); } }, l)));
-  let pane;
+  const pane = h('div.rv-look');
   if (state.tab === 'theme') {
     const cur = PRESETS.find((p) => p.id === a.preset) || PRESETS[0];
-    pane = h('div.rv-look', {},
-      h('div.rv-themes', {}, PRESETS.map((p) => h(`button.rv-theme${p.id === a.preset ? '.on' : ''}`, { type: 'button', 'aria-label': p.name,
-        onclick: () => set({ preset: p.id, bg: p.bg, accent: p.accent, up: p.up, down: p.down }) },
-      h('span.rv-theme-win', { style: { background: BACKGROUNDS[p.bg]?.css } },
-        h('i.bar'), h('i.side'), h('i.ln', { style: { background: p.accent } }), h('i.card'), h('i.card2')),
-      h('b', {}, p.name)))),
-      h('div.rv-theme-now', {}, h('b', {}, cur.name), h('span', {}, 'Geçerli tema')));
+    const strip = h('div.rv-themes', {}, PRESETS.map((p) => h(`button.rv-theme${p.id === a.preset ? '.on' : ''}`, { type: 'button', 'aria-label': p.name, dataset: { id: p.id },
+      onclick: () => set({ preset: p.id, bg: p.bg, accent: p.accent, up: p.up, down: p.down }) },
+    h('span.rv-theme-win', { style: { background: BACKGROUNDS[p.bg]?.css } },
+      h('i.bar'), h('i.side'), h('i.ln', { style: { background: p.accent } }), h('i.card'), h('i.card2')),
+    h('b', {}, p.name))));
+    requestAnimationFrame(() => strip.querySelector('.on')?.scrollIntoView({ inline: 'center', block: 'nearest' }));
+    pane.append(strip, h('div.rv-theme-now', {}, h('b', {}, cur.name), h('span', {}, `${PRESETS.length} koyu tema`)),
+      form('Koyuluk', [field('Sayfa ve cam', range(0, 100, 1, a.depth, (v) => live({ depth: v }), (v) => { a.depth = v; ctx.save(); }, (v) => `%${v}`, 'Koyuluk'), 'Işıkları kısar, camı koyulaştırır')]));
   } else if (state.tab === 'accent') {
-    pane = h('div.rv-accents', {}, ACCENTS.map(([c, n]) => h(`button.rv-accent${a.accent === c ? '.on' : ''}`, { type: 'button', style: { '--c': c }, onclick: () => set({ accent: c, homeAccent: null }) },
-      h('span.rv-accent-win', {}, h('i.dots'), h('i.d'), h('i.l'), h('i.d2'), h('i.l2')), h('b', {}, n))));
+    const own = !ACCENTS.some(([c]) => c === a.accent);
+    pane.append(
+      h('div.rv-accents', {}, ACCENTS.map(([c, n]) => h(`button.rv-accent${a.accent === c ? '.on' : ''}`, { type: 'button', style: { '--c': c }, title: n, 'aria-label': n, onclick: () => set({ accent: c, homeAccent: null }) }, h('i'), h('b', {}, n)))),
+      form(null, [field('Özel renk', swatch(own ? a.accent : '#a855f7', (v) => live({ accent: v, homeAccent: null }), (v) => set({ accent: v, homeAccent: null }), 'Özel vurgu rengi'), own ? 'Seçili' : 'Kendi rengini seç')]),
+      form('Kâr ve zarar', MONEY.map(([n, pos, neg], i) => {
+        const on = i === 0 ? !a.pos && !a.neg : a.pos === pos && a.neg === neg;
+        return h(`button.rv-field.pick${on ? '.on' : ''}`, { type: 'button', onclick: () => set(i === 0 ? { pos: null, neg: null } : { pos, neg }) },
+          h('span.rv-field-t', {}, h('b', {}, n), h('small', {}, on ? 'Seçili' : 'Oturumlar, analiz, bakiye')), h('span.rv-dots', {}, h('i', { style: { background: pos } }), h('i', { style: { background: neg } })));
+      })));
+  } else if (state.tab === 'type') {
+    pane.append(h('div.rv-fonts', {}, Object.entries(FONT_PAIRS).map(([id, f]) => h(`button.rv-font${a.font === id ? '.on' : ''}`, { type: 'button', onclick: () => set({ font: id }) },
+      h('span.rv-font-aa', { style: { fontFamily: f.display, fontWeight: f.dWeight, letterSpacing: f.dTrack, fontStretch: f.dStretch, fontVariationSettings: f.dSettings } }, 'Replay'),
+      h('span.rv-font-num', { style: { fontFamily: f.mono, fontStretch: f.monoStretch } }, '1.08448'),
+      h('b', { style: { fontFamily: f.ui } }, f.name)))));
   } else {
-    pane = group(CANDLES.map(([n, up, down]) => ({ icon: 'chart', title: n, sub: a.up === up && a.down === down ? 'Seçili' : 'Yükselen · düşen', on: a.up === up && a.down === down,
-      value: h('span.rv-dots', {}, h('i', { style: { background: up } }), h('i', { style: { background: down } })), onclick: () => set({ up, down, homeUp: null, homeDown: null }) })));
+    const preview = chartPreview(a);
+    const repreview = () => preview.replaceWith(chartPreview(a));
+    const liveChart = (patch) => { live(patch); const p = pane.querySelector('.rv-preview'); p?.replaceWith(chartPreview(a)); };
+    const col = (k, label, fallback) => swatch(a[k] || fallback(), (v) => liveChart({ [k]: v }), (v) => { a[k] = v; ctx.save(); }, label);
+    const pair = (ku, kd, lu, ld, fu, fd) => h('span.rv-pair', {}, col(ku, lu, fu), col(kd, ld, fd));
+    const up = () => a.up, down = () => a.down;
+    void repreview;
+    pane.append(preview,
+      h('div.rv-candle-sets', {}, CANDLES.map(([n, u, d]) => h(`button.rv-chip${a.up === u && a.down === d ? '.on' : ''}`, { type: 'button', title: n,
+        onclick: () => set({ up: u, down: d, homeUp: null, homeDown: null, bodyUp: null, bodyDown: null, borderUp: null, borderDown: null, wickUp: null, wickDown: null }) },
+      h('span.rv-dots', {}, h('i', { style: { background: u } }), h('i', { style: { background: d } })), n))),
+      form('Mumlar', [
+        field('Ana renkler', pair('up', 'down', 'Yükselen', 'Düşen', up, down), 'Yükselen · düşen'),
+        field('Gövde', pair('bodyUp', 'bodyDown', 'Yükselen gövde', 'Düşen gövde', up, down)),
+        field('Kenar', h('span.rv-pair', {}, toggle(a.border, () => set({ border: !a.border }), 'Kenar çizgisi'), a.border ? pair('borderUp', 'borderDown', 'Yükselen kenar', 'Düşen kenar', up, down) : null)),
+        field('Fitil', pair('wickUp', 'wickDown', 'Yükselen fitil', 'Düşen fitil', up, down)),
+        field('İçi boş mumlar', toggle(a.hollow, () => set({ hollow: !a.hollow }), 'İçi boş mumlar'), 'Yükselen mumun içi boş'),
+        h('button.rv-field.pick', { type: 'button', onclick: () => set({ bodyUp: null, bodyDown: null, borderUp: null, borderDown: null, wickUp: null, wickDown: null }) }, h('span.rv-field-t', {}, h('b', {}, 'Parça renklerini sıfırla'), h('small', {}, 'Gövde, kenar ve fitil ana renkleri alır')), icon('refresh', 18)),
+      ]),
+      form('Arka plan', [
+        field('Zemin', segCtl([['glass', 'Tema'], ['solid', 'Düz'], ['gradient', 'Gradyan']], a.chartBg, (v) => set({ chartBg: v }))),
+        a.chartBg !== 'glass' ? field(a.chartBg === 'gradient' ? 'Üst · alt' : 'Renk', a.chartBg === 'gradient'
+          ? h('span.rv-pair', {}, col('chartColor', 'Üst renk', () => '#0b0b0d'), col('chartColor2', 'Alt renk', () => '#140d26'))
+          : col('chartColor', 'Zemin rengi', () => '#0b0b0d')) : null,
+        field('Izgara', segCtl([['both', 'Tam'], ['horz', 'Yatay'], ['none', 'Yok']], a.grid, (v) => set({ grid: v }))),
+        a.grid !== 'none' ? field('Izgara rengi', col('gridColor', 'Izgara rengi', () => '#1c1d22')) : null,
+      ]),
+      form('Eksen ve imleç', [
+        field('Eksen yazısı', h('span.rv-pair', {}, segCtl([[10, '10'], [11, '11'], [12, '12'], [13, '13']], a.chartFont, (v) => set({ chartFont: v })), col('textColor', 'Eksen yazı rengi', () => '#a1a1aa'))),
+        field('Artı imleci', h('span.rv-pair', {}, segCtl([['dotted', '···'], ['dashed', '- -'], ['solid', '—']], a.crosshair, (v) => set({ crosshair: v })), col('crossColor', 'İmleç rengi', () => '#8a8a90'))),
+        field('Fiyat ölçeği', segCtl([['normal', 'Normal'], ['log', 'Log'], ['percent', '%']], a.scale, (v) => set({ scale: v }))),
+      ]),
+      form('Ayrıntılar', [
+        field('Hacim', range(0, 70, 1, a.volOpacity ?? 26, (v) => liveChart({ volOpacity: v }), (v) => { a.volOpacity = v; ctx.save(); }, (v) => (v ? `%${v}` : 'gizli'), 'Hacim görünürlüğü')),
+        field('Filigran', h('span.rv-pair', {}, toggle(a.watermark, () => set({ watermark: !a.watermark }), 'Sembol filigranı'))),
+        a.watermark ? field('Filigran gücü', range(0, 20, 1, a.markOpacity ?? 4, (v) => live({ markOpacity: v }), (v) => { a.markOpacity = v; ctx.save(); }, (v) => `%${v}`, 'Filigran gücü')) : null,
+        field('Son fiyat çizgisi', toggle(a.lastLine, () => set({ lastLine: !a.lastLine }), 'Son fiyat çizgisi')),
+      ]));
   }
   return [tabs, pane];
 }
@@ -225,36 +338,43 @@ function lookPane(ctx, state, repaint) {
 export function appearanceSheet(ctx, tab = 'theme') {
   const state = { tab };
   const body = h('div.rv-look-body');
-  const repaint = () => body.replaceChildren(...lookPane(ctx, state, repaint));
+  const repaint = () => { const y = body.closest('.rv-sheet')?.scrollTop; body.replaceChildren(...lookPane(ctx, state, repaint)); if (y != null) body.closest('.rv-sheet').scrollTop = y; };
   repaint();
-  return sheet({ title: 'Görünüm', cls: 'look', body });
+  return sheet({ title: 'Görünüm', cls: 'look', body, banner: true });
 }
 
-/** The profile and the look in one panel (Alltra's right-hand drawer). */
+/** The account (Alltra's): the theme's light behind the face, then the rows.
+ *  "Görünüm" opens the look in the same panel, with a way back. */
 export function profileDrawer(which = 'profile') {
   const p = shell.me.profile;
   const state = { tab: 'theme' };
   const body = h('div.rv-drawer-body');
-  const tabs = h('div.rv-tabs', { role: 'tablist' });
+  let sh = null;
+  const back = h('button.rv-icon-btn.rv-close', { type: 'button', title: 'Geri', 'aria-label': 'Geri', onclick: () => { which = 'profile'; paint(); } }, h('span.rv-back-ic', {}, icon('chevron', 18)));
   const paint = () => {
-    tabs.replaceChildren(...[['profile', 'Profil'], ['look', 'Görünüm']].map(([k, l]) => h(`button${which === k ? '.on' : ''}`, { type: 'button', role: 'tab', onclick: () => { which = k; paint(); } }, l)));
-    if (which === 'look') { body.replaceChildren(...lookPane(homeLook, state, paint)); return; }
+    if (which === 'look') {
+      sh?.setTitle('Görünüm'); sh?.setLead(back);
+      const y = body.closest('.rv-sheet')?.scrollTop;
+      body.replaceChildren(...lookPane(homeLook, state, paint));
+      if (y != null) body.closest('.rv-sheet').scrollTop = y;
+      return;
+    }
+    sh?.setTitle('Hesap'); sh?.setLead(null);
     body.replaceChildren(
-      h('div.rv-banner', {},
-        h('div.rv-banner-hex', { 'aria-hidden': 'true' }, Array.from({ length: 30 }, (_, i) => h('span', { style: { opacity: (0.15 + ((i * 37) % 60) / 100).toFixed(2) } }, ((i * 2654435761) >>> 0).toString(16).slice(0, 2).toUpperCase()))),
-        h('div.rv-banner-me', {}, h('span.rv-banner-av', {}, avatar({ ...p, locked: false }, 'lg'), h('i')), h('h3', {}, p.name), h('span', {}, 'RV Next · test sürümü'),
-          h('div.rv-banner-chips', {}, h('span', {}, icon('star', 14), 'Kurucu'), h('span', {}, icon('check', 14), 'Aktif')))),
-      h('h4.rv-group-title', {}, 'Hızlı işlemler'),
-      h('div.rv-quick', {},
-        quick('palette', 'Görünüm', 'Tema ve vurgu', () => { which = 'look'; paint(); }),
-        quick('sliders', 'Tercihler', 'Saat dilimi, hesap', () => { closeSheet(); settingsDialog(host); }),
-        quick('swap', 'Profil değiştir', 'Başka profille gir', async () => { await flushStorage(); await api.leaveProfile(); window.location.replace('profiles.html'); }),
-        quick('home', 'Ana site', 'r5vers.github.io', () => { window.location.href = '../home.html'; })),
-      group([{ icon: 'refresh', title: 'Test sürümünü sıfırla', sub: 'Ana siteden yeniden kopyalar', danger: true, tone: 'rose', onclick: () => { window.location.href = 'sifirla.html'; } }]));
+      h('div.rv-acc', {}, h('span.rv-acc-av', {}, avatar({ ...p, locked: false }, 'lg'), h('i')), h('h3', {}, p.name), h('span', {}, '@rv-next · test sürümü')),
+      group([
+        { icon: 'user', title: 'Profil', sub: 'Profil değiştir, yeni profil', onclick: async () => { await flushStorage(); await api.leaveProfile(); window.location.replace('profiles.html'); } },
+        { icon: 'palette', title: 'Görünüm', sub: 'Tema, renk, yazı ve grafik', onclick: () => { which = 'look'; paint(); } },
+      ], null, { mono: true }),
+      group([
+        { icon: 'sliders', title: 'Tercihler', sub: 'Saat dilimi, hesap, işlem varsayılanları', onclick: () => { closeSheet(); settingsDialog(host); } },
+        { icon: 'home', title: 'Ana site', sub: 'r5vers.github.io', onclick: () => { window.location.href = '../home.html'; } },
+      ], null, { mono: true }),
+      group([{ icon: 'refresh', title: 'Test sürümünü sıfırla', sub: 'Ana siteden yeniden kopyalar', danger: true, onclick: () => { window.location.href = 'sifirla.html'; } }], null, { mono: true }));
   };
-  const quick = (ic, t, s, onclick) => h('button.rv-quick-btn', { type: 'button', onclick }, h('span.rv-row-ic.c-accent', {}, icon(ic, 18)), h('span.rv-row-t', {}, h('b', {}, t), h('small', {}, s)));
+  sh = sheet({ title: which === 'look' ? 'Görünüm' : 'Hesap', cls: 'account', body, banner: true });
   paint();
-  return sheet({ title: 'Profil', cls: 'drawer-panel', tabs, body });
+  return sh;
 }
 
 /** Old names kept for the pages that call them. */
@@ -269,7 +389,24 @@ export function appsSheet(current) {
   });
 }
 
-export const markButton = (current) => ({ node: brandMark(24), label: 'Uygulamalar', onclick: () => appsSheet(current) });
+/** Alltra's app switcher: the bar's round mark grows into a column of the
+ *  apps; the page behind goes soft until one is chosen. */
+export function appSwitcher(current, from) {
+  document.querySelector('.rv-switch-back')?.remove();
+  const r = from.getBoundingClientRect();
+  const apps = [{ id: 'home', name: 'Ana ekran', icon: 'home', href: 'home.html' }, ...APPS];
+  const backdrop = h('div.rv-switch-back');
+  const close = () => { backdrop.classList.add('out'); setTimeout(() => backdrop.remove(), 200); };
+  const col = h('nav.rv-switch', { 'aria-label': 'Uygulamalar', style: { left: `${r.left}px`, bottom: `${window.innerHeight - r.bottom}px`, width: `${r.width}px` } },
+    apps.map((a, i) => h(`a.rv-switch-app${a.id === current ? '.on' : ''}`, { href: a.href, title: a.name, 'aria-label': a.name, style: { '--i': apps.length - i },
+      onclick: (e) => { e.preventDefault(); close(); if (a.id !== current) go(a.href); } }, icon(a.icon, 22), h('span.rv-switch-l', {}, a.name))),
+    h('button.rv-switch-app.rv-switch-x', { type: 'button', title: 'Kapat', 'aria-label': 'Kapat', onclick: close }, brandMark(24)));
+  backdrop.append(col);
+  backdrop.addEventListener('pointerdown', (e) => { if (e.target === backdrop) close(); });
+  document.body.append(backdrop);
+}
+
+export const markButton = (current) => ({ node: brandMark(24), label: 'Uygulamalar', onclick: (e) => appSwitcher(current, e.currentTarget) });
 
 export function avatarButton() {
   const p = shell.me.profile;

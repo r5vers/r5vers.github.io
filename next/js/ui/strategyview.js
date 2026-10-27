@@ -1,12 +1,12 @@
 // Strategy tester tab: code editor, templates, run in a worker, results.
-import { api } from '../api.js?v=efec4daadb';
-import { backtestRecord, resultFromRecord } from '../core/backtests.js?v=efec4daadb';
-import { autoFill, fillChoices } from '../core/fill.js?v=efec4daadb';
-import { parseTf } from '../core/timeframes.js?v=efec4daadb';
-import * as F from '../format.js?v=efec4daadb';
-import { confirmBox, h, icon, toast } from './dom.js?v=efec4daadb';
-import { renderHistory } from './panels.js?v=efec4daadb';
-import { StatsView } from './statsview.js?v=efec4daadb';
+import { api } from '../api.js?v=44e476acc5';
+import { backtestRecord, resultFromRecord } from '../core/backtests.js?v=44e476acc5';
+import { autoFill, fillChoices } from '../core/fill.js?v=44e476acc5';
+import { parseTf } from '../core/timeframes.js?v=44e476acc5';
+import * as F from '../format.js?v=44e476acc5';
+import { confirmBox, h, icon, toast } from './dom.js?v=44e476acc5';
+import { renderHistory } from './panels.js?v=44e476acc5';
+import { StatsView } from './statsview.js?v=44e476acc5';
 
 const DAY = 86400;
 /** `fn` once the browser has painted (a new frame, not the same task). */
@@ -165,7 +165,7 @@ export class StrategyView {
     if (!base.n) { this.out.replaceChildren(h('div.empty', {}, 'Bu aralıkta veri yok.')); this._runLabel(false); return; }
     this.out.replaceChildren(h('div.muted', {}, `${base.n.toLocaleString('tr-TR')} ${fillTf} bar üzerinde test ediliyor…`));
     const runInfo = {};
-    const worker = new Worker(new URL('../workers/backtest.worker.js?v=efec4daadb', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('../workers/backtest.worker.js?v=44e476acc5', import.meta.url), { type: 'module' });
     this.worker = worker;
     const started = performance.now();
     worker.onmessage = (e) => {

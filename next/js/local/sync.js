@@ -11,7 +11,7 @@
 //
 // Candles stay per device: a session carries `dataset_key` ("pack:EURUSD:1m")
 // and finds the device's own copy of that data.
-import { Cloud } from './cloud.js?v=efec4daadb';
+import { Cloud } from './cloud.js?v=44e476acc5';
 
 export const GROUP = 'RV Grup';
 const FLUSH_DELAY = 1500;
@@ -62,7 +62,7 @@ async function unpack(text) {
   const bin = atob(text.slice(3));
   const u8 = Uint8Array.from(bin, (c) => c.charCodeAt(0));
   if (typeof DecompressionStream === 'undefined') {           // Safari before 16.4
-    const { gunzipSync } = await import('../../vendor/fflate.js?v=efec4daadb');
+    const { gunzipSync } = await import('../../vendor/fflate.js?v=44e476acc5');
     return JSON.parse(new TextDecoder().decode(gunzipSync(u8)));
   }
   return JSON.parse(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text());

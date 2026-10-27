@@ -2,12 +2,14 @@
 // as large cards, recents, markets, one market's chart, the floating bar.
 // Wide screens (Alltra's overview): the greeting and a large search in the
 // middle, the apps in a row, then an overview of glass cards.
-import { api } from './api.js?v=efec4daadb';
-import * as F from './format.js?v=efec4daadb';
-import { brandMark, h, icon, sparkline } from './ui/dom.js?v=efec4daadb';
-import { openPalette, wirePalette } from './ui/palette.js?v=efec4daadb';
-import { wireTooltips } from './ui/tooltip.js?v=efec4daadb';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=efec4daadb';
+import { api } from './api.js?v=44e476acc5';
+import * as F from './format.js?v=44e476acc5';
+import { brandMark, h, icon, sparkline } from './ui/dom.js?v=44e476acc5';
+import { openPalette, wirePalette } from './ui/palette.js?v=44e476acc5';
+import { wireTooltips } from './ui/tooltip.js?v=44e476acc5';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=44e476acc5';
+
+const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
 const st = { datasets: [], sessions: [], loaded: false, quotes: new Map(), chart: { range: '1A', data: null } };
 const RANGES = [['1A', 23], ['6A', 130], ['YB', 0], ['1Y', 260]];
@@ -74,9 +76,27 @@ const foot = () => h('footer.hub-foot', {}, 'RV Next · test sürümü · verile
 
 // ── the apps: large cards (phone), a row of tiles (wide) ────────────────
 function appRow(wide) {
-  const row = h(`div.hub-apps${wide ? '.wide' : ''}`, {}, APPS.map((a, i) => h(`a.hub-app.app-${a.id}${i === 0 ? '.featured' : ''}`, { href: a.href, onclick: (e) => { e.preventDefault(); go(a.href); } },
-    h('span.hub-app-top', {}, h('span.hub-app-ic', {}, icon(a.icon, wide ? 26 : 28)), a.badge ? h('span.hub-badge', {}, a.badge) : null),
+  const row = h(`div.hub-apps${wide ? '.wide' : ''}`, {}, APPS.map((a) => h(`a.hub-app.gl.app-${a.id}`, { href: a.href, onclick: (e) => { e.preventDefault(); go(a.href); } },
+    h('span.hub-app-fill', { 'aria-hidden': 'true' }),
+    h('span.hub-app-top', {}, h('span.hub-app-ic', {}, icon(a.icon, wide ? 24 : 26)), a.badge ? h('span.hub-badge', {}, a.badge) : null),
     h('span.hub-app-txt', {}, h('b', {}, a.name), h('small', {}, a.sub)))));
+  // the cards are clear glass; the one at the row's start takes its colour,
+  // fading in as it slides into place and out as it leaves
+  const cards = [...row.children];
+  let raf = 0;
+  const tint = () => {
+    raf = 0;
+    if (!row.isConnected) return;
+    const anchor = row.getBoundingClientRect().left + (parseFloat(getComputedStyle(row).paddingLeft) || 0);
+    for (const c of cards) {
+      const d = Math.abs(c.getBoundingClientRect().left - anchor);
+      c.style.setProperty('--on', Math.max(0, 1 - d / (c.offsetWidth * 0.7)).toFixed(3));
+    }
+  };
+  const queue = () => { if (!raf) raf = requestAnimationFrame(tint); };
+  row.addEventListener('scroll', queue, { passive: true });
+  window.addEventListener('resize', queue, { passive: true });
+  requestAnimationFrame(() => requestAnimationFrame(tint));
   if (!wide) return h('section.hub-sec', {}, h('h2.hub-h', {}, 'Uygulamaların'), row);
   const bar = h('i');
   const counter = h('div.hub-count', {}, h('span', {}, '01'), h('span.hub-count-bar', {}, bar), h('span', {}, String(APPS.length).padStart(2, '0')));
@@ -134,7 +154,7 @@ function continueCard() {
 function kpiCard() {
   const rs = replays();
   const sum = (xs) => xs.reduce((a, x) => a + (Number.isFinite(x) ? x : 0), 0);
-  const net = sum(rs.map((x) => x.summary?.net));
+  const net = sum(rs.map((x) => netOf(x.summary)));
   const trades = sum(rs.map((x) => x.summary?.trades));
   const rates = rs.map((x) => x.summary?.winRate).filter(Number.isFinite);
   const rate = rates.length ? sum(rates) / rates.length : null;
@@ -163,7 +183,7 @@ function recentCard() {
   return h('article.gl.ov-card.span2', {}, h('div.ov-head', {}, h('h3', {}, 'Son kullanılanlar'), h('button.rv-link', { type: 'button', onclick: () => go('replay.html') }, 'Hepsi')),
     rows.length ? h('div.ov-rows', {}, rows.map((x) => {
       const test = x.kind === 'backtest', sm = x.summary || {};
-      const v = test ? sm.returnPct : sm.net;
+      const v = test ? sm.returnPct : netOf(sm);
       return h('button.ov-row.wide', { type: 'button', onclick: () => go(chartUrl(test ? { backtest: x.id } : { session: x.id })) },
         h(`span.rv-row-ic.c-${test ? 'violet' : 'accent'}`, {}, icon(test ? 'flask' : 'replay', 18)),
         h('span.ov-row-t', {}, h('b', {}, test ? (sm.strategy || x.name) : x.name), h('small', {}, `${sm.symbol || '—'}${sm.tf ? ` · ${sm.tf}` : ''}`)),

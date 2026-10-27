@@ -1,6 +1,6 @@
 // Which bars a strategy test fills orders on. Finer is more exact, but a
 // browser (phones included) should not hold more than ~600k of them.
-import { canAggregate, parseTf } from './timeframes.js?v=efec4daadb';
+import { canAggregate, parseTf } from './timeframes.js?v=44e476acc5';
 
 const MAX_FILL_BARS = 600_000;
 const FILL_CANDIDATES = ['1m', '2m', '3m', '5m', '10m', '15m', '30m', '1h', '4h'];

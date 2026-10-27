@@ -1,7 +1,7 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=efec4daadb';
-import { field, h, icon } from './dom.js?v=efec4daadb';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=44e476acc5';
+import { field, h, icon } from './dom.js?v=44e476acc5';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -183,19 +183,33 @@ const shade = (hex, f) => {
   return `#${ch(n >> 16)}${ch((n >> 8) & 255)}${ch(n & 255)}`;
 };
 
-/** One-click looks: background, accent, candles and a type pairing. */
+/** One-click looks: background, accent, candles and a type pairing. `orbs`
+ *  are the three lights behind the glass, `base` the page's own tone. */
 export const PRESETS = [
-  { id: 'onyx', name: 'Oniks', bg: 'onyx', accent: '#a855f7', up: '#26a69a', down: '#ef5350', font: 'sistem' },
-  { id: 'gece', name: 'Gece', bg: 'gece', accent: '#3b82f6', up: '#26a69a', down: '#ef5350', font: 'sistem' },
-  { id: 'iris', name: 'İris', bg: 'iris', accent: '#8b5cf6', up: '#38bdf8', down: '#f43f5e', font: 'sistem' },
-  { id: 'okyanus', name: 'Okyanus', bg: 'okyanus', accent: '#14b8a6', up: '#2dd4bf', down: '#fb7185', font: 'sistem' },
-  { id: 'amber', name: 'Kehribar', bg: 'amber', accent: '#f59e0b', up: '#2dd4bf', down: '#f97316', font: 'sistem' },
+  { id: 'onyx', name: 'Oniks', bg: 'onyx', accent: '#a855f7', up: '#26a69a', down: '#ef5350', font: 'sistem', orbs: ['#7c3aed', '#2563eb', '#db2777'], base: '#05060b' },
+  { id: 'grafit', name: 'Grafit', bg: 'grafit', accent: '#e4e4e7', up: '#26a69a', down: '#ef5350', font: 'sistem', orbs: ['#3f3f46', '#52525b', '#27272a'], base: '#040404' },
+  { id: 'gece', name: 'Gece', bg: 'gece', accent: '#3b82f6', up: '#26a69a', down: '#ef5350', font: 'sistem', orbs: ['#2563eb', '#0ea5e9', '#6366f1'], base: '#04070f' },
+  { id: 'buzul', name: 'Buzul', bg: 'buzul', accent: '#22d3ee', up: '#2dd4bf', down: '#fb7185', font: 'sistem', orbs: ['#0891b2', '#0ea5e9', '#0d9488'], base: '#03090c' },
+  { id: 'iris', name: 'İris', bg: 'iris', accent: '#8b5cf6', up: '#38bdf8', down: '#f43f5e', font: 'sistem', orbs: ['#6d28d9', '#4f46e5', '#c026d3'], base: '#06050f' },
+  { id: 'okyanus', name: 'Okyanus', bg: 'okyanus', accent: '#14b8a6', up: '#2dd4bf', down: '#fb7185', font: 'sistem', orbs: ['#0d9488', '#059669', '#0284c7'], base: '#030908' },
+  { id: 'zumrut', name: 'Zümrüt', bg: 'zumrut', accent: '#10b981', up: '#34d399', down: '#f87171', font: 'sistem', orbs: ['#047857', '#4d7c0f', '#0f766e'], base: '#030805' },
+  { id: 'amber', name: 'Kehribar', bg: 'amber', accent: '#f59e0b', up: '#2dd4bf', down: '#f97316', font: 'sistem', orbs: ['#d97706', '#ea580c', '#be123c'], base: '#0b0705' },
+  { id: 'gunbatimi', name: 'Gün batımı', bg: 'gunbatimi', accent: '#fb923c', up: '#2dd4bf', down: '#f43f5e', font: 'sistem', orbs: ['#ea580c', '#db2777', '#7c3aed'], base: '#0b0507' },
+  { id: 'kizil', name: 'Kızıl', bg: 'kizil', accent: '#ef4444', up: '#26a69a', down: '#ef5350', font: 'sistem', orbs: ['#b91c1c', '#9f1239', '#7c2d12'], base: '#0a0404' },
+  { id: 'gul', name: 'Gül', bg: 'gul', accent: '#ec4899', up: '#34d399', down: '#fb7185', font: 'sistem', orbs: ['#be185d', '#7c3aed', '#e11d48'], base: '#0a0408' },
 ];
+// the RV themes' backgrounds (previews, the chart's flat tone) from their lights
+for (const p of PRESETS) {
+  BACKGROUNDS[p.bg] = { name: p.name, light: false,
+    css: `radial-gradient(900px 620px at 12% -12%, ${p.orbs[0]}66, transparent 62%), radial-gradient(900px 620px at 108% 18%, ${p.orbs[1]}44, transparent 60%), radial-gradient(700px 500px at 50% 115%, ${p.orbs[2]}2a, transparent 60%), linear-gradient(180deg, ${p.base}, ${p.base})` };
+}
 export const RV_THEMES = PRESETS.map((p) => p.id);
 
 export const DEFAULT_APPEARANCE = {
   v: APPEARANCE_VERSION,
   preset: 'onyx', bg: 'onyx', accent: '#a855f7', font: 'sistem', nxOnyx: 1,
+  depth: 55,               // how dark the page and its glass are, 0..100
+  pos: null, neg: null,    // money made / lost on the app pages (null: emerald / rose)
   custom: { type: 'mesh', c1: '#0e1016', c2: '#3a2a5e', c3: '#0f4c5c', angle: 150 },
   design: 'classic',       // studio (lights, motion, boards) | classic (the earlier, plainer look)
   style: 'glass',          // glass | brutal (hard edges and offset shadows)
@@ -215,6 +229,7 @@ export const DEFAULT_APPEARANCE = {
   homeAccent: null, homeUp: null, homeDown: null,
   // chart details (null: follow the theme)
   gridColor: null, textColor: null, crossColor: null, volOpacity: 26, markOpacity: 4,
+  chartColor2: '#140d26',  // the second colour of a gradient chart background
   // the RV metal, and how headings are written: metal | solid | gradient | plain
   metal: 'silver', titleStyle: 'plain', titleColor: '#ffffff', titleStops: ['#e6e9ff', '#8fa8ff', '#c77dff'], titleAngle: 135, titleShine: 0,
   cardRim: 'soft',         // soft | metal (a fine metal edge on the home boards)
@@ -260,6 +275,9 @@ export function normalizeAppearance(saved) {
   const hex = (v) => /^#[0-9a-f]{6}$/i.test(v || '');
   if (!Array.isArray(a.titleStops) || a.titleStops.length !== 3 || !a.titleStops.every(hex)) a.titleStops = [...DEFAULT_APPEARANCE.titleStops];
   if (!hex(a.titleColor)) a.titleColor = DEFAULT_APPEARANCE.titleColor;
+  a.depth = Math.max(0, Math.min(100, Number.isFinite(+a.depth) ? +a.depth : DEFAULT_APPEARANCE.depth));
+  if (!['glass', 'solid', 'gradient'].includes(a.chartBg)) a.chartBg = 'glass';
+  if (!hex(a.chartColor2)) a.chartColor2 = DEFAULT_APPEARANCE.chartColor2;
   return a;
 }
 
@@ -352,6 +370,17 @@ export function applyAppearance(input, root = document.documentElement, { page =
   set('--shine-dur', `${(14 - 10 * (a.titleShine || 0)).toFixed(1)}s`);
   Object.assign(root.dataset, { title: a.titleStyle, shine: a.titleShine > 0 ? 'on' : 'off', rim: a.cardRim === 'metal' ? 'metal' : 'soft' });
   set('--page-solid', solidBackground(a));
+  // RV Next: the theme's lights, its depth, the type and the chart's ground
+  const rv = PRESETS.find((x) => x.id === a.preset) || PRESETS[0];
+  rv.orbs.forEach((c, i) => set(`--o${i + 1}`, c));
+  set('--bg-base', rv.base);
+  set('--depth', (a.depth / 100).toFixed(2));
+  set('--rv-sans', `${f.ui}, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif`);
+  set('--rv-display', `${f.display}, ${f.ui}, 'Inter', -apple-system, system-ui, sans-serif`);
+  const opt = (k, v) => (v ? set(k, v) : root.style.removeProperty(k));
+  opt('--pos', a.pos);
+  opt('--neg', a.neg);
+  opt('--chart-bg', a.chartBg === 'gradient' ? `linear-gradient(180deg, ${a.chartColor}, ${a.chartColor2})` : a.chartBg === 'solid' ? a.chartColor : null);
   // the studio design's light orbs live in one fixed layer behind everything
   if (document.body && !document.body.querySelector(':scope > .ambient')) {
     document.body.prepend(h('div.ambient', { 'aria-hidden': 'true' }, h('i'), h('i'), h('i')));

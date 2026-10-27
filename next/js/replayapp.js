@@ -4,14 +4,17 @@
 // screens: the app's sections in a sidebar, a banner, the sessions as a grid
 // of cards (P&L, day of the replay, progress). A session opens in a sheet
 // (a drawer on a wide screen).
-import { api } from './api.js?v=efec4daadb';
-import * as F from './format.js?v=efec4daadb';
-import { confirmBox, h, icon, toast } from './ui/dom.js?v=efec4daadb';
-import { SESSION_SETS } from './chart/sessions.js?v=efec4daadb';
-import { nyOffset } from './core/timeframes.js?v=efec4daadb';
-import { wirePalette } from './ui/palette.js?v=efec4daadb';
-import { settingsDialog } from './ui/dialogs.js?v=efec4daadb';
-import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, relTime, ring, sheet, symbolBadge, tz } from './rvshell.js?v=efec4daadb';
+import { api } from './api.js?v=44e476acc5';
+import * as F from './format.js?v=44e476acc5';
+import { confirmBox, h, icon, toast } from './ui/dom.js?v=44e476acc5';
+import { SESSION_SETS } from './chart/sessions.js?v=44e476acc5';
+import { nyOffset } from './core/timeframes.js?v=44e476acc5';
+import { wirePalette } from './ui/palette.js?v=44e476acc5';
+import { settingsDialog } from './ui/dialogs.js?v=44e476acc5';
+import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, relTime, ring, sheet, symbolBadge, tz } from './rvshell.js?v=44e476acc5';
+
+/** A replay's result: its balance against where it started (closed and open trades). */
+const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
 const st = { sessions: [], datasets: [], loaded: false, kind: 'replay', filter: 'all', view: 'sessions', trades: null, tradesLoading: false };
 
@@ -96,7 +99,7 @@ function promoCard() {
 
 // ── sessions ─────────────────────────────────────────────────────────────
 const FILTERS = {
-  replay: [['all', 'Tümü', () => true], ['open', 'Açık', (s) => (s.summary?.open || 0) > 0], ['up', 'Kârda', (s) => (s.summary?.net ?? 0) > 0], ['down', 'Zararda', (s) => (s.summary?.net ?? 0) < 0]],
+  replay: [['all', 'Tümü', () => true], ['open', 'Açık', (s) => (s.summary?.open || 0) > 0], ['up', 'Kârda', (s) => netOf(s.summary) > 0], ['down', 'Zararda', (s) => netOf(s.summary) < 0]],
   test: [['all', 'Tümü', () => true], ['up', 'Kârda', (s) => (s.summary?.returnPct ?? 0) > 0], ['down', 'Zararda', (s) => (s.summary?.returnPct ?? 0) < 0]],
 };
 function filtered() {
@@ -184,7 +187,7 @@ function sessionRow(s) {
   return h('button.gl.ra-row', { type: 'button', onclick: () => sessionSheet(s) },
     symbolBadge(symOf(sm), 44),
     h('span.ra-row-t', {}, h('b', {}, s.name), h('small', {}, `${sm.symbol || '—'}${sm.tf ? ` · ${sm.tf}` : ''} · ${relTime(s.updated_at)}`)),
-    h(`span.ra-row-v.num.${tone(sm.net ?? 0)}`, {}, bal != null ? F.money(bal, money(sm), 0) : '—'));
+    h(`span.ra-row-v.num.${tone(netOf(sm))}`, {}, bal != null ? F.money(bal, money(sm), 0) : '—'));
 }
 function testRow(s) {
   const sm = s.summary || {};
@@ -196,7 +199,7 @@ function testRow(s) {
 
 function sessionCard(s) {
   const sm = s.summary || {};
-  const net = sm.net ?? 0, init = sm.initial || 10000;
+  const net = netOf(sm), init = sm.initial || 10000;
   const pr = progress(s);
   return h('article.ra-card', { tabindex: '0', onclick: () => sessionSheet(s), onkeydown: (e) => { if (e.key === 'Enter') sessionSheet(s); } },
     h('header', {}, symbolBadge(symOf(sm), 34), h('div', {}, h('b', {}, s.name), h('small', {}, `${sm.symbol || '—'}${sm.tf ? ` · ${sm.tf}` : ''}`)),
