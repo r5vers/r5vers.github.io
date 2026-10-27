@@ -1,8 +1,8 @@
 // Replay engine: holds the chart as it looked at the cursor and feeds the
 // following base bars one at a time into the chart builder and the broker.
-import { api } from './api.js?v=131e7ce3e0';
-import { BarBuilder, columnsToBars } from './core/aggregate.js?v=131e7ce3e0';
-import { parseTf } from './core/timeframes.js?v=131e7ce3e0';
+import { api } from './api.js?v=c20cb1ba70';
+import { BarBuilder, columnsToBars } from './core/aggregate.js?v=c20cb1ba70';
+import { parseTf } from './core/timeframes.js?v=c20cb1ba70';
 
 const HISTORY = 3000;
 const FEED_CHUNK = 5000;

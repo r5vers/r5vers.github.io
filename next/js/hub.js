@@ -1,13 +1,16 @@
 // Home of the test copy. Phones: your name and the time of day, your apps
 // as large cards, recents, markets, one market's chart, the floating bar.
-// Wide screens (Alltra's overview): the greeting and a large search in the
-// middle, the apps in a row, then an overview of glass cards.
-import { api } from './api.js?v=131e7ce3e0';
-import * as F from './format.js?v=131e7ce3e0';
-import { brandMark, h, icon, sparkline } from './ui/dom.js?v=131e7ce3e0';
-import { openPalette, wirePalette } from './ui/palette.js?v=131e7ce3e0';
-import { wireTooltips } from './ui/tooltip.js?v=131e7ce3e0';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=131e7ce3e0';
+// Wide screens, after the original RV home: the date, a large greeting and
+// the markets' sessions right now, where you left off, the apps as a row of
+// tiles, the markets as cards with their last months drawn, then recents.
+import { api } from './api.js?v=c20cb1ba70';
+import * as F from './format.js?v=c20cb1ba70';
+import { brandMark, h, icon } from './ui/dom.js?v=c20cb1ba70';
+import { SESSION_SETS } from './chart/sessions.js?v=c20cb1ba70';
+import { nyOffset } from './core/timeframes.js?v=c20cb1ba70';
+import { openPalette, wirePalette } from './ui/palette.js?v=c20cb1ba70';
+import { wireTooltips } from './ui/tooltip.js?v=c20cb1ba70';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=c20cb1ba70';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
@@ -54,7 +57,7 @@ function render() {
       h('button.rv-btn.ghost', { type: 'button', onclick: () => profileDrawer('look') }, icon('palette', 17), 'Görünüm'),
       h('button.rv-btn', { type: 'button', onclick: () => go(chartUrl({ new: 'replay' })) }, icon('plus', 17), 'Yeni oturum')] });
     root.className = 'hub hub-wide';
-    root.replaceChildren(deskHero(), appRow(true), overview(), foot());
+    root.replaceChildren(deskHero(), appRow(true), marketGrid(), overview(), foot());
     return;
   }
   appFrame({ current: 'home' });
@@ -79,7 +82,8 @@ function appRow(wide) {
   const row = h(`div.hub-apps${wide ? '.wide' : ''}`, {}, APPS.map((a) => h(`a.hub-app.gl.app-${a.id}`, { href: a.href, onclick: (e) => { e.preventDefault(); go(a.href); } },
     h('span.hub-app-fill', { 'aria-hidden': 'true' }), h('span.hub-app-art', { 'aria-hidden': 'true' }, icon(a.icon, wide ? 150 : 140)),
     h('span.hub-app-top', {}, h('span.hub-app-ic', {}, icon(a.icon, wide ? 24 : 26)), a.badge ? h('span.hub-badge', {}, a.badge) : null),
-    h('span.hub-app-txt', {}, h('b', {}, a.name), h('small', {}, a.sub)))));
+    h('span.hub-app-txt', {}, h('b', {}, a.name), h('small', {}, a.sub)),
+    wide ? h('span.hub-app-go', { 'aria-hidden': 'true' }, icon('arrow', 16)) : null)));
   // the cards are clear glass; the one at the row's start takes its colour,
   // fading in as it slides into place and out as it leaves
   const cards = [...row.children];
@@ -98,61 +102,101 @@ function appRow(wide) {
   window.addEventListener('resize', queue, { passive: true });
   requestAnimationFrame(() => requestAnimationFrame(tint));
   if (!wide) return h('section.hub-sec', {}, h('h2.hub-h', {}, 'Uygulamaların'), row);
-  const bar = h('i');
-  const counter = h('div.hub-count', {}, h('span', {}, '01'), h('span.hub-count-bar', {}, bar), h('span', {}, String(APPS.length).padStart(2, '0')));
-  // the counter only when the row runs past the screen
-  const fits = () => { counter.style.visibility = row.scrollWidth > row.clientWidth + 4 ? 'visible' : 'hidden'; };
-  requestAnimationFrame(() => requestAnimationFrame(fits));
-  window.addEventListener('resize', fits, { passive: true });
-  row.addEventListener('scroll', () => { const f = row.scrollLeft / Math.max(1, row.scrollWidth - row.clientWidth); bar.style.transform = `translateX(${(f * 300).toFixed(0)}%)`; }, { passive: true });
-  return h('section.hub-sec', {}, h('div.hub-head', {}, h('h2.hub-h', {}, 'Uygulamaların'), counter), row);
+  return h('section.hub-sec', {}, row);
 }
 
-// ── wide: the greeting and the search ────────────────────────────────────
+// ── wide: the date, the greeting, the sessions, where you left off ──────
 function deskHero() {
   const p = shell.me.profile;
   const last = replays()[0];
-  const chip = (ic, label, run) => h('button.hub-chip', { type: 'button', onclick: run }, icon(ic, 15), label);
+  const tests = st.sessions.filter((x) => x.kind === 'backtest').length;
+  const date = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz() }).format(new Date());
   return h('section.hub-hero', {},
-    h('h1', {}, `${greeting()}, `, h('b', {}, p.name)),
-    h('button.hub-searchbar', { type: 'button', onclick: () => openPalette(items) }, icon('search', 20), h('span', {}, 'ReplayView’da ara: piyasa, oturum, komut'), h('kbd', {}, '/')),
-    h('div.hub-chips', {},
-      last ? chip('play', `Devam et: ${last.name}`, () => go(chartUrl({ session: last.id }))) : chip('play', 'İlk oturumu başlat', () => go(chartUrl({ new: 'replay' }))),
-      chip('chart', 'Grafiği aç', () => go(chartUrl({ view: 'chart' }))),
-      chip('flask', 'Strateji testi', () => go(chartUrl({ tab: 'strategy' }))),
-      chip('indicator', 'Analiz', () => go('replay.html#analiz'))));
+    h('div.hub-hero-main', {},
+      h('span.hub-date', {}, date),
+      h('h1', {}, `${greeting()}, `, h('b', {}, p.name)),
+      sessionStrip(),
+      h('p.hub-lead', {}, st.loaded ? `${markets().length} piyasa hazır · ${replays().length} replay oturumu · ${tests} strateji testi` : 'Yükleniyor…'),
+      h('div.hub-hero-acts', {},
+        h('button.rv-btn.lg', { type: 'button', onclick: () => go(chartUrl({ new: 'replay' })) }, icon('plus', 17), 'Yeni oturum'),
+        h('button.rv-btn.ghost.lg', { type: 'button', onclick: () => go(chartUrl({ view: 'chart' })) }, icon('chart', 17), 'Grafiği aç'),
+        h('button.rv-btn.ghost.lg.hub-find', { type: 'button', onclick: () => openPalette(items) }, icon('search', 17), 'Ara', h('kbd', {}, 'Ctrl K')))),
+    last ? resumeCard(last) : null);
+}
+
+function resumeCard(last) {
+  const sm = last.summary || {};
+  const net = netOf(sm), ccy = sm.currency || 'USD';
+  return h('button.gl.hub-resume', { type: 'button', onclick: () => go(chartUrl({ session: last.id })), title: 'Kaldığın yerden devam et' },
+    h('span.hub-resume-play', {}, icon('play', 22)),
+    h('span.hub-resume-t', {}, h('small', {}, 'Kaldığın yer'), h('b', {}, last.name), h('span', {}, `${sm.symbol || '—'}${sm.tf ? ` · ${sm.tf}` : ''} · ${relTime(last.updated_at)}`)),
+    h(`b.num.hub-resume-net${net > 0 ? '.pos' : net < 0 ? '.neg' : ''}`, {}, F.signedMoney(net, ccy)));
+}
+
+// the markets' sessions right now (New York time, DST aware), as on RV's home
+const SESSION_NAMES = { ASIA: 'Asya', LONDON: 'Londra', 'NEW YORK': 'New York' };
+const hm = (min) => { const m = Math.max(0, Math.round(min)); return m >= 60 ? `${Math.floor(m / 60)} sa ${m % 60} dk` : `${m} dk`; };
+function sessionStrip() {
+  const now = Date.now() / 1000, local = now + nyOffset(now);
+  const day = new Date(local * 1000).getUTCDay();
+  const min = Math.floor((((local % 86400) + 86400) % 86400) / 60);
+  // forex closes Friday 17:00 and opens Sunday 17:00, New York time
+  if (day === 6 || (day === 5 && min >= 17 * 60) || (day === 0 && min < 17 * 60)) {
+    const toOpen = ((day === 5 ? 2 : day === 6 ? 1 : 0) * 1440) + 17 * 60 - min;
+    return h('div.hub-sessions', {}, h('span.hub-sess', { style: { '--c': '#71717a' } }, h('i'), 'Forex kapalı', h('small', {}, `açılışa ${hm(toOpen)}`)));
+  }
+  const until = (t) => ((t - min) % 1440 + 1440) % 1440;
+  return h('div.hub-sessions', {}, SESSION_SETS[0].zones.map((z) => {
+    const open = z.from < z.to ? min >= z.from && min < z.to : min >= z.from || min < z.to;
+    const left = open ? until(z.to) : until(z.from), name = SESSION_NAMES[z.name] || z.name;
+    return h(`span.hub-sess${open ? '.on' : ''}`, { style: { '--c': z.color }, title: open ? `${name} seansı açık, ${hm(left)} sonra kapanır` : `${name} seansı ${hm(left)} sonra açılır` },
+      h('i'), name, h('small', {}, open ? `${hm(left)} kaldı` : `${hm(left)} sonra`));
+  }));
+}
+
+// ── wide: the markets, each with its last months drawn ───────────────────
+function marketGrid() {
+  const list = markets();
+  const head = h('div.hub-head', {}, h('h2.hub-h', {}, 'Piyasalar'), h('button.rv-link', { type: 'button', onclick: () => go(chartUrl({ tab: 'data' })) }, 'Veri yönetimi'));
+  if (st.loaded && !list.length) {
+    return h('section.hub-sec', {}, head, h('div.gl.hub-empty', {}, h('p', {}, 'Bu cihazda piyasa verisi yok. 15 yıllık EURUSD, Nasdaq ve altın paketlerini aç.'),
+      h('button.rv-btn', { type: 'button', onclick: () => go(chartUrl({ tab: 'data' })) }, icon('download', 16), 'Veri paketleri')));
+  }
+  const dfmt = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
+  return h('section.hub-sec', {}, head, h('div.hub-mkts', {}, (st.loaded ? list.slice(0, 6) : [0, 1, 2]).map((d) => {
+    if (!d.id) return h('div.skel.hub-mk-skel');
+    const q = st.quotes.get(d.id);
+    const chg = q && q.prev ? q.last / q.prev - 1 : null;
+    const years = d.first_ts && d.last_ts ? Math.round((d.last_ts - d.first_ts) / 31557600) : null;
+    return h('button.gl.hub-mk', { type: 'button', onclick: () => go(chartUrl({ ds: d.id })) },
+      h('span.hub-mk-top', {}, h('span', {}, h('b', {}, d.symbol), h('small', {}, NAMES[d.symbol] || d.name || '')),
+        chg != null ? h(`span.badge-num.${chg >= 0 ? 'pos' : 'neg'}`, {}, `${chg >= 0 ? '+' : ''}${F.pct(chg, 2)}`) : null),
+      h('span.hub-mk-px.num', {}, q ? F.price(q.last, d.decimals) : '—'),
+      q?.spark?.length > 1 ? areaSpark(q.spark) : h('span.hub-mk-nospark'),
+      h('span.hub-mk-foot', {}, h('span', {}, years ? `${years} yıl veri` : `${(d.bar_count || 0).toLocaleString('tr-TR')} bar`), d.last_ts ? h('span', {}, `son: ${dfmt.format(new Date(d.last_ts * 1000))}`) : null));
+  })));
+}
+
+/** A small area of the last closes in the accent, as on RV's market cards. */
+function areaSpark(c) {
+  const W = 300, H = 64, lo = Math.min(...c), hi = Math.max(...c), span = hi - lo || 1;
+  const pts = c.map((v, i) => `${((i / (c.length - 1)) * W).toFixed(1)},${(4 + (1 - (v - lo) / span) * (H - 8)).toFixed(1)}`);
+  const id = `a${Math.random().toString(36).slice(2, 8)}`;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.classList.add('hub-mk-spark');
+  svg.innerHTML = `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".32"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs>
+    <path d="M${pts[0]} L${pts.join(' L')} L${W},${H} L0,${H} Z" fill="url(#${id})"/><polyline points="${pts.join(' ')}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+  return svg;
 }
 
 // ── wide: the overview of glass cards ────────────────────────────────────
 function overview() {
   return h('section.hub-sec', {},
-    h('div.hub-head', {}, h('h2.hub-h', {}, 'Genel bakış'), h('span.hub-sub', {}, new Intl.DateTimeFormat('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz() }).format(new Date()))),
-    h('div.ov-grid', {}, continueCard(), kpiCard(), chartCard(), watchCard(), recentCard(), quickCard()));
-}
-
-function continueCard() {
-  const last = replays()[0];
-  if (!last) {
-    return h('article.gl.ov-card.ov-continue.span2', {},
-      h('span.eyebrow', {}, 'Replay'), h('h3.ov-title', {}, 'Herhangi bir piyasayı yeniden yaşa.'),
-      h('p.muted', {}, 'Geçmişte bir tarih seç, grafik o ana kadar olanı göstersin; bar bar ilerleyip gerçek gibi işlem aç.'),
-      h('div.row', {}, h('button.rv-btn', { type: 'button', onclick: () => go(chartUrl({ new: 'replay' })) }, icon('play', 16), 'İlk oturumu başlat')));
-  }
-  const sm = last.summary || {};
-  const bal = sm.balance ?? sm.initial ?? 0, init = sm.initial || 10000;
-  const ret = (bal - init) / init;
-  const cls = ret > 0 ? 'pos' : ret < 0 ? 'neg' : '';
-  return h('article.gl.ov-card.ov-continue.span2', {},
-    h('div.ov-head', {}, h('span.eyebrow', {}, 'Kaldığın yer'), h('span.muted', {}, relTime(last.updated_at))),
-    h('div.ov-continue-main', {},
-      h('div', {},
-        h('div.ov-who', {}, symbolBadge(sm.symbols?.[0] || sm.symbol, 40), h('div', {}, h('b', {}, last.name), h('small', {}, `${sm.symbol || '—'}${sm.tf ? ` · ${sm.tf}` : ''} · ${sm.trades ?? 0} işlem`))),
-        h(`div.ov-big.num${cls ? `.${cls}` : ''}`, {}, F.money(bal, sm.currency || 'USD')),
-        h(`span.badge-num${cls ? `.${cls}` : ''}`, {}, `${ret > 0 ? '+' : ''}${F.pct(ret, 2)}`)),
-      h('div.ov-spark', {}, sm.spark?.length > 1 ? sparkline(sm.spark, { color: ret >= 0 ? 'var(--pos)' : 'var(--neg)', width: 460, height: 130 }) : h('div.ov-spark-empty', {}, 'Kapanan işlem oldukça bakiye eğrisi burada çizilir'))),
-    h('div.row', {},
-      h('button.rv-btn', { type: 'button', onclick: () => go(chartUrl({ session: last.id })) }, icon('play', 16), 'Devam et'),
-      h('button.rv-btn.ghost', { type: 'button', onclick: () => go('replay.html') }, 'Tüm oturumlar')));
+    h('div.hub-head', {}, h('h2.hub-h', {}, 'Genel bakış')),
+    h('div.ov-grid', {}, recentCard(), kpiCard()));
 }
 
 function kpiCard() {
@@ -170,18 +214,6 @@ function kpiCard() {
     h('div.ov-kpi', {}, h('span', {}, 'Oturum'), h('b.num', {}, String(rs.length))));
 }
 
-function watchCard() {
-  const list = markets();
-  return h('article.gl.ov-card.ov-watch', {}, h('div.ov-head', {}, h('h3', {}, 'Piyasalar'), h('button.rv-link', { type: 'button', onclick: () => go(chartUrl({ tab: 'data' })) }, 'Veri')),
-    list.length ? h('div.ov-rows', {}, list.slice(0, 6).map((d) => {
-      const q = st.quotes.get(d.id);
-      const chg = q && q.prev ? q.last / q.prev - 1 : null;
-      return h('button.ov-row', { type: 'button', onclick: () => go(chartUrl({ ds: d.id })) }, symbolBadge(d.symbol, 34),
-        h('span.ov-row-t', {}, h('b', {}, d.symbol), h('small', {}, NAMES[d.symbol] || d.name)),
-        h('span.ov-row-v', {}, h('b.num', {}, q ? F.price(q.last, d.decimals) : '—'), chg != null ? h(`small.num.${chg >= 0 ? 'pos' : 'neg'}`, {}, `${chg >= 0 ? '+' : ''}${F.pct(chg, 2)}`) : null));
-    })) : h('p.muted', {}, st.loaded ? 'Bu cihazda piyasa verisi yok.' : 'Yükleniyor…'));
-}
-
 function recentCard() {
   const rows = st.sessions.slice(0, 5);
   return h('article.gl.ov-card.span2', {}, h('div.ov-head', {}, h('h3', {}, 'Son kullanılanlar'), h('button.rv-link', { type: 'button', onclick: () => go('replay.html') }, 'Hepsi')),
@@ -194,16 +226,6 @@ function recentCard() {
         h(`b.num.ov-row-num${(v ?? 0) > 0 ? '.pos' : (v ?? 0) < 0 ? '.neg' : ''}`, {}, test ? (v != null ? F.pct(v, 1) : '—') : F.signedMoney(v, sm.currency || 'USD')),
         h('span.muted.ov-row-time', {}, relTime(x.updated_at || x.created_at)));
     })) : h('p.muted', {}, st.loaded ? 'Henüz oturum yok.' : 'Yükleniyor…'));
-}
-
-function quickCard() {
-  const q = (ic, t, s, run, tone) => h('button.ov-quick', { type: 'button', onclick: run }, h(`span.rv-row-ic.c-${tone}`, {}, icon(ic, 18)), h('span.ov-row-t', {}, h('b', {}, t), h('small', {}, s)));
-  return h('article.gl.ov-card', {}, h('div.ov-head', {}, h('h3', {}, 'Kısayollar')),
-    h('div.ov-quicks', {},
-      q('play', 'Yeni replay', 'Bir tarihten başla', () => go(chartUrl({ new: 'replay' })), 'accent'),
-      q('flask', 'Strateji testi', 'Kodla backtest', () => go(chartUrl({ tab: 'strategy' })), 'violet'),
-      q('download', 'Veri paketleri', '15 yıllık veri', () => go(chartUrl({ tab: 'data' })), 'teal'),
-      q('palette', 'Görünüm', 'Tema ve vurgu', () => profileDrawer('look'), 'amber')));
 }
 
 // ── phone sections ───────────────────────────────────────────────────────
@@ -249,9 +271,9 @@ async function loadQuotes() {
     const tf = d.timeframes?.includes('1D') ? '1D' : d.timeframes?.at(-1);
     if (!tf) return;
     try {
-      const r = await api.bars(d.id, { tf, limit: 2 });
+      const r = await api.bars(d.id, { tf, limit: 90 });
       const c = r?.c ? Array.from(r.c) : [];
-      if (c.length) st.quotes.set(d.id, { last: c.at(-1), prev: c.at(-2) });
+      if (c.length) st.quotes.set(d.id, { last: c.at(-1), prev: c.at(-2), spark: c });
     } catch { /* the card stays without a price */ }
   }));
   render();

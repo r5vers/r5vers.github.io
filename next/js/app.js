@@ -1,31 +1,31 @@
 // Replay Terminal - application controller.
-import { api } from './api.js?v=131e7ce3e0';
-import { columnsToBars } from './core/aggregate.js?v=131e7ce3e0';
-import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=131e7ce3e0';
-import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=131e7ce3e0';
-import { computeStats } from './core/stats.js?v=131e7ce3e0';
-import { bucket, parseTf } from './core/timeframes.js?v=131e7ce3e0';
-import { TradingChart } from './chart/chart.js?v=131e7ce3e0';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=131e7ce3e0';
-import { configureICT } from './chart/sessions.js?v=131e7ce3e0';
-import { INDICATORS } from './chart/indicators.js?v=131e7ce3e0';
-import { TradeLines } from './chart/tradelines.js?v=131e7ce3e0';
-import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=131e7ce3e0';
-import * as F from './format.js?v=131e7ce3e0';
-import { appearanceSheet } from './rvshell.js?v=131e7ce3e0';
-import { ReplayEngine } from './replay.js?v=131e7ce3e0';
-import * as D from './ui/dialogs.js?v=131e7ce3e0';
-import { DataView } from './ui/dataview.js?v=131e7ce3e0';
-import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=131e7ce3e0';
-import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=131e7ce3e0';
-import { openPalette, wirePalette } from './ui/palette.js?v=131e7ce3e0';
-import { wireTooltips } from './ui/tooltip.js?v=131e7ce3e0';
-import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=131e7ce3e0';
-import { scrubWheel } from './ui/scrubwheel.js?v=131e7ce3e0';
-import { StatsView } from './ui/statsview.js?v=131e7ce3e0';
-import { StrategyView } from './ui/strategyview.js?v=131e7ce3e0';
-import { Ticket } from './ui/ticket.js?v=131e7ce3e0';
-import { SidePane } from './ui/sidepane.js?v=131e7ce3e0';
+import { api } from './api.js?v=c20cb1ba70';
+import { columnsToBars } from './core/aggregate.js?v=c20cb1ba70';
+import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=c20cb1ba70';
+import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=c20cb1ba70';
+import { computeStats } from './core/stats.js?v=c20cb1ba70';
+import { bucket, parseTf } from './core/timeframes.js?v=c20cb1ba70';
+import { TradingChart } from './chart/chart.js?v=c20cb1ba70';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=c20cb1ba70';
+import { configureICT } from './chart/sessions.js?v=c20cb1ba70';
+import { INDICATORS } from './chart/indicators.js?v=c20cb1ba70';
+import { TradeLines } from './chart/tradelines.js?v=c20cb1ba70';
+import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=c20cb1ba70';
+import * as F from './format.js?v=c20cb1ba70';
+import { appearanceSheet } from './rvshell.js?v=c20cb1ba70';
+import { ReplayEngine } from './replay.js?v=c20cb1ba70';
+import * as D from './ui/dialogs.js?v=c20cb1ba70';
+import { DataView } from './ui/dataview.js?v=c20cb1ba70';
+import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=c20cb1ba70';
+import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=c20cb1ba70';
+import { openPalette, wirePalette } from './ui/palette.js?v=c20cb1ba70';
+import { wireTooltips } from './ui/tooltip.js?v=c20cb1ba70';
+import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=c20cb1ba70';
+import { scrubWheel } from './ui/scrubwheel.js?v=c20cb1ba70';
+import { StatsView } from './ui/statsview.js?v=c20cb1ba70';
+import { StrategyView } from './ui/strategyview.js?v=c20cb1ba70';
+import { Ticket } from './ui/ticket.js?v=c20cb1ba70';
+import { SidePane } from './ui/sidepane.js?v=c20cb1ba70';
 
 const LW = window.LightweightCharts;
 const SPEEDS = [[1, '1x'], [2, '2x'], [4, '4x'], [8, '8x'], [16, '16x'], [40, '40x'], [0, 'Maks']];
@@ -174,6 +174,12 @@ class App {
       onNeedNewer: () => this.loadNewer(),
     });
     this.chart.setAccent(paint.appearance.accent);
+    // phones: the bar and the time float over the chart's foot, so the prices
+    // keep clear of them
+    const phone = window.matchMedia('(max-width: 760px)');
+    const margins = () => this.chart.chart.priceScale('right').applyOptions({ scaleMargins: { top: 0.08, bottom: phone.matches ? 0.26 : 0.12 } });
+    margins();
+    phone.addEventListener?.('change', margins);
     this.drawings = new DrawingManager(this.chart, {
       requestText: (initial, submit) => this.textDrawingDialog(initial, submit),
       onChange: () => this.saveDrawings(),
