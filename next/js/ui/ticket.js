@@ -1,7 +1,7 @@
 // Order ticket + account summary (right side panel).
-import { lotsForRisk } from '../core/broker.js?v=7f60f3c784';
-import * as F from '../format.js?v=7f60f3c784';
-import { h, icon } from './dom.js?v=7f60f3c784';
+import { lotsForRisk } from '../core/broker.js?v=43f704a38f';
+import * as F from '../format.js?v=43f704a38f';
+import { h, icon } from './dom.js?v=43f704a38f';
 
 export class Ticket {
   constructor(el, app) {

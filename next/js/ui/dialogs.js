@@ -1,10 +1,10 @@
 // Modal dialogs: new replay session, saved sessions, settings, indicators, jump.
-import { api } from '../api.js?v=7f60f3c784';
-import { INDICATORS } from '../chart/indicators.js?v=7f60f3c784';
-import { SESSION_SETS } from '../chart/sessions.js?v=7f60f3c784';
-import * as F from '../format.js?v=7f60f3c784';
-import { confirmBox, field, flushStorage, h, icon, modal, storage, toast } from './dom.js?v=7f60f3c784';
-import { appearanceSection } from './look.js?v=7f60f3c784';
+import { api } from '../api.js?v=43f704a38f';
+import { INDICATORS } from '../chart/indicators.js?v=43f704a38f';
+import { SESSION_SETS } from '../chart/sessions.js?v=43f704a38f';
+import * as F from '../format.js?v=43f704a38f';
+import { confirmBox, field, flushStorage, h, icon, modal, storage, toast } from './dom.js?v=43f704a38f';
+import { appearanceSection } from './look.js?v=43f704a38f';
 
 const TIMEZONES = ['Europe/Istanbul', 'UTC', 'America/New_York', 'Europe/London', 'Europe/Berlin', 'Asia/Tokyo', 'Asia/Dubai', 'Australia/Sydney'];
 

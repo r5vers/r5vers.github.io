@@ -3,14 +3,14 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=7f60f3c784';
-import * as F from './format.js?v=7f60f3c784';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=7f60f3c784';
-import { configureICT } from './chart/sessions.js?v=7f60f3c784';
-import { settingsDialog } from './ui/dialogs.js?v=7f60f3c784';
-import { liquidGlass } from './ui/liquid.js?v=7f60f3c784';
-import { openPalette } from './ui/palette.js?v=7f60f3c784';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=7f60f3c784';
+import { api } from './api.js?v=43f704a38f';
+import * as F from './format.js?v=43f704a38f';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=43f704a38f';
+import { configureICT } from './chart/sessions.js?v=43f704a38f';
+import { settingsDialog } from './ui/dialogs.js?v=43f704a38f';
+import { liquidGlass } from './ui/liquid.js?v=43f704a38f';
+import { openPalette } from './ui/palette.js?v=43f704a38f';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=43f704a38f';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };

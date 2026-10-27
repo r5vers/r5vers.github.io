@@ -1,32 +1,32 @@
 // Replay Terminal - application controller.
-import { api } from './api.js?v=7f60f3c784';
-import { columnsToBars } from './core/aggregate.js?v=7f60f3c784';
-import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=7f60f3c784';
-import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=7f60f3c784';
-import { computeStats } from './core/stats.js?v=7f60f3c784';
-import { bucket, parseTf } from './core/timeframes.js?v=7f60f3c784';
-import { TradingChart } from './chart/chart.js?v=7f60f3c784';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=7f60f3c784';
-import { configureICT } from './chart/sessions.js?v=7f60f3c784';
-import { INDICATORS } from './chart/indicators.js?v=7f60f3c784';
-import { TradeLines } from './chart/tradelines.js?v=7f60f3c784';
-import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=7f60f3c784';
-import * as F from './format.js?v=7f60f3c784';
-import { appearanceSheet } from './rvshell.js?v=7f60f3c784';
-import { liquidGlass } from './ui/liquid.js?v=7f60f3c784';
-import { ReplayEngine } from './replay.js?v=7f60f3c784';
-import * as D from './ui/dialogs.js?v=7f60f3c784';
-import { DataView } from './ui/dataview.js?v=7f60f3c784';
-import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=7f60f3c784';
-import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=7f60f3c784';
-import { openPalette, wirePalette } from './ui/palette.js?v=7f60f3c784';
-import { wireTooltips } from './ui/tooltip.js?v=7f60f3c784';
-import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=7f60f3c784';
-import { scrubWheel } from './ui/scrubwheel.js?v=7f60f3c784';
-import { StatsView } from './ui/statsview.js?v=7f60f3c784';
-import { StrategyView } from './ui/strategyview.js?v=7f60f3c784';
-import { Ticket } from './ui/ticket.js?v=7f60f3c784';
-import { SidePane } from './ui/sidepane.js?v=7f60f3c784';
+import { api } from './api.js?v=43f704a38f';
+import { columnsToBars } from './core/aggregate.js?v=43f704a38f';
+import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=43f704a38f';
+import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=43f704a38f';
+import { computeStats } from './core/stats.js?v=43f704a38f';
+import { bucket, parseTf } from './core/timeframes.js?v=43f704a38f';
+import { TradingChart } from './chart/chart.js?v=43f704a38f';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=43f704a38f';
+import { configureICT } from './chart/sessions.js?v=43f704a38f';
+import { INDICATORS } from './chart/indicators.js?v=43f704a38f';
+import { TradeLines } from './chart/tradelines.js?v=43f704a38f';
+import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=43f704a38f';
+import * as F from './format.js?v=43f704a38f';
+import { appearanceSheet } from './rvshell.js?v=43f704a38f';
+import { liquidGlass } from './ui/liquid.js?v=43f704a38f';
+import { ReplayEngine } from './replay.js?v=43f704a38f';
+import * as D from './ui/dialogs.js?v=43f704a38f';
+import { DataView } from './ui/dataview.js?v=43f704a38f';
+import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=43f704a38f';
+import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=43f704a38f';
+import { openPalette, wirePalette } from './ui/palette.js?v=43f704a38f';
+import { wireTooltips } from './ui/tooltip.js?v=43f704a38f';
+import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=43f704a38f';
+import { scrubWheel } from './ui/scrubwheel.js?v=43f704a38f';
+import { StatsView } from './ui/statsview.js?v=43f704a38f';
+import { StrategyView } from './ui/strategyview.js?v=43f704a38f';
+import { Ticket } from './ui/ticket.js?v=43f704a38f';
+import { SidePane } from './ui/sidepane.js?v=43f704a38f';
 
 const LW = window.LightweightCharts;
 const SPEEDS = [[1, '1x'], [2, '2x'], [4, '4x'], [8, '8x'], [16, '16x'], [40, '40x'], [0, 'Maks']];
@@ -155,6 +155,8 @@ class App {
     if ((this.settings.ticket.v || 1) < 2) Object.assign(this.settings.ticket, { slOn: false, tpOn: false, sizeMode: 'risk', riskPct: this.settings.ticket.riskPct || 1, v: 2 });
     // ⏭ moves one candle of the chart (Alltra's), once over a copied setting
     if (!this.settings.nxStep) { this.settings.stepUnit = 'bar'; this.settings.nxStep = 1; }
+    // the favourites bar starts over again at the chart's top right (it used to sit on the legend)
+    if (!this.settings.nxFav2) { delete this.settings.favBar; this.settings.nxFav2 = 1; }
     if (configureICT(this.settings)) this.saveSettings();
     // first visit on this phone: give the chart the room
     if (!device && window.innerWidth < 760) this.settings.bottomCollapsed = true;
@@ -2846,7 +2848,7 @@ class App {
 
   /** Phones: the drawing tools as a sheet from the bottom (Alltra's), by
    *  kind; a tool held down goes into (or out of) the favourites. */
-  drawSheet() {
+  drawSheet(anchor = null) {
     const KINDS = [
       ['fav', 'Favoriler', null],
       ['lines', 'Çizgiler', ['trend', 'ray', 'arrow', 'hline', 'hray', 'vline', 'channel']],
@@ -2878,7 +2880,9 @@ class App {
       }
       foot.replaceChildren(
         h(`button.ds-cursor${this.drawings.tool === 'cursor' ? '.on' : ''}`, { type: 'button', onclick: () => { this.drawings.setTool('cursor'); close(); } }, icon('cursor', 18), 'İmleç'),
-        h(`button.ds-magnet${this.drawings.magnet ? '.on' : ''}`, { type: 'button', onclick: () => { this.drawings.magnet = !this.drawings.magnet; this.settings.magnet = this.drawings.magnet; this.saveSettings(); paint(); } }, icon('magnet', 18), this.drawings.magnet ? 'Mıknatıs açık' : 'Mıknatıs kapalı'));
+        h(`button.ds-magnet${this.drawings.magnet ? '.on' : ''}`, { type: 'button', onclick: () => { this.drawings.magnet = !this.drawings.magnet; this.settings.magnet = this.drawings.magnet; this.saveSettings(); paint(); } }, icon('magnet', 18), this.drawings.magnet ? 'Mıknatıs açık' : 'Mıknatıs kapalı'),
+        h(`button${this.drawings.hideAll ? '.on' : ''}`, { type: 'button', onclick: () => { this.drawings.hideAll = !this.drawings.hideAll; this.drawings.select(null); this.drawings.redraw(); this.renderFavBar(); paint(); } }, icon('eye', 18), this.drawings.hideAll ? 'Çizimler gizli' : 'Çizimleri gizle'),
+        h('button.ds-danger', { type: 'button', disabled: !this.drawings.drawings.length, onclick: async () => { close(); if (await confirmBox('Çizimleri sil', 'Bu grafikteki tüm çizimler silinsin mi?', 'Sil', 'danger')) this.drawings.clear(); } }, icon('trash', 18), 'Tümünü sil'));
     };
     const sheet = h('div.ds-sheet', { role: 'dialog', 'aria-label': 'Çizim araçları' },
       h('span.ds-grab'),
@@ -2886,6 +2890,15 @@ class App {
         h(`button.ds-round${this.drawings.keepDrawing ? '.on' : ''}`, { type: 'button', title: 'Sürekli çizim: araç çizimden sonra elde kalır', onclick: (e) => { this.drawings.keepDrawing = !this.drawings.keepDrawing; this.settings.keepDrawing = this.drawings.keepDrawing; this.saveSettings(); e.currentTarget.classList.toggle('on', this.drawings.keepDrawing); } }, icon('lock', 17))),
       chips, tools, foot);
     const back = h('div.ds-back', { onclick: (e) => { if (e.target === back) close(); } }, sheet);
+    // wide screens: a panel under the button that opened it, not a sheet from the foot
+    if (anchor && window.innerWidth > 760) {
+      const r = anchor.getBoundingClientRect();
+      back.classList.add('ds-pop');
+      sheet.style.top = `${Math.round(r.bottom + 10)}px`;
+      sheet.style.left = `${Math.round(Math.max(12, Math.min(window.innerWidth - 452, r.left + r.width / 2 - 220)))}px`;
+    }
+    const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); document.removeEventListener('keydown', onKey, true); } };
+    document.addEventListener('keydown', onKey, true);
     document.body.append(back);
     paint();
     requestAnimationFrame(() => back.classList.add('open'));
@@ -3022,7 +3035,7 @@ class App {
     $('#instrument-btn').addEventListener('click', () => this.openInstrumentPicker());
     $('#btn-profile').addEventListener('click', () => this.openProfileMenu());
     $('#tf-select').addEventListener('change', (e) => this.setTf(e.target.value));
-    $('#btn-draw').addEventListener('click', () => this.drawSheet());
+    $('#btn-draw').addEventListener('click', (e) => this.drawSheet(e.currentTarget));
     document.addEventListener('visibilitychange', () => { if (!document.hidden && this.mode === 'live') this._livePoll(); });
     $('#btn-search').addEventListener('click', () => openPalette(() => this._paletteItems()));
     $('#btn-fullscreen').addEventListener('click', () => this.toggleFullscreen());

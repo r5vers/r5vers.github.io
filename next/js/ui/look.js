@@ -1,7 +1,7 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=7f60f3c784';
-import { field, h, icon } from './dom.js?v=7f60f3c784';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=43f704a38f';
+import { field, h, icon } from './dom.js?v=43f704a38f';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -344,23 +344,28 @@ export function revealPage() {
   requestAnimationFrame(() => document.documentElement.classList.remove('booting'));
 }
 
-// The light behind the glass: two waves of the theme's colours with sharp,
-// lit crests and a faint third arc — something crisp for the glass to bend,
-// in place of the soft orbs. Colours come from CSS variables, so a theme
-// change repaints it without redrawing.
-const CREST_A = 'M-60,640 C200,590 350,380 620,340 C900,300 1080,480 1300,430 C1460,394 1550,300 1660,250';
-const CREST_B = 'M-60,930 C280,880 520,700 820,720 C1100,740 1270,600 1660,560';
+// The light behind the glass (Apple's "Liquid Glass" stage): sheets of dark
+// silk that overlap, each lit along its crest — a crisp rim of the theme's
+// light and a glow that falls inside the sheet and fades into the dark.
+// Colours come from CSS variables, so a theme change repaints it as is.
+const SILK = [
+  // [path, light falls from, fill direction (x2 y2), rim stroke id]
+  ['M1700,-100 L860,-100 C1000,70 1150,170 1240,340 C1340,530 1300,720 1430,880 C1510,980 1610,1020 1700,1030 Z', 'a', '0 0 1 0', 'b'],
+  ['M-100,-100 L720,-100 C580,40 400,130 210,160 C80,182 -20,240 -100,310 Z', 'c', '0 1 0 0', 'c'],
+  ['M-100,1100 L-100,760 C100,700 260,560 430,520 C650,468 770,568 990,476 C1190,392 1310,210 1490,168 C1570,150 1640,172 1700,200 L1700,1100 Z', 'a', '0 0 0 1', 'a'],
+  ['M-100,1100 L-100,990 C200,910 420,830 650,810 C910,788 1090,868 1310,826 C1470,796 1590,706 1700,646 L1700,1100 Z', 'b', '0 0 0 1', 'b'],
+];
 const AMBIENT_SVG = `<svg class="waves" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
 <defs>
-<linearGradient id="wfA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o1);stop-opacity:.42"/><stop offset=".55" style="stop-color:var(--o1);stop-opacity:0"/></linearGradient>
-<linearGradient id="wfB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o2);stop-opacity:.34"/><stop offset=".6" style="stop-color:var(--o2);stop-opacity:0"/></linearGradient>
-<linearGradient id="weA" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--o1);stop-opacity:0"/><stop offset=".3" style="stop-color:var(--o1);stop-opacity:.9"/><stop offset=".55" style="stop-color:var(--crest, #fff);stop-opacity:.95"/><stop offset=".8" style="stop-color:var(--o3);stop-opacity:.8"/><stop offset="1" style="stop-color:var(--o3);stop-opacity:.1"/></linearGradient>
-<linearGradient id="weB" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--o2);stop-opacity:.1"/><stop offset=".45" style="stop-color:var(--o2);stop-opacity:.9"/><stop offset=".7" style="stop-color:var(--crest, #fff);stop-opacity:.7"/><stop offset="1" style="stop-color:var(--o1);stop-opacity:0"/></linearGradient>
-<filter id="wGlow" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="sGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="22"/></filter>
+<filter id="sHalo" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>
+<linearGradient id="srA" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--o1);stop-opacity:.15"/><stop offset=".35" style="stop-color:var(--o3);stop-opacity:.95"/><stop offset=".62" style="stop-color:var(--crest);stop-opacity:1"/><stop offset="1" style="stop-color:var(--o1);stop-opacity:.25"/></linearGradient>
+<linearGradient id="srB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o1);stop-opacity:.9"/><stop offset=".5" style="stop-color:var(--crest);stop-opacity:.85"/><stop offset="1" style="stop-color:var(--o2);stop-opacity:.2"/></linearGradient>
+<linearGradient id="srC" x1="1" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o3);stop-opacity:.7"/><stop offset="1" style="stop-color:var(--o1);stop-opacity:.1"/></linearGradient>
+${SILK.map(([, , dir], i) => { const [x1, y1, x2, y2] = dir.split(' '); return `<linearGradient id="sf${i}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"><stop offset="0" style="stop-color:var(--silk-hi)"/><stop offset=".55" style="stop-color:var(--silk-lo)"/></linearGradient>`; }).join('')}
+${SILK.map(([d], i) => `<clipPath id="sc${i}"><path d="${d}"/></clipPath>`).join('')}
 </defs>
-<g class="wave wa"><path d="${CREST_A} L1660,1060 L-60,1060 Z" fill="url(#wfA)"/><path d="${CREST_A}" fill="none" stroke="url(#weA)" stroke-width="9" opacity=".5" filter="url(#wGlow)"/><path d="${CREST_A}" fill="none" stroke="url(#weA)" stroke-width="1.6"/></g>
-<g class="wave wb"><path d="${CREST_B} L1660,1060 L-60,1060 Z" fill="url(#wfB)"/><path d="${CREST_B}" fill="none" stroke="url(#weB)" stroke-width="8" opacity=".45" filter="url(#wGlow)"/><path d="${CREST_B}" fill="none" stroke="url(#weB)" stroke-width="1.4"/></g>
-<path class="wave wc" d="M430,-60 C350,140 150,250 -60,270" fill="none" style="stroke:var(--o3)" stroke-opacity=".5" stroke-width="1.2"/>
+${SILK.map(([d, glow, , rim], i) => `<g class="silk s${i}"><path d="${d}" fill="url(#sf${i})"/><path d="${d}" fill="none" class="glow g${glow}" stroke-width="70" clip-path="url(#sc${i})" filter="url(#sGlow)"/><path d="${d}" fill="none" stroke="url(#sr${rim.toUpperCase()})" stroke-width="5" opacity=".55" filter="url(#sHalo)"/><path d="${d}" fill="none" stroke="url(#sr${rim.toUpperCase()})" stroke-width="1.4"/></g>`).join('')}
 </svg>`;
 
 /** Paint the page: CSS variables and data attributes on <html>. */

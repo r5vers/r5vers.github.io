@@ -9,7 +9,7 @@ const SUPPORTED = typeof navigator !== 'undefined' && /Chrome\/\d+/.test(navigat
 // the controls that get the bend; large scrolling cards keep the cheap glass
 const TARGETS = ['.rv-pill', '.rv-round:not(.ghost)', '.rv-rail', '.rv-side', '.rv-crumbs', '.rv-top-actions .rv-btn.ghost', '.hub-searchbar',
   '.rv-switch', '.rv-close', '.m-pill', '.m-round', '.m-acts', '.page-chart #draw-toolbar', '.page-chart .fav-bar',
-  '.page-chart .topbar :is(.instrument, .tf-group, .mode-switch, .home-link, .btn.icon, .search-btn, .profile-chip, #btn-indicators)'].join(', ');
+  '.page-chart .topbar :is(.instrument, .tf-group, .mode-switch, .legs, .home-link, .btn.icon, .search-btn, .profile-chip, #btn-indicators, #btn-draw)', '.ds-pop .ds-sheet'].join(', ');
 
 let defs = null;
 let count = 0;

@@ -7,8 +7,8 @@
 //   await rows.search(x, side)   first index with t >= x ("left") / t > x ("right")
 //   await rows.tAt(i)
 //   await rows.slice(i, j)       columns of rows [i, j)
-import { bucket, canAggregate, parseTf, HOUR } from '../core/timeframes.js?v=7f60f3c784';
-import { concatCols, emptyCols, sliceCols } from './rtc.js?v=7f60f3c784';
+import { bucket, canAggregate, parseTf, HOUR } from '../core/timeframes.js?v=43f704a38f';
+import { concatCols, emptyCols, sliceCols } from './rtc.js?v=43f704a38f';
 
 export function lowerBound(arr, x, lo = 0, hi = arr.length) {
   while (lo < hi) { const mid = (lo + hi) >>> 1; if (arr[mid] < x) lo = mid + 1; else hi = mid; }
