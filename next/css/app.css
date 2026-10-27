@@ -1298,7 +1298,9 @@ body.leaving { opacity: 0; transition: opacity 0.16s ease; }
 
 /* Transparent chart glass: the wheel never paints a theme-colored haze. */
 .scrub::before { content: ''; position: absolute; inset: 0; pointer-events: none;
-  backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
+  /* a soft shade, not a blur: the browser kept showing the chart from
+     before under a blur while the candles moved on behind it */
+  background: radial-gradient(ellipse at 50% 70%, rgba(0, 0, 0, .55), transparent 72%);
   mask-image: radial-gradient(ellipse at 50% 70%, #000 10%, transparent 70%);
   -webkit-mask-image: radial-gradient(ellipse at 50% 70%, #000 10%, transparent 70%); }
 #draw-toolbar, #app #draw-toolbar.show, #replay-controls { background: rgba(var(--tint), .70);

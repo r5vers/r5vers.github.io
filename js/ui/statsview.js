@@ -1,6 +1,6 @@
 // Statistics panel: KPIs, equity curve, breakdowns by hour / weekday / month.
-import * as F from '../format.js?v=446247be79';
-import { h } from './dom.js?v=446247be79';
+import * as F from '../format.js?v=184b95d359';
+import { h } from './dom.js?v=184b95d359';
 
 const LW = window.LightweightCharts;
 const DAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
