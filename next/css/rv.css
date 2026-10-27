@@ -685,7 +685,13 @@ body.page-chart { --strip-h: 56px; --cp-bg: transparent; --cp-panel: rgba(255, 2
   .page-chart :is(#draw-toolbar, .ctrl-strip, .fav-bar) { display: none !important; }
   .page-chart .sidepanel:not(.show) { display: none !important; }
   .page-chart .scrub { display: none !important; }
-  body.page-chart.m-replay .scrub:not([hidden]) { display: block !important; left: 18px; right: 18px; width: auto; transform: none; height: 44px; bottom: calc(var(--m-bar-h) + var(--m-pad) + 48px); }
+  /* the replay wheel: a glass track over the bar, plainly a control */
+  body.page-chart.m-replay .scrub:not([hidden]) { display: block !important; left: 14px; right: 14px; width: auto; transform: none; height: 48px; bottom: calc(var(--m-bar-h) + var(--m-pad) + 46px); border-radius: 999px;
+    background: linear-gradient(180deg, rgba(40, 41, 52, .6), rgba(14, 15, 22, .72)); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 0 0 1px rgba(255, 255, 255, .08), 0 14px 30px -16px rgba(0, 0, 0, .9); }
+  body.page-chart.m-replay .scrub:not([hidden])::before { display: none; }
+  body.page-chart.m-replay .scrub:not([hidden])::after { content: ''; position: absolute; left: 50%; top: 5px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 10px var(--accent); pointer-events: none; }
+  body.page-chart.m-replay { --m-foot: calc(var(--m-bar-h) + var(--m-pad) + 100px); }
   .page-chart .chart-area.glass { border-radius: 0; margin: 0 -10px; background: transparent !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
   .page-chart .panes, .page-chart #chart-msg { bottom: var(--m-foot); }
   .page-chart #bottom.collapsed { display: none !important; }
