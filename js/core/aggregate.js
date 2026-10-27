@@ -1,5 +1,5 @@
 // Building chart bars from base bars on the client (the replay's forming bar).
-import { bucket } from './timeframes.js?v=184b95d359';
+import { bucket } from './timeframes.js?v=d93fdedfec';
 
 /** Columns {t,o,h,l,c,v} from the API -> bar objects for the chart. */
 export function columnsToBars(cols) {

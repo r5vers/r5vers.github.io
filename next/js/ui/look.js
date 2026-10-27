@@ -1,8 +1,8 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=184b95d359';
-import { field, h, icon } from './dom.js?v=184b95d359';
-import { LOCAL_NAMES } from '../local/site.js?v=184b95d359';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=d93fdedfec';
+import { field, h, icon } from './dom.js?v=d93fdedfec';
+import { LOCAL_NAMES } from '../local/site.js?v=d93fdedfec';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -450,6 +450,8 @@ export function applyAppearance(input, root = document.documentElement, { page =
   opt('--pos', a.pos);
   opt('--neg', a.neg);
   opt('--chart-bg', a.chartBg === 'gradient' ? `linear-gradient(180deg, ${a.chartColor}, ${a.chartColor2})` : a.chartBg === 'solid' ? a.chartColor : null);
+  // the shade behind the replay wheel takes the chart's own ground (its foot, where the wheel sits)
+  opt('--wheel-shade', a.chartBg === 'gradient' ? a.chartColor2 : a.chartBg === 'solid' ? a.chartColor : null);
   // the studio design's light orbs live in one fixed layer behind everything
   if (document.body) {
     let amb = document.body.querySelector(':scope > .ambient');

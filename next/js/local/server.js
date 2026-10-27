@@ -3,14 +3,14 @@
 //
 // handle(db, { method, path, query, body }) -> { status, json } | { status, bytes, headers }
 // `body` is the request body as an ArrayBuffer, a JSON string, or undefined.
-import { canAggregate, parseTf, CHART_TFS } from '../core/timeframes.js?v=184b95d359';
-import { aggregateCols } from './query.js?v=184b95d359';
-import { barsAnswer, replayAnswer } from './candles.js?v=184b95d359';
-import { ChunkRows, deleteSeries, deviceSource, readAll, replaceSeries } from './series.js?v=184b95d359';
-import * as packs from './packs.js?v=184b95d359';
-import * as live from './live.js?v=184b95d359';
-import * as sync from './sync.js?v=184b95d359';
-import { TEST_COPY } from './site.js?v=184b95d359';
+import { canAggregate, parseTf, CHART_TFS } from '../core/timeframes.js?v=d93fdedfec';
+import { aggregateCols } from './query.js?v=d93fdedfec';
+import { barsAnswer, replayAnswer } from './candles.js?v=d93fdedfec';
+import { ChunkRows, deleteSeries, deviceSource, readAll, replaceSeries } from './series.js?v=d93fdedfec';
+import * as packs from './packs.js?v=d93fdedfec';
+import * as live from './live.js?v=d93fdedfec';
+import * as sync from './sync.js?v=d93fdedfec';
+import { TEST_COPY } from './site.js?v=d93fdedfec';
 
 const KV_MAX_BYTES = 4 * 1024 * 1024;
 const PHOTO_MAX_BYTES = 1024 * 1024;
@@ -105,7 +105,7 @@ function dataWorker() {
   if (broken || typeof Worker === 'undefined') return null;
   if (!worker) {
     try {
-      worker = new Worker(new URL('../workers/data.worker.js?v=184b95d359', import.meta.url), { type: 'module' });
+      worker = new Worker(new URL('../workers/data.worker.js?v=d93fdedfec', import.meta.url), { type: 'module' });
     } catch { broken = true; return null; }
     worker.onmessage = (e) => {
       const w = waiting.get(e.data.id);

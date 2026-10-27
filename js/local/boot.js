@@ -3,11 +3,11 @@
 // files (Vercel, the installed app) the site has no server: requests to
 // /api/... are answered here, on the device, from IndexedDB - so the rest of
 // the app works the same in both.
-import { carryFromTestCopy, importFromMain, importLocalStorage } from './clone.js?v=184b95d359';
-import { IdbDb, LightDb, persistStorage, snapshotCodec } from './db.js?v=184b95d359';
-import { handle } from './server.js?v=184b95d359';
-import { LOCAL_NAMES, TEST_COPY } from './site.js?v=184b95d359';
-import { flush, sync } from './sync.js?v=184b95d359';
+import { carryFromTestCopy, importFromMain, importLocalStorage } from './clone.js?v=d93fdedfec';
+import { IdbDb, LightDb, persistStorage, snapshotCodec } from './db.js?v=d93fdedfec';
+import { handle } from './server.js?v=d93fdedfec';
+import { LOCAL_NAMES, TEST_COPY } from './site.js?v=d93fdedfec';
+import { flush, sync } from './sync.js?v=d93fdedfec';
 
 export const LOCAL = typeof window !== 'undefined' && !window.RV_SERVER;
 // the test copy: the main site's looks and caches, once, before anything reads them
@@ -44,7 +44,7 @@ function wantLight() {
 async function lightDb() {
   // the snapshot is kept compressed (fflate); without it, plain
   let codec = null;
-  try { codec = snapshotCodec(await import('../../vendor/fflate.js?v=184b95d359')); } catch { /* plain JSON */ }
+  try { codec = snapshotCodec(await import('../../vendor/fflate.js?v=d93fdedfec')); } catch { /* plain JSON */ }
   const db = new LightDb(globalThis.localStorage, codec);
   // what changed goes into localStorage before the page goes away
   addEventListener('pagehide', () => db.save());
