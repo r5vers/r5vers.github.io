@@ -1,7 +1,7 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=44e476acc5';
-import { field, h, icon } from './dom.js?v=44e476acc5';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=7f60f3c784';
+import { field, h, icon } from './dom.js?v=7f60f3c784';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -344,6 +344,25 @@ export function revealPage() {
   requestAnimationFrame(() => document.documentElement.classList.remove('booting'));
 }
 
+// The light behind the glass: two waves of the theme's colours with sharp,
+// lit crests and a faint third arc — something crisp for the glass to bend,
+// in place of the soft orbs. Colours come from CSS variables, so a theme
+// change repaints it without redrawing.
+const CREST_A = 'M-60,640 C200,590 350,380 620,340 C900,300 1080,480 1300,430 C1460,394 1550,300 1660,250';
+const CREST_B = 'M-60,930 C280,880 520,700 820,720 C1100,740 1270,600 1660,560';
+const AMBIENT_SVG = `<svg class="waves" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<defs>
+<linearGradient id="wfA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o1);stop-opacity:.42"/><stop offset=".55" style="stop-color:var(--o1);stop-opacity:0"/></linearGradient>
+<linearGradient id="wfB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o2);stop-opacity:.34"/><stop offset=".6" style="stop-color:var(--o2);stop-opacity:0"/></linearGradient>
+<linearGradient id="weA" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--o1);stop-opacity:0"/><stop offset=".3" style="stop-color:var(--o1);stop-opacity:.9"/><stop offset=".55" style="stop-color:var(--crest, #fff);stop-opacity:.95"/><stop offset=".8" style="stop-color:var(--o3);stop-opacity:.8"/><stop offset="1" style="stop-color:var(--o3);stop-opacity:.1"/></linearGradient>
+<linearGradient id="weB" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--o2);stop-opacity:.1"/><stop offset=".45" style="stop-color:var(--o2);stop-opacity:.9"/><stop offset=".7" style="stop-color:var(--crest, #fff);stop-opacity:.7"/><stop offset="1" style="stop-color:var(--o1);stop-opacity:0"/></linearGradient>
+<filter id="wGlow" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+</defs>
+<g class="wave wa"><path d="${CREST_A} L1660,1060 L-60,1060 Z" fill="url(#wfA)"/><path d="${CREST_A}" fill="none" stroke="url(#weA)" stroke-width="9" opacity=".5" filter="url(#wGlow)"/><path d="${CREST_A}" fill="none" stroke="url(#weA)" stroke-width="1.6"/></g>
+<g class="wave wb"><path d="${CREST_B} L1660,1060 L-60,1060 Z" fill="url(#wfB)"/><path d="${CREST_B}" fill="none" stroke="url(#weB)" stroke-width="8" opacity=".45" filter="url(#wGlow)"/><path d="${CREST_B}" fill="none" stroke="url(#weB)" stroke-width="1.4"/></g>
+<path class="wave wc" d="M430,-60 C350,140 150,250 -60,270" fill="none" style="stroke:var(--o3)" stroke-opacity=".5" stroke-width="1.2"/>
+</svg>`;
+
 /** Paint the page: CSS variables and data attributes on <html>. */
 export function applyAppearance(input, root = document.documentElement, { page = 'chart' } = {}) {
   const a = normalizeAppearance(input);
@@ -383,7 +402,9 @@ export function applyAppearance(input, root = document.documentElement, { page =
   opt('--chart-bg', a.chartBg === 'gradient' ? `linear-gradient(180deg, ${a.chartColor}, ${a.chartColor2})` : a.chartBg === 'solid' ? a.chartColor : null);
   // the studio design's light orbs live in one fixed layer behind everything
   if (document.body && !document.body.querySelector(':scope > .ambient')) {
-    document.body.prepend(h('div.ambient', { 'aria-hidden': 'true' }, h('i'), h('i'), h('i')));
+    const amb = h('div.ambient', { 'aria-hidden': 'true' });
+    amb.innerHTML = AMBIENT_SVG;
+    document.body.prepend(amb);
   }
   set('--accent', accent);
   set('--accent-ink', inkFor(accent));

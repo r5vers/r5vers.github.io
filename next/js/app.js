@@ -1,31 +1,32 @@
 // Replay Terminal - application controller.
-import { api } from './api.js?v=44e476acc5';
-import { columnsToBars } from './core/aggregate.js?v=44e476acc5';
-import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=44e476acc5';
-import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=44e476acc5';
-import { computeStats } from './core/stats.js?v=44e476acc5';
-import { bucket, parseTf } from './core/timeframes.js?v=44e476acc5';
-import { TradingChart } from './chart/chart.js?v=44e476acc5';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=44e476acc5';
-import { configureICT } from './chart/sessions.js?v=44e476acc5';
-import { INDICATORS } from './chart/indicators.js?v=44e476acc5';
-import { TradeLines } from './chart/tradelines.js?v=44e476acc5';
-import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=44e476acc5';
-import * as F from './format.js?v=44e476acc5';
-import { appearanceSheet } from './rvshell.js?v=44e476acc5';
-import { ReplayEngine } from './replay.js?v=44e476acc5';
-import * as D from './ui/dialogs.js?v=44e476acc5';
-import { DataView } from './ui/dataview.js?v=44e476acc5';
-import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=44e476acc5';
-import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=44e476acc5';
-import { openPalette, wirePalette } from './ui/palette.js?v=44e476acc5';
-import { wireTooltips } from './ui/tooltip.js?v=44e476acc5';
-import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=44e476acc5';
-import { scrubWheel } from './ui/scrubwheel.js?v=44e476acc5';
-import { StatsView } from './ui/statsview.js?v=44e476acc5';
-import { StrategyView } from './ui/strategyview.js?v=44e476acc5';
-import { Ticket } from './ui/ticket.js?v=44e476acc5';
-import { SidePane } from './ui/sidepane.js?v=44e476acc5';
+import { api } from './api.js?v=7f60f3c784';
+import { columnsToBars } from './core/aggregate.js?v=7f60f3c784';
+import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=7f60f3c784';
+import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=7f60f3c784';
+import { computeStats } from './core/stats.js?v=7f60f3c784';
+import { bucket, parseTf } from './core/timeframes.js?v=7f60f3c784';
+import { TradingChart } from './chart/chart.js?v=7f60f3c784';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=7f60f3c784';
+import { configureICT } from './chart/sessions.js?v=7f60f3c784';
+import { INDICATORS } from './chart/indicators.js?v=7f60f3c784';
+import { TradeLines } from './chart/tradelines.js?v=7f60f3c784';
+import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=7f60f3c784';
+import * as F from './format.js?v=7f60f3c784';
+import { appearanceSheet } from './rvshell.js?v=7f60f3c784';
+import { liquidGlass } from './ui/liquid.js?v=7f60f3c784';
+import { ReplayEngine } from './replay.js?v=7f60f3c784';
+import * as D from './ui/dialogs.js?v=7f60f3c784';
+import { DataView } from './ui/dataview.js?v=7f60f3c784';
+import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=7f60f3c784';
+import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=7f60f3c784';
+import { openPalette, wirePalette } from './ui/palette.js?v=7f60f3c784';
+import { wireTooltips } from './ui/tooltip.js?v=7f60f3c784';
+import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=7f60f3c784';
+import { scrubWheel } from './ui/scrubwheel.js?v=7f60f3c784';
+import { StatsView } from './ui/statsview.js?v=7f60f3c784';
+import { StrategyView } from './ui/strategyview.js?v=7f60f3c784';
+import { Ticket } from './ui/ticket.js?v=7f60f3c784';
+import { SidePane } from './ui/sidepane.js?v=7f60f3c784';
 
 const LW = window.LightweightCharts;
 const SPEEDS = [[1, '1x'], [2, '2x'], [4, '4x'], [8, '8x'], [16, '16x'], [40, '40x'], [0, 'Maks']];
@@ -159,6 +160,7 @@ class App {
     if (!device && window.innerWidth < 760) this.settings.bottomCollapsed = true;
     const paint = applyAppearance(this.settings.appearance);
     revealPage();
+    liquidGlass();
     this.chart = new TradingChart($('#chart'), {
       tz: this.settings.tz, theme: paint.theme, look: paint.look, host: $('#chart-area'),
       // the legend is redrawn at most once per screen frame
@@ -2820,7 +2822,8 @@ class App {
       bar.style.left = `${x}px`; bar.style.top = `${y}px`;
       return { x, y };
     };
-    const pos = this.settings.favBar || { x: 14, y: 78 };
+    // the first place is the chart's top right, clear of the legend and the price axis
+    const pos = this.settings.favBar || { x: area.clientWidth - bar.offsetWidth - 86, y: 12 };
     requestAnimationFrame(() => place(pos.x, pos.y));
     grip.addEventListener('pointerdown', (e) => {
       e.preventDefault();

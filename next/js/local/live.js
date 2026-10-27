@@ -2,8 +2,8 @@
 // the forming one included (server/live.py, in the browser). OANDA answers
 // pages on r5vers.github.io directly (it allows them: CORS), with the
 // group's key; Binance needs none. Nothing here is stored.
-import { bucket, parseTf } from '../core/timeframes.js?v=44e476acc5';
-import { defaults } from './instruments.js?v=44e476acc5';
+import { bucket, parseTf } from '../core/timeframes.js?v=7f60f3c784';
+import { defaults } from './instruments.js?v=7f60f3c784';
 
 export const OANDA_SERVERS = { practice: 'https://api-fxpractice.oanda.com', live: 'https://api-fxtrade.oanda.com' };
 const GRANULARITY = { '1m': 'M1', '5m': 'M5', '15m': 'M15', '30m': 'M30', '1h': 'H1', '2h': 'H2', '4h': 'H4', '1D': 'D', '1W': 'W', '1M': 'M' };

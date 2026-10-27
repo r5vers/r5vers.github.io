@@ -2,12 +2,12 @@
 // as large cards, recents, markets, one market's chart, the floating bar.
 // Wide screens (Alltra's overview): the greeting and a large search in the
 // middle, the apps in a row, then an overview of glass cards.
-import { api } from './api.js?v=44e476acc5';
-import * as F from './format.js?v=44e476acc5';
-import { brandMark, h, icon, sparkline } from './ui/dom.js?v=44e476acc5';
-import { openPalette, wirePalette } from './ui/palette.js?v=44e476acc5';
-import { wireTooltips } from './ui/tooltip.js?v=44e476acc5';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=44e476acc5';
+import { api } from './api.js?v=7f60f3c784';
+import * as F from './format.js?v=7f60f3c784';
+import { brandMark, h, icon, sparkline } from './ui/dom.js?v=7f60f3c784';
+import { openPalette, wirePalette } from './ui/palette.js?v=7f60f3c784';
+import { wireTooltips } from './ui/tooltip.js?v=7f60f3c784';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=7f60f3c784';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
@@ -100,6 +100,10 @@ function appRow(wide) {
   if (!wide) return h('section.hub-sec', {}, h('h2.hub-h', {}, 'Uygulamaların'), row);
   const bar = h('i');
   const counter = h('div.hub-count', {}, h('span', {}, '01'), h('span.hub-count-bar', {}, bar), h('span', {}, String(APPS.length).padStart(2, '0')));
+  // the counter only when the row runs past the screen
+  const fits = () => { counter.style.visibility = row.scrollWidth > row.clientWidth + 4 ? 'visible' : 'hidden'; };
+  requestAnimationFrame(() => requestAnimationFrame(fits));
+  window.addEventListener('resize', fits, { passive: true });
   row.addEventListener('scroll', () => { const f = row.scrollLeft / Math.max(1, row.scrollWidth - row.clientWidth); bar.style.transform = `translateX(${(f * 300).toFixed(0)}%)`; }, { passive: true });
   return h('section.hub-sec', {}, h('div.hub-head', {}, h('h2.hub-h', {}, 'Uygulamaların'), counter), row);
 }

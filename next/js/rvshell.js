@@ -3,13 +3,14 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=44e476acc5';
-import * as F from './format.js?v=44e476acc5';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=44e476acc5';
-import { configureICT } from './chart/sessions.js?v=44e476acc5';
-import { settingsDialog } from './ui/dialogs.js?v=44e476acc5';
-import { openPalette } from './ui/palette.js?v=44e476acc5';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=44e476acc5';
+import { api } from './api.js?v=7f60f3c784';
+import * as F from './format.js?v=7f60f3c784';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=7f60f3c784';
+import { configureICT } from './chart/sessions.js?v=7f60f3c784';
+import { settingsDialog } from './ui/dialogs.js?v=7f60f3c784';
+import { liquidGlass } from './ui/liquid.js?v=7f60f3c784';
+import { openPalette } from './ui/palette.js?v=7f60f3c784';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=7f60f3c784';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };
@@ -49,6 +50,7 @@ export async function bootShell(onRepaint) {
   host.saveSettings();
   applyAppearance(s.appearance, undefined, { page: 'home' });
   revealPage();
+  liquidGlass();
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
   WIDE.addEventListener?.('change', () => shell.onRepaint());
   return me;
