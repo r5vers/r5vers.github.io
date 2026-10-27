@@ -1,6 +1,6 @@
 // Small DOM helpers: element builder, toasts, modals, icons.
-import '../local/boot.js?v=1039d95bd6';
-import { escapeHtml } from '../format.js?v=1039d95bd6';
+import '../local/boot.js?v=b966ffb7f9';
+import { escapeHtml } from '../format.js?v=b966ffb7f9';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];

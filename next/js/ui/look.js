@@ -1,7 +1,7 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=1039d95bd6';
-import { field, h, icon } from './dom.js?v=1039d95bd6';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=b966ffb7f9';
+import { field, h, icon } from './dom.js?v=b966ffb7f9';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -11,7 +11,7 @@ const MIN_APPEARANCE_VERSION = 5;
 /** Type pairings: display (headings), ui (text) and data (numbers, chart). */
 export const FONT_PAIRS = {
   sistem: { name: 'Sistem', note: 'cihazın kendi yazısı (iPhone’da SF, Android’de Roboto) · Inter gibi',
-    display: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto", ui: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', Roboto", mono: "ui-monospace, 'SF Mono', 'Roboto Mono', Menlo",
+    display: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto", ui: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto", mono: "'Inter'",
     dWeight: 650, dTrack: '-0.02em', dCase: 'none', dStretch: '100%', dSettings: 'normal', monoStretch: '100%', uiSize: '14px' },
   nokta: { name: 'Nokta', note: 'Doto (nokta matris) · Instrument Sans · Azeret Mono',
     display: "'Doto'", ui: "'Instrument Sans'", mono: "'Azeret Mono'",

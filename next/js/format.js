@@ -25,9 +25,9 @@ export function money(x, currency = 'USD', digits = 2) {
   return `${x < 0 ? '−' : ''}${sym ? sym + s : `${s} ${currency}`}`;
 }
 
-export function signedMoney(x, currency) {
+export function signedMoney(x, currency, digits = 2) {
   if (x == null || !Number.isFinite(x)) return '—';
-  return (x > 0 ? '+' : '') + money(x, currency);
+  return (x > 0 ? '+' : '') + money(x, currency, digits);
 }
 
 export function num(x, digits = 2) {
