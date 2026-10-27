@@ -1,7 +1,7 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=0f8583c5e0';
-import { field, h, icon } from './dom.js?v=0f8583c5e0';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=279ddf48f5';
+import { field, h, icon } from './dom.js?v=279ddf48f5';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -220,7 +220,7 @@ export const DEFAULT_APPEARANCE = {
   v: APPEARANCE_VERSION,
   preset: 'onyx', bg: 'onyx', accent: '#a855f7', font: 'sistem', nxOnyx: 1,
   depth: 55,               // how dark the page and its glass are, 0..100
-  scene: 'ipek',           // the light behind the glass: ipek | dalga | halka | sirt | duz
+  scene: 'rv',             // behind the page: rv (the accent's light) | ipek | dalga | halka | sirt | duz
   pos: null, neg: null,    // money made / lost on the app pages (null: emerald / rose)
   custom: { type: 'mesh', c1: '#0e1016', c2: '#3a2a5e', c3: '#0f4c5c', angle: 150 },
   design: 'classic',       // studio (lights, motion, boards) | classic (the earlier, plainer look)
@@ -289,6 +289,9 @@ export function normalizeAppearance(saved) {
   if (!hex(a.titleColor)) a.titleColor = DEFAULT_APPEARANCE.titleColor;
   a.depth = Math.max(0, Math.min(100, Number.isFinite(+a.depth) ? +a.depth : DEFAULT_APPEARANCE.depth));
   if (!SCENES[a.scene]) a.scene = DEFAULT_APPEARANCE.scene;
+  // the original RV page is the default again, once; the patterned scenes stay a choice
+  if (!saved.nxRvBg) a.scene = 'rv';
+  a.nxRvBg = 1;
   // the type: one family for text and titles; the old pairs go to theirs
   a.font = FONT_OF[a.font] || a.font;
   if (!RV_FONTS.includes(a.font)) a.font = 'sistem';
@@ -394,6 +397,9 @@ const wave = (p, crest, fill, rim) => `<path d="${crest} L1660,1060 L-60,1060 Z"
 const ring = (p, r, k) => `<circle cx="1380" cy="1080" r="${r}" fill="url(#${p}rf${k})"/><circle cx="1380" cy="1080" r="${r}" fill="none" class="glow g${'abc'[k % 3]}" stroke-width="60" clip-path="url(#${p}rc${k})" filter="url(#${p}Glow)"/><circle cx="1380" cy="1080" r="${r}" fill="none" stroke="url(#${p}rA)" stroke-width="5" opacity=".5" filter="url(#${p}Halo)"/><circle cx="1380" cy="1080" r="${r}" fill="none" stroke="url(#${p}rA)" stroke-width="1.4"/>`;
 
 export const SCENES = {
+  // the original RV page: the accent's light from two corners and three slow
+  // soft lights of the accent and the candle colours (drawn by CSS)
+  rv: { name: 'RV', html: '<div class="rv-nebula"><i></i><i></i><i></i></div>' },
   ipek: { name: 'İpek', svg: (p) => SILK.map(([d, g, dir, rim], i) => sheetOf(p, i, d, g, dir, rim)).join('') },
   dalga: { name: 'Dalga', svg: (p) => wave(p, CREST_A, '--o1', 'A') + wave(p, CREST_B, '--o2', 'B') },
   halka: { name: 'Halka', svg: (p) => [980, 760, 540].map((r, k) => `<radialGradient id="${p}rf${k}" cx="1380" cy="1080" r="${r}" gradientUnits="userSpaceOnUse"><stop offset=".55" style="stop-color:var(--silk-lo)"/><stop offset="1" style="stop-color:var(--silk-hi)"/></radialGradient><clipPath id="${p}rc${k}"><circle cx="1380" cy="1080" r="${r}"/></clipPath>${ring(p, r, k)}`).join('') },
@@ -401,7 +407,8 @@ export const SCENES = {
   duz: { name: 'Düz', svg: null },
 };
 export const sceneSvg = (id, p = 'a') => {
-  const s = SCENES[id] || SCENES.ipek;
+  const s = SCENES[id] || SCENES.rv;
+  if (s.html) return s.html;
   return s.svg ? `<svg class="waves" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>${defsCommon(p)}</defs>${s.svg(p)}</svg>` : '';
 };
 
