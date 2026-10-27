@@ -2,12 +2,12 @@
 // as large cards, recents, markets, one market's chart, the floating bar.
 // Wide screens (Alltra's overview): the greeting and a large search in the
 // middle, the apps in a row, then an overview of glass cards.
-import { api } from './api.js?v=352a97af6c';
-import * as F from './format.js?v=352a97af6c';
-import { brandMark, h, icon, sparkline } from './ui/dom.js?v=352a97af6c';
-import { openPalette, wirePalette } from './ui/palette.js?v=352a97af6c';
-import { wireTooltips } from './ui/tooltip.js?v=352a97af6c';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=352a97af6c';
+import { api } from './api.js?v=b966ffb7f9';
+import * as F from './format.js?v=b966ffb7f9';
+import { brandMark, h, icon, sparkline } from './ui/dom.js?v=b966ffb7f9';
+import { openPalette, wirePalette } from './ui/palette.js?v=b966ffb7f9';
+import { wireTooltips } from './ui/tooltip.js?v=b966ffb7f9';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=b966ffb7f9';
 
 const st = { datasets: [], sessions: [], loaded: false, quotes: new Map(), chart: { range: '1A', data: null } };
 const RANGES = [['1A', 23], ['6A', 130], ['YB', 0], ['1Y', 260]];
