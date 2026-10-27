@@ -3,13 +3,13 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=b966ffb7f9';
-import * as F from './format.js?v=b966ffb7f9';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=b966ffb7f9';
-import { configureICT } from './chart/sessions.js?v=b966ffb7f9';
-import { settingsDialog } from './ui/dialogs.js?v=b966ffb7f9';
-import { openPalette } from './ui/palette.js?v=b966ffb7f9';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=b966ffb7f9';
+import { api } from './api.js?v=efec4daadb';
+import * as F from './format.js?v=efec4daadb';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=efec4daadb';
+import { configureICT } from './chart/sessions.js?v=efec4daadb';
+import { settingsDialog } from './ui/dialogs.js?v=efec4daadb';
+import { openPalette } from './ui/palette.js?v=efec4daadb';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=efec4daadb';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };

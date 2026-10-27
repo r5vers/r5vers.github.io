@@ -4,14 +4,14 @@
 // screens: the app's sections in a sidebar, a banner, the sessions as a grid
 // of cards (P&L, day of the replay, progress). A session opens in a sheet
 // (a drawer on a wide screen).
-import { api } from './api.js?v=b966ffb7f9';
-import * as F from './format.js?v=b966ffb7f9';
-import { confirmBox, h, icon, toast } from './ui/dom.js?v=b966ffb7f9';
-import { SESSION_SETS } from './chart/sessions.js?v=b966ffb7f9';
-import { nyOffset } from './core/timeframes.js?v=b966ffb7f9';
-import { wirePalette } from './ui/palette.js?v=b966ffb7f9';
-import { settingsDialog } from './ui/dialogs.js?v=b966ffb7f9';
-import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, relTime, ring, sheet, symbolBadge, tz } from './rvshell.js?v=b966ffb7f9';
+import { api } from './api.js?v=efec4daadb';
+import * as F from './format.js?v=efec4daadb';
+import { confirmBox, h, icon, toast } from './ui/dom.js?v=efec4daadb';
+import { SESSION_SETS } from './chart/sessions.js?v=efec4daadb';
+import { nyOffset } from './core/timeframes.js?v=efec4daadb';
+import { wirePalette } from './ui/palette.js?v=efec4daadb';
+import { settingsDialog } from './ui/dialogs.js?v=efec4daadb';
+import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, relTime, ring, sheet, symbolBadge, tz } from './rvshell.js?v=efec4daadb';
 
 const st = { sessions: [], datasets: [], loaded: false, kind: 'replay', filter: 'all', view: 'sessions', trades: null, tradesLoading: false };
 

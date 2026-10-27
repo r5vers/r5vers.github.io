@@ -3,12 +3,12 @@
 // straight into IndexedDB. A pack fetches only the years it lacks or that
 // changed, so pressing the button again tops it up, and a download cut short
 // (the page was closed) carries on where it stopped.
-import { emptyCols, parseFile } from './rtc.js?v=b966ffb7f9';
-import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=b966ffb7f9';
-import { parseTf } from '../core/timeframes.js?v=b966ffb7f9';
-import { createDataset, datasetJson, listDatasets } from './server.js?v=b966ffb7f9';
-import { storageEstimate } from './db.js?v=b966ffb7f9';
-import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=b966ffb7f9';
+import { emptyCols, parseFile } from './rtc.js?v=efec4daadb';
+import { aggregated, manifestOf, putPart, replaceSeries } from './series.js?v=efec4daadb';
+import { parseTf } from '../core/timeframes.js?v=efec4daadb';
+import { createDataset, datasetJson, listDatasets } from './server.js?v=efec4daadb';
+import { storageEstimate } from './db.js?v=efec4daadb';
+import { DATA_URL, fetchFile, getManifest, sha256, sleep, within } from './net.js?v=efec4daadb';
 
 export { DATA_URL, getManifest };
 export const YEARS = 15;
@@ -334,6 +334,6 @@ export async function status(db) {
 
 /** CSV upload, parsed on the device. */
 export async function importCsv(db, query, body) {
-  const { importCsvFile } = await import('./csvimport.js?v=b966ffb7f9');
+  const { importCsvFile } = await import('./csvimport.js?v=efec4daadb');
   return importCsvFile(db, query, body);
 }
