@@ -1,10 +1,10 @@
 // Modal dialogs: new replay session, saved sessions, settings, indicators, jump.
-import { api } from '../api.js?v=379181f731';
-import { INDICATORS } from '../chart/indicators.js?v=379181f731';
-import { SESSION_SETS } from '../chart/sessions.js?v=379181f731';
-import * as F from '../format.js?v=379181f731';
-import { confirmBox, field, flushStorage, h, icon, modal, storage, toast } from './dom.js?v=379181f731';
-import { appearanceSection } from './look.js?v=379181f731';
+import { api } from '../api.js?v=1039d95bd6';
+import { INDICATORS } from '../chart/indicators.js?v=1039d95bd6';
+import { SESSION_SETS } from '../chart/sessions.js?v=1039d95bd6';
+import * as F from '../format.js?v=1039d95bd6';
+import { confirmBox, field, flushStorage, h, icon, modal, storage, toast } from './dom.js?v=1039d95bd6';
+import { appearanceSection } from './look.js?v=1039d95bd6';
 
 const TIMEZONES = ['Europe/Istanbul', 'UTC', 'America/New_York', 'Europe/London', 'Europe/Berlin', 'Asia/Tokyo', 'Asia/Dubai', 'Australia/Sydney'];
 
@@ -211,11 +211,10 @@ export async function settingsDialog(app, { section = null } = {}) {
     dlg?.el.parentElement?.classList.toggle('clear', which === 'look');
     tabs.replaceChildren(
       h(`button${which === 'general' ? '.on' : ''}`, { onclick: () => show('general') }, 'Genel'),
-      h(`button${which === 'look' ? '.on' : ''}`, { onclick: () => show('look') }, 'Görünüm'),
       h(`button${which === 'api' ? '.on' : ''}`, { onclick: () => show('api') }, 'API bağlantıları'));
     body.replaceChildren(which === 'api' ? api_ : which === 'look' ? look.el : general);
   };
-  show(section || 'general');
+  show(section === 'api' ? 'api' : 'general');
   dlg = modal({
     title: 'Ayarlar',
     body: h('div', { style: { display: 'grid', gap: '10px' } }, tabs, body),

@@ -1,30 +1,31 @@
 // Replay Terminal - application controller.
-import { api } from './api.js?v=379181f731';
-import { columnsToBars } from './core/aggregate.js?v=379181f731';
-import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=379181f731';
-import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=379181f731';
-import { computeStats } from './core/stats.js?v=379181f731';
-import { bucket, parseTf } from './core/timeframes.js?v=379181f731';
-import { TradingChart } from './chart/chart.js?v=379181f731';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=379181f731';
-import { configureICT } from './chart/sessions.js?v=379181f731';
-import { INDICATORS } from './chart/indicators.js?v=379181f731';
-import { TradeLines } from './chart/tradelines.js?v=379181f731';
-import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=379181f731';
-import * as F from './format.js?v=379181f731';
-import { ReplayEngine } from './replay.js?v=379181f731';
-import * as D from './ui/dialogs.js?v=379181f731';
-import { DataView } from './ui/dataview.js?v=379181f731';
-import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=379181f731';
-import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=379181f731';
-import { openPalette, wirePalette } from './ui/palette.js?v=379181f731';
-import { wireTooltips } from './ui/tooltip.js?v=379181f731';
-import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=379181f731';
-import { scrubWheel } from './ui/scrubwheel.js?v=379181f731';
-import { StatsView } from './ui/statsview.js?v=379181f731';
-import { StrategyView } from './ui/strategyview.js?v=379181f731';
-import { Ticket } from './ui/ticket.js?v=379181f731';
-import { SidePane } from './ui/sidepane.js?v=379181f731';
+import { api } from './api.js?v=1039d95bd6';
+import { columnsToBars } from './core/aggregate.js?v=1039d95bd6';
+import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=1039d95bd6';
+import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=1039d95bd6';
+import { computeStats } from './core/stats.js?v=1039d95bd6';
+import { bucket, parseTf } from './core/timeframes.js?v=1039d95bd6';
+import { TradingChart } from './chart/chart.js?v=1039d95bd6';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=1039d95bd6';
+import { configureICT } from './chart/sessions.js?v=1039d95bd6';
+import { INDICATORS } from './chart/indicators.js?v=1039d95bd6';
+import { TradeLines } from './chart/tradelines.js?v=1039d95bd6';
+import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=1039d95bd6';
+import * as F from './format.js?v=1039d95bd6';
+import { appearanceSheet } from './rvshell.js?v=1039d95bd6';
+import { ReplayEngine } from './replay.js?v=1039d95bd6';
+import * as D from './ui/dialogs.js?v=1039d95bd6';
+import { DataView } from './ui/dataview.js?v=1039d95bd6';
+import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=1039d95bd6';
+import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=1039d95bd6';
+import { openPalette, wirePalette } from './ui/palette.js?v=1039d95bd6';
+import { wireTooltips } from './ui/tooltip.js?v=1039d95bd6';
+import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=1039d95bd6';
+import { scrubWheel } from './ui/scrubwheel.js?v=1039d95bd6';
+import { StatsView } from './ui/statsview.js?v=1039d95bd6';
+import { StrategyView } from './ui/strategyview.js?v=1039d95bd6';
+import { Ticket } from './ui/ticket.js?v=1039d95bd6';
+import { SidePane } from './ui/sidepane.js?v=1039d95bd6';
 
 const LW = window.LightweightCharts;
 const SPEEDS = [[1, '1x'], [2, '2x'], [4, '4x'], [8, '8x'], [16, '16x'], [40, '40x'], [0, 'Maks']];
@@ -542,7 +543,7 @@ class App {
         h('button.item', { onclick: () => { this.closePopover(); this.sessionsDialog(); } }, icon('sessions', 16), h('span', {}, h('span.t.plain', {}, 'Replay oturumları'), h('span.s', {}, 'kayıtlı oturumlara dön'))),
         h('button.item', { onclick: () => { this.closePopover(); openPalette(() => this._paletteItems()); } }, icon('search', 16), h('span', {}, h('span.t.plain', {}, 'Ara'), h('span.s', {}, 'sembol, zaman dilimi, komut'))),
       ] : []),
-      h('button.item', { onclick: () => { this.closePopover(); D.settingsDialog(this, { section: 'look' }); } }, icon('palette', 16), h('span', {}, h('span.t.plain', {}, 'Görünüm'), h('span.s', {}, 'tema, renkler, cam, yazı tipi'))),
+      h('button.item', { onclick: () => { this.closePopover(); this.lookSheet(); } }, icon('palette', 16), h('span', {}, h('span.t.plain', {}, 'Görünüm'), h('span.s', {}, 'tema, vurgu rengi, mum renkleri'))),
       h('button.item', { onclick: () => { this.closePopover(); D.settingsDialog(this); } }, icon('sliders', 16), h('span', {}, h('span.t.plain', {}, 'Ayarlar'), h('span.s', {}, 'saat dilimi, hesap, API anahtarı'))),
       this.auth ? h('button.item', { onclick: async () => { if (this.dirty) await this.save(); await flushStorage(); await api.logout(); window.location.replace('profiles.html'); } }, icon('power', 16), h('span.t.plain', {}, 'Siteden çıkış')) : null,
     ].filter(Boolean), { align: 'right' });
@@ -2486,7 +2487,7 @@ class App {
     const el = $('#replay-controls');
     if (!this.scrubEl) {
       this.scrubEl = scrubWheel({ getLook: () => this.chart.look || {}, onSteps: (n) => this.scrubSteps(n), onStart: () => { if (this.playing) this.pause(); } });
-      el.after(this.scrubEl);
+      $('#chart-area').append(this.scrubEl);
     }
     this.scrubEl.hidden = this.mode !== 'replay' || this.settings.scrubWheel === false;
     el.classList.toggle('on', this.mode === 'replay');
@@ -2583,6 +2584,11 @@ class App {
     this.renderClock();
   }
 
+  /** The RV appearance sheet, painting the chart as it changes. */
+  lookSheet() {
+    appearanceSheet({ a: this.settings.appearance, apply: (x) => { this.settings.appearance = x; this.previewAppearance(x); }, save: () => this.saveSettings() });
+  }
+
   /** Phones: the timeframes as a grid. */
   tfMenu(anchor) {
     if (this._popover) { this.closePopover(); return; }
@@ -2612,7 +2618,8 @@ class App {
       this.mode === 'replay' ? item('layouts', 'Ekranı böl', 'iki grafik alt alta', () => this.layoutMenu(anchor)) : null,
       item('sessions', 'Kayıtlı oturumlar', null, () => this.sessionsDialog()),
       item('search', 'Ara', 'sembol, zaman dilimi, komut', () => openPalette(() => this._paletteItems())),
-      item('sliders', 'Ayarlar ve görünüm', null, () => D.settingsDialog(this)),
+      item('palette', 'Görünüm', 'tema, vurgu rengi, mum renkleri', () => this.lookSheet()),
+      item('sliders', 'Ayarlar', 'saat dilimi, hesap, grafik', () => D.settingsDialog(this)),
       this.mode === 'replay' ? item('stop', 'Replay’den çık', 'oturum kaydedilir', () => this.exitReplay()) : null,
       item('home', 'Ana ekran', null, () => { window.location.href = 'home.html'; }),
     ].filter(Boolean), { align: 'right' });
@@ -3116,7 +3123,7 @@ class App {
     cmd('Canlı grafik', () => D.liveDialog(this), 'live', { keys: 'oanda binance' });
     cmd('Otomatik ölçek', () => this.chart.autoScale(), 'refresh', { keys: 'fiyat ekseni A' });
     cmd('Son bara git', () => this.chart.scrollToEnd(), 'ffwd');
-    cmd('Görünüm', () => D.settingsDialog(this, { section: 'look' }), 'palette', { keys: 'tema renk font yazı' });
+    cmd('Görünüm', () => this.lookSheet(), 'palette', { keys: 'tema renk font yazı' });
     cmd('Ayarlar', () => D.settingsDialog(this), 'sliders', { keys: 'saat dilimi hesap api' });
     cmd('Ana ekran', () => { window.location.href = 'home.html'; }, 'home');
     cmd('Klavye kısayolları', () => this.shortcutsDialog(), 'sliders', { kbd: '?' });

@@ -1,7 +1,7 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=379181f731';
-import { field, h, icon } from './dom.js?v=379181f731';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=1039d95bd6';
+import { field, h, icon } from './dom.js?v=1039d95bd6';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -52,7 +52,11 @@ export const FONT_PAIRS = {
  *  so the glass has something to refract. `light` ones switch the UI to
  *  dark-on-light. */
 export const BACKGROUNDS = {
-  onyx: { name: 'Oniks', light: false, css: '#000' },
+  onyx: { name: 'Oniks', light: false, css: 'radial-gradient(900px 620px at 12% -12%, rgba(124,58,237,.26), transparent 62%), radial-gradient(900px 620px at 108% 18%, rgba(37,99,235,.18), transparent 60%), radial-gradient(700px 500px at 50% 115%, rgba(168,85,247,.10), transparent 60%), #000' },
+  gece: { name: 'Gece', light: false, css: 'radial-gradient(1000px 700px at 82% -12%, rgba(59,130,246,.34), transparent 62%), radial-gradient(900px 700px at -10% 108%, rgba(14,165,233,.16), transparent 60%), linear-gradient(180deg, #070b16, #03050b)' },
+  iris: { name: 'İris', light: false, css: 'radial-gradient(1000px 700px at 80% -10%, rgba(99,102,241,.42), transparent 62%), radial-gradient(900px 700px at -10% 100%, rgba(168,85,247,.22), transparent 60%), linear-gradient(180deg, #0d0a20, #06050f)' },
+  okyanus: { name: 'Okyanus', light: false, css: 'radial-gradient(1000px 700px at 85% -10%, rgba(45,212,191,.28), transparent 62%), radial-gradient(800px 600px at -10% 105%, rgba(16,185,129,.18), transparent 60%), linear-gradient(180deg, #05130f, #020806)' },
+  amber: { name: 'Kehribar', light: false, css: 'radial-gradient(1000px 650px at 85% -15%, rgba(245,158,11,.30), transparent 62%), radial-gradient(800px 600px at -10% 110%, rgba(234,88,12,.16), transparent 60%), linear-gradient(180deg, #15100a, #0a0705)' },
   obsidian: { name: 'Obsidyen', light: false,
     css: 'radial-gradient(1100px 700px at 88% -12%, rgba(198,255,61,0.13), transparent 62%), radial-gradient(900px 640px at -8% 112%, rgba(46,230,166,0.12), transparent 60%), linear-gradient(180deg, #08090c, #050608)' },
   matte: { name: 'Mat siyah', light: false,
@@ -182,35 +186,12 @@ const shade = (hex, f) => {
 /** One-click looks: background, accent, candles and a type pairing. */
 export const PRESETS = [
   { id: 'onyx', name: 'Oniks', bg: 'onyx', accent: '#a855f7', up: '#26a69a', down: '#ef5350', font: 'sistem' },
-  { id: 'bulut', name: 'Bulutsu', bg: 'nebula', accent: '#9fa8ff', up: '#8fa8ff', down: '#c77dff', font: 'atolye' },
-  { id: 'neon', name: 'Neon', bg: 'obsidian', accent: '#c6ff3d', up: '#c6ff3d', down: '#a855f7', font: 'atolye' },
-  { id: 'obsidian', name: 'Obsidyen', bg: 'obsidian', accent: '#c6ff3d', up: '#2ee6a6', down: '#ff4d6d', font: 'atolye' },
-  { id: 'nokta', name: 'Nokta', bg: 'matte', accent: '#d71921', up: '#f2f2f2', down: '#d71921', font: 'nokta' },
-  { id: 'black', name: 'Siyah', bg: 'black', accent: '#0a84ff', up: '#30d158', down: '#ff453a', font: 'sade' },
-  { id: 'navy', name: 'Lacivert', bg: 'navy', accent: '#e6b450', up: '#e6b450', down: '#e06c75', font: 'maison' },
-  { id: 'amber', name: 'Kehribar', bg: 'amber', accent: '#ffb020', up: '#2dd4bf', down: '#ff8a3d', font: 'teknik' },
-  { id: 'sakura', name: 'Sakura', bg: 'sakura', accent: '#ff8fab', up: '#9be7c4', down: '#ff8fab', font: 'yumusak' },
-  { id: 'tundra', name: 'Tundra', bg: 'tundra', accent: '#a5b4fc', up: '#86efac', down: '#fda4af', font: 'sade' },
-  { id: 'phosphor', name: 'Fosfor', bg: 'phosphor', accent: '#3cff7a', up: '#3cff7a', down: '#ff5c5c', font: 'terminal' },
-  { id: 'cyber', name: 'Siber', bg: 'cyber', accent: '#00e5ff', up: '#00e5ff', down: '#ff2bd6', font: 'genis' },
-  { id: 'plum', name: 'Erik', bg: 'plum', accent: '#bf5af2', up: '#30d158', down: '#ff375f', font: 'yumusak' },
-  { id: 'forest', name: 'Orman', bg: 'forest', accent: '#b9d46a', up: '#86efac', down: '#fca5a5', font: 'editoryal' },
-  { id: 'sunset', name: 'Gün batımı', bg: 'sunset', accent: '#ff9f0a', up: '#f6c453', down: '#ff375f', font: 'grotesk' },
-  { id: 'slate', name: 'Arduvaz', bg: 'slate', accent: '#64d2ff', up: '#2dd4bf', down: '#fb923c', font: 'terminal' },
-  { id: 'smoke', name: 'Duman', bg: 'smoke', accent: '#d9b779', up: '#3cc8a0', down: '#ee6a6a', font: 'atolye' },
-  { id: 'midnight', name: 'Gece', bg: 'midnight', accent: '#7aa2ff', up: '#4fd1c5', down: '#ff6b81', font: 'atolye' },
-  { id: 'ocean', name: 'Okyanus', bg: 'ocean', accent: '#5eead4', up: '#34d399', down: '#fb7185', font: 'grotesk' },
-  { id: 'wine', name: 'Bordo', bg: 'wine', accent: '#e8b4a0', up: '#9fd8b6', down: '#ff8a80', font: 'maison' },
-  { id: 'emerald', name: 'Zümrüt', bg: 'emerald', accent: '#b9d46a', up: '#6ee7b7', down: '#f87171', font: 'gazete' },
-  { id: 'lavender', name: 'Lavanta', bg: 'lavender', accent: '#c4b5fd', up: '#67e8f9', down: '#f9a8d4', font: 'grotesk' },
-  { id: 'copper', name: 'Bakır', bg: 'copper', accent: '#f0a36b', up: '#e9e2d0', down: '#d9734e', font: 'maison' },
-  { id: 'carbon', name: 'Karbon', bg: 'carbon', accent: '#e5e7eb', up: '#e9e9ea', down: '#5d616c', font: 'teknik' },
-  { id: 'aurora', name: 'Aurora', bg: 'aurora', accent: '#e879f9', up: '#22d3ee', down: '#f472b6', font: 'atolye' },
-  { id: 'paper', name: 'Kağıt', bg: 'paper', accent: '#1d3bd1', up: '#0f8a6c', down: '#c93a3a', font: 'gazete' },
-  { id: 'sand', name: 'Kum', bg: 'sand', accent: '#8b2635', up: '#2f7d5b', down: '#b5462f', font: 'maison' },
-  { id: 'snow', name: 'Kar', bg: 'snow', accent: '#0a84ff', up: '#30d158', down: '#ff453a', font: 'sade' },
-  { id: 'ice', name: 'Buz', bg: 'ice', accent: '#2563eb', up: '#0d9488', down: '#e11d48', font: 'atolye' },
+  { id: 'gece', name: 'Gece', bg: 'gece', accent: '#3b82f6', up: '#26a69a', down: '#ef5350', font: 'sistem' },
+  { id: 'iris', name: 'İris', bg: 'iris', accent: '#8b5cf6', up: '#38bdf8', down: '#f43f5e', font: 'sistem' },
+  { id: 'okyanus', name: 'Okyanus', bg: 'okyanus', accent: '#14b8a6', up: '#2dd4bf', down: '#fb7185', font: 'sistem' },
+  { id: 'amber', name: 'Kehribar', bg: 'amber', accent: '#f59e0b', up: '#2dd4bf', down: '#f97316', font: 'sistem' },
 ];
+export const RV_THEMES = PRESETS.map((p) => p.id);
 
 export const DEFAULT_APPEARANCE = {
   v: APPEARANCE_VERSION,
@@ -259,7 +240,7 @@ export function normalizeAppearance(saved) {
   // v6: the untouched Neon (and the first Bebe mavisi) look moves to the new
   // default, Bulutsu; a look the user changed stays as it is
   if (saved.v < 6 && (saved.preset === 'neon' || saved.preset === 'bulut')) {
-    const p = PRESETS.find((x) => x.id === 'bulut');
+    const p = PRESETS[0];
     Object.assign(a, { preset: p.id, bg: p.bg, accent: p.accent, up: p.up, down: p.down });
   }
   // RV Next: the clean Onyx look (black, the device's own type, one purple
@@ -269,6 +250,9 @@ export function normalizeAppearance(saved) {
     Object.assign(a, { preset: p.id, bg: p.bg, accent: p.accent, up: p.up, down: p.down, font: p.font, design: 'classic', style: 'glass', radius: 'round', titleStyle: 'plain', titleColor: '#ffffff', homeAccent: null, homeUp: null, homeDown: null, texture: 'none', motion: false, pointerLight: false, grain: 0 });
   }
   a.nxOnyx = 1;
+  // the five RV themes: anything else falls back to Oniks
+  if (!RV_THEMES.includes(a.preset)) a.preset = 'onyx';
+  a.bg = a.preset;
   if (!BACKGROUNDS[a.bg]) a.bg = DEFAULT_APPEARANCE.bg;
   if (!FONT_PAIRS[a.font]) a.font = DEFAULT_APPEARANCE.font;
   if (!METALS[a.metal]) a.metal = DEFAULT_APPEARANCE.metal;
@@ -353,6 +337,7 @@ export function applyAppearance(input, root = document.documentElement, { page =
   const f = FONT_PAIRS[a.font];
   const set = (k, v) => root.style.setProperty(k, String(v));
   Object.assign(root.dataset, {
+    rvTheme: RV_THEMES.includes(a.preset) ? a.preset : 'onyx',
     theme: light ? 'light' : 'dark', style: a.style, motion: a.motion ? 'on' : 'off',
     pointer: a.pointerLight ? 'on' : 'off', font: a.font, texture: a.texture || 'none', design: a.design === 'classic' ? 'classic' : 'studio',
   });

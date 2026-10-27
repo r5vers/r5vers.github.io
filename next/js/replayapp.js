@@ -3,14 +3,14 @@
 // cards (a tap opens the session's sheet), and at the foot the app's tabs:
 // sessions · analysis · more. Replay sessions and strategy tests sit side by
 // side under one switch.
-import { api } from './api.js?v=379181f731';
-import * as F from './format.js?v=379181f731';
-import { confirmBox, h, icon, toast } from './ui/dom.js?v=379181f731';
-import { SESSION_SETS } from './chart/sessions.js?v=379181f731';
-import { nyOffset } from './core/timeframes.js?v=379181f731';
-import { wirePalette } from './ui/palette.js?v=379181f731';
-import { settingsDialog } from './ui/dialogs.js?v=379181f731';
-import { avatarButton, baseItems, bootShell, chartUrl, dock, go, group, host, markButton, pillTab, relTime, sheet, symbolBadge, tz } from './rvshell.js?v=379181f731';
+import { api } from './api.js?v=1039d95bd6';
+import * as F from './format.js?v=1039d95bd6';
+import { confirmBox, h, icon, toast } from './ui/dom.js?v=1039d95bd6';
+import { SESSION_SETS } from './chart/sessions.js?v=1039d95bd6';
+import { nyOffset } from './core/timeframes.js?v=1039d95bd6';
+import { wirePalette } from './ui/palette.js?v=1039d95bd6';
+import { settingsDialog } from './ui/dialogs.js?v=1039d95bd6';
+import { appearanceSheet, avatarButton, baseItems, homeLook, sideNav, bootShell, chartUrl, dock, go, group, host, markButton, pillTab, relTime, sheet, symbolBadge, tz } from './rvshell.js?v=1039d95bd6';
 
 const st = { sessions: [], datasets: [], loaded: false, kind: 'replay', filter: 'all', view: 'sessions', trades: null, tradesLoading: false };
 
@@ -49,6 +49,7 @@ function render() {
   const body = st.view === 'analytics' ? analytics() : st.view === 'more' ? more() : sessionsView();
   root.className = `ra ra-${st.view}`;
   root.replaceChildren(h('div.ra-aurora', { 'aria-hidden': 'true' }), top, ...body);
+  sideNav(st.view === 'analytics' ? 'analytics' : 'replay');
   dock({
     left: markButton('replay'),
     center: [
@@ -322,7 +323,7 @@ function more() {
       { icon: 'data', title: 'Veri paketleri', sub: '15 yıllık EURUSD, Nasdaq, altın…', onclick: () => go(chartUrl({ tab: 'data' })) },
     ]),
     group([
-      { icon: 'palette', title: 'Görünüm', sub: 'tema, renkler, grafik', onclick: () => settingsDialog(host, { section: 'look' }) },
+      { icon: 'palette', title: 'Görünüm', sub: 'tema, vurgu rengi, mum renkleri', onclick: () => appearanceSheet(homeLook) },
       { icon: 'sliders', title: 'Tercihler', sub: 'saat dilimi, hesap, işlem ücretleri', onclick: () => settingsDialog(host) },
       { icon: 'home', title: 'Ana ekran', sub: 'özet ve uygulamalar', onclick: () => go('home.html') },
     ]),

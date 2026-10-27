@@ -3,12 +3,12 @@
 // shows the candles, the session's indicators, the market's drawings and its
 // open trades; the chart the trader works on (drawing, trading) is the
 // main one, and a click here makes this one the main chart (app.js).
-import { TradingChart } from '../chart/chart.js?v=379181f731';
-import { DrawingManager } from '../chart/drawings.js?v=379181f731';
-import { TradeLines } from '../chart/tradelines.js?v=379181f731';
-import { bucket } from '../core/timeframes.js?v=379181f731';
-import * as F from '../format.js?v=379181f731';
-import { h, icon } from './dom.js?v=379181f731';
+import { TradingChart } from '../chart/chart.js?v=1039d95bd6';
+import { DrawingManager } from '../chart/drawings.js?v=1039d95bd6';
+import { TradeLines } from '../chart/tradelines.js?v=1039d95bd6';
+import { bucket } from '../core/timeframes.js?v=1039d95bd6';
+import * as F from '../format.js?v=1039d95bd6';
+import { h, icon } from './dom.js?v=1039d95bd6';
 
 export class SidePane {
   /** `slot`: the layout cell; `leg`: the market; `tf`: its timeframe id. */

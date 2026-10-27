@@ -2,13 +2,13 @@
 // and its settings, one floating bar at the foot (a round button, a pill, a
 // round button), sheets that rise from the foot, the account sheet and the
 // app switcher.
-import { api } from './api.js?v=379181f731';
-import * as F from './format.js?v=379181f731';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=379181f731';
-import { configureICT } from './chart/sessions.js?v=379181f731';
-import { settingsDialog } from './ui/dialogs.js?v=379181f731';
-import { openPalette } from './ui/palette.js?v=379181f731';
-import { DEFAULT_APPEARANCE, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=379181f731';
+import { api } from './api.js?v=1039d95bd6';
+import * as F from './format.js?v=1039d95bd6';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=1039d95bd6';
+import { configureICT } from './chart/sessions.js?v=1039d95bd6';
+import { settingsDialog } from './ui/dialogs.js?v=1039d95bd6';
+import { openPalette } from './ui/palette.js?v=1039d95bd6';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=1039d95bd6';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };
@@ -144,11 +144,11 @@ export function accountSheet() {
   const p = shell.me.profile;
   const s = sheet({
     title: 'Profil', cls: 'account',
-    banner: 'linear-gradient(160deg, #19c2d6 0%, #1a8cff 46%, rgba(10, 60, 120, .35) 78%, transparent 100%)',
+    banner: 'linear-gradient(160deg, var(--rv-glow1) 0%, var(--rv-glow2) 46%, color-mix(in srgb, var(--rv-glow2) 30%, transparent) 78%, transparent 100%)',
     body: [
       h('div.rv-account', {}, avatar({ ...p, locked: false }, 'lg'), h('h3', {}, p.name), h('span', {}, 'RV Next · test sürümü')),
       group([
-        { icon: 'palette', title: 'Görünüm', sub: 'tema, renkler, yazı, grafik', onclick: () => { s.close(); settingsDialog(host, { section: 'look' }); } },
+        { icon: 'palette', title: 'Görünüm', sub: 'tema, vurgu rengi, mum renkleri', onclick: () => { s.close(); appearanceSheet(homeLook); } },
         { icon: 'sliders', title: 'Tercihler', sub: 'saat dilimi, hesap, işlem ücretleri', onclick: () => { s.close(); settingsDialog(host); } },
       ]),
       group([
@@ -198,7 +198,7 @@ export function baseItems() {
   add('Uygulamalar', 'Analiz', () => go('replay.html#analiz'), { icon: 'indicator' });
   add('Uygulamalar', 'Strateji testi', () => go(chartUrl({ tab: 'strategy' })), { icon: 'flask', keys: 'backtest' });
   add('Uygulamalar', 'Veri paketleri', () => go(chartUrl({ tab: 'data' })), { icon: 'data' });
-  add('Ayarlar', 'Görünüm', () => settingsDialog(host, { section: 'look' }), { icon: 'palette', keys: 'tema renk' });
+  add('Ayarlar', 'Görünüm', () => appearanceSheet(homeLook), { icon: 'palette', keys: 'tema renk' });
   add('Ayarlar', 'Tercihler', () => settingsDialog(host), { icon: 'sliders' });
   return out;
 }
@@ -208,4 +208,58 @@ export function symbolBadge(symbol, size = 44) {
   const hue = [...String(symbol || '?')].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7);
   return h('span.rv-sym', { style: { width: `${size}px`, height: `${size}px`, background: `linear-gradient(140deg, hsl(${hue} 70% 58%), hsl(${(hue + 40) % 360} 70% 42%))`, fontSize: `${Math.round(size * 0.34)}px` } },
     String(symbol || '?').replace(/[^A-Z0-9]/gi, '').slice(0, 2).toUpperCase());
+}
+
+// ── appearance (Alltra's sheet: theme carousel, accent cards, candles) ──
+export const ACCENTS = [['#3b82f6', 'Mavi'], ['#a855f7', 'Mor'], ['#ec4899', 'Pembe'], ['#ef4444', 'Kırmızı'], ['#f97316', 'Turuncu'], ['#eab308', 'Altın'], ['#22c55e', 'Yeşil'], ['#14b8a6', 'Turkuaz'], ['#9ca3af', 'Platin']];
+export const CANDLES = [['Klasik', '#26a69a', '#ef5350'], ['Gök / gül', '#38bdf8', '#f43f5e'], ['Canlı', '#22c55e', '#ef4444'], ['Sade', '#e5e7eb', '#6b7280']];
+
+/** The look of the home pages: settings of the profile, painted on save. */
+export const homeLook = {
+  get a() { return shell.settings.appearance; },
+  apply(a) { shell.settings.appearance = a; applyAppearance(a, undefined, { page: 'home' }); },
+  save() { host.saveSettings(); },
+};
+
+/** `ctx`: { a (the appearance), apply(a), save() } — from any page. */
+export function appearanceSheet(ctx, tab = 'theme') {
+  const a = ctx.a;
+  const set = (patch) => { Object.assign(a, patch); ctx.apply(a); ctx.save(); paint(); };
+  const tabs = h('div.rv-ptabs');
+  const pane = h('div.rv-ppane');
+  const paint = () => {
+    tabs.replaceChildren(...[['theme', 'Tema'], ['accent', 'Vurgu'], ['candles', 'Grafik']].map(([k, l]) => h(`button${tab === k ? '.on' : ''}`, { type: 'button', onclick: () => { tab = k; paint(); } }, l)));
+    if (tab === 'theme') {
+      const cur = PRESETS.find((p) => p.id === a.preset) || PRESETS[0];
+      pane.replaceChildren(
+        h('div.rv-themes', {}, PRESETS.map((p) => h(`button.rv-theme${p.id === a.preset ? '.on' : ''}`, { type: 'button', 'aria-label': p.name,
+          onclick: (e) => { set({ preset: p.id, bg: p.bg, accent: p.accent, up: p.up, down: p.down }); e.currentTarget.scrollIntoView?.({ inline: 'center', behavior: 'smooth', block: 'nearest' }); } },
+        h('span.rv-theme-win', { style: { background: BACKGROUNDS[p.bg]?.css } }, h('i.d'), h('i.l', { style: { background: p.accent } }), h('i.s'), h('i.c')), h('b', {}, p.name)))),
+        h('div.rv-theme-now', {}, h('b', {}, cur.name), h('span', {}, 'Geçerli tema')));
+      setTimeout(() => pane.querySelector('.rv-theme.on')?.scrollIntoView?.({ inline: 'center', block: 'nearest' }), 30);
+    } else if (tab === 'accent') {
+      pane.replaceChildren(h('div.rv-accents', {}, ACCENTS.map(([c, n]) => h(`button.rv-accent${a.accent === c ? '.on' : ''}`, { type: 'button', style: { '--c': c }, onclick: () => set({ accent: c, homeAccent: null }) },
+        h('span.rv-accent-win', {}, h('i.d'), h('i.l'), h('i.d2'), h('i.l2')), h('b', {}, n)))));
+    } else {
+      pane.replaceChildren(group(CANDLES.map(([n, up, down]) => ({ icon: 'chart', title: n, sub: a.up === up && a.down === down ? 'seçili' : 'yükselen · düşen', value: h('span.rv-dots', {}, h('i', { style: { background: up } }), h('i', { style: { background: down } })), onclick: () => set({ up, down, homeUp: null, homeDown: null }) }))));
+    }
+  };
+  paint();
+  return sheet({ title: 'Görünüm', cls: 'look', body: [tabs, pane] });
+}
+
+// ── wide screens: a rail of the apps on the left ─────────────────────────
+export function sideNav(current) {
+  let nav = document.getElementById('rv-side');
+  if (!nav) { nav = h('aside.rv-side', { id: 'rv-side', 'aria-label': 'Uygulamalar' }); document.body.append(nav); }
+  const p = shell.me.profile;
+  const item = (id, label, ic, href) => h(`a.rv-side-item${id === current ? '.on' : ''}`, { href, onclick: (e) => { e.preventDefault(); go(href); } }, icon(ic, 20), h('span', {}, label));
+  nav.replaceChildren(
+    h('a.rv-side-brand', { href: 'home.html', onclick: (e) => { e.preventDefault(); go('home.html'); } }, brandMark(26), h('b', {}, 'ReplayView')),
+    h('nav.rv-side-list', {},
+      item('home', 'Ana ekran', 'home', 'home.html'),
+      ...APPS.map((x) => item(x.id, x.name, x.icon, x.href))),
+    h('div.rv-side-foot', {},
+      h('button.rv-side-item', { type: 'button', onclick: () => appearanceSheet(homeLook) }, icon('palette', 20), h('span', {}, 'Görünüm')),
+      h('button.rv-side-me', { type: 'button', onclick: () => accountSheet() }, avatar({ ...p, locked: false }, 'sm'), h('span', {}, h('b', {}, p.name), h('small', {}, 'Profil ve ayarlar')))));
 }
