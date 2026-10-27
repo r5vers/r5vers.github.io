@@ -3,14 +3,14 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=43f704a38f';
-import * as F from './format.js?v=43f704a38f';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=43f704a38f';
-import { configureICT } from './chart/sessions.js?v=43f704a38f';
-import { settingsDialog } from './ui/dialogs.js?v=43f704a38f';
-import { liquidGlass } from './ui/liquid.js?v=43f704a38f';
-import { openPalette } from './ui/palette.js?v=43f704a38f';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=43f704a38f';
+import { api } from './api.js?v=fd94038260';
+import * as F from './format.js?v=fd94038260';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=fd94038260';
+import { configureICT } from './chart/sessions.js?v=fd94038260';
+import { settingsDialog } from './ui/dialogs.js?v=fd94038260';
+import { liquidGlass } from './ui/liquid.js?v=fd94038260';
+import { openPalette } from './ui/palette.js?v=fd94038260';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, RV_FONTS, SCENES, applyAppearance, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=fd94038260';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };
@@ -276,7 +276,14 @@ function lookPane(ctx, state, repaint) {
       h('i.bar'), h('i.side'), h('i.ln', { style: { background: p.accent } }), h('i.card'), h('i.card2')),
     h('b', {}, p.name))));
     requestAnimationFrame(() => strip.querySelector('.on')?.scrollIntoView({ inline: 'center', block: 'nearest' }));
+    // the scenes behind the glass, each shown small in the theme's colours
+    const scenes = h('div.rv-scenes', {}, Object.entries(SCENES).map(([id, sc], i) => {
+      const win = h('span.rv-scene-win');
+      win.innerHTML = sceneSvg(id, `p${i}`);
+      return h(`button.rv-scene${a.scene === id ? '.on' : ''}`, { type: 'button', 'aria-label': sc.name, onclick: () => set({ scene: id }) }, win, h('b', {}, sc.name));
+    }));
     pane.append(strip, h('div.rv-theme-now', {}, h('b', {}, cur.name), h('span', {}, `${PRESETS.length} koyu tema`)),
+      h('section.rv-group-wrap', {}, h('h4.rv-group-title', {}, 'Arka plan'), scenes),
       form('Koyuluk', [field('Sayfa ve cam', range(0, 100, 1, a.depth, (v) => live({ depth: v }), (v) => { a.depth = v; ctx.save(); }, (v) => `%${v}`, 'Koyuluk'), 'Işıkları kısar, camı koyulaştırır')]));
   } else if (state.tab === 'accent') {
     const own = !ACCENTS.some(([c]) => c === a.accent);
@@ -289,10 +296,11 @@ function lookPane(ctx, state, repaint) {
           h('span.rv-field-t', {}, h('b', {}, n), h('small', {}, on ? 'Seçili' : 'Oturumlar, analiz, bakiye')), h('span.rv-dots', {}, h('i', { style: { background: pos } }), h('i', { style: { background: neg } })));
       })));
   } else if (state.tab === 'type') {
-    pane.append(h('div.rv-fonts', {}, Object.entries(FONT_PAIRS).map(([id, f]) => h(`button.rv-font${a.font === id ? '.on' : ''}`, { type: 'button', onclick: () => set({ font: id }) },
-      h('span.rv-font-aa', { style: { fontFamily: f.display, fontWeight: f.dWeight, letterSpacing: f.dTrack, fontStretch: f.dStretch, fontVariationSettings: f.dSettings } }, 'Replay'),
-      h('span.rv-font-num', { style: { fontFamily: f.mono, fontStretch: f.monoStretch } }, '1.08448'),
-      h('b', { style: { fontFamily: f.ui } }, f.name)))));
+    // each family shown in itself: what the card shows is what the pages get
+    pane.append(h('div.rv-fonts', {}, RV_FONTS.map((id) => { const f = FONT_PAIRS[id]; return h(`button.rv-font${a.font === id ? '.on' : ''}`, { type: 'button', style: { fontFamily: `${f.ui}, Inter, sans-serif` }, onclick: () => set({ font: id }) },
+      h('span.rv-font-aa', {}, 'Günaydın'),
+      h('span.rv-font-num', {}, '$9.841,00'),
+      h('b', {}, id === 'sistem' ? 'Inter' : f.name)); })));
   } else {
     const preview = chartPreview(a);
     const repreview = () => preview.replaceWith(chartPreview(a));

@@ -3,9 +3,9 @@
 // files (Vercel, the installed app) the site has no server: requests to
 // /api/... are answered here, on the device, from IndexedDB - so the rest of
 // the app works the same in both.
-import { importFromMain, importLocalStorage } from './clone.js?v=43f704a38f';
-import { IdbDb, LightDb, persistStorage, snapshotCodec } from './db.js?v=43f704a38f';
-import { handle } from './server.js?v=43f704a38f';
+import { importFromMain, importLocalStorage } from './clone.js?v=fd94038260';
+import { IdbDb, LightDb, persistStorage, snapshotCodec } from './db.js?v=fd94038260';
+import { handle } from './server.js?v=fd94038260';
 
 export const LOCAL = typeof window !== 'undefined' && !window.RV_SERVER;
 // the test copy: the main site's looks and caches, once, before anything reads them
@@ -42,7 +42,7 @@ function wantLight() {
 async function lightDb() {
   // the snapshot is kept compressed (fflate); without it, plain
   let codec = null;
-  try { codec = snapshotCodec(await import('../../vendor/fflate.js?v=43f704a38f')); } catch { /* plain JSON */ }
+  try { codec = snapshotCodec(await import('../../vendor/fflate.js?v=fd94038260')); } catch { /* plain JSON */ }
   const db = new LightDb(globalThis.localStorage, codec);
   // what changed goes into localStorage before the page goes away
   addEventListener('pagehide', () => db.save());

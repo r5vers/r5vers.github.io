@@ -1,7 +1,7 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=43f704a38f';
-import { field, h, icon } from './dom.js?v=43f704a38f';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=fd94038260';
+import { field, h, icon } from './dom.js?v=fd94038260';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -47,6 +47,17 @@ export const FONT_PAIRS = {
     display: "'Azeret Mono'", ui: "'Spline Sans'", mono: "'Azeret Mono'",
     dWeight: 600, dTrack: '-0.01em', dCase: 'uppercase', dStretch: '100%', dSettings: 'normal', monoStretch: '100%', uiSize: '13px' },
 };
+
+// RV Next's type: one family for text and titles, so what the choice shows
+// is what the page gets (the earlier pairs mixed a display face the pages
+// never used); a saved pair moves to the family it set the text in.
+Object.assign(FONT_PAIRS, Object.fromEntries([
+  ['instrument', 'Instrument', "'Instrument Sans'"], ['schibsted', 'Schibsted', "'Schibsted Grotesk'"], ['familjen', 'Familjen', "'Familjen Grotesk'"],
+  ['bricolage', 'Bricolage', "'Bricolage Grotesque'"], ['spline', 'Spline', "'Spline Sans'"],
+].map(([id, name, fam]) => [id, { name, note: fam.replace(/'/g, ''), display: fam, ui: fam, mono: fam, dWeight: 650, dTrack: '-0.02em', dCase: 'none', dStretch: '100%', dSettings: 'normal', monoStretch: '100%', uiSize: '14px' }])));
+export const RV_FONTS = ['sistem', 'instrument', 'schibsted', 'familjen', 'bricolage', 'spline'];
+const FONT_OF = { nokta: 'instrument', maison: 'instrument', sade: 'instrument', yumusak: 'instrument', atolye: 'schibsted', editoryal: 'schibsted',
+  gazete: 'familjen', genis: 'familjen', grotesk: 'bricolage', teknik: 'spline', terminal: 'spline' };
 
 /** Page backgrounds: a base tone, two or three light sources and a vignette,
  *  so the glass has something to refract. `light` ones switch the UI to
@@ -209,6 +220,7 @@ export const DEFAULT_APPEARANCE = {
   v: APPEARANCE_VERSION,
   preset: 'onyx', bg: 'onyx', accent: '#a855f7', font: 'sistem', nxOnyx: 1,
   depth: 55,               // how dark the page and its glass are, 0..100
+  scene: 'ipek',           // the light behind the glass: ipek | dalga | halka | sirt | duz
   pos: null, neg: null,    // money made / lost on the app pages (null: emerald / rose)
   custom: { type: 'mesh', c1: '#0e1016', c2: '#3a2a5e', c3: '#0f4c5c', angle: 150 },
   design: 'classic',       // studio (lights, motion, boards) | classic (the earlier, plainer look)
@@ -276,6 +288,10 @@ export function normalizeAppearance(saved) {
   if (!Array.isArray(a.titleStops) || a.titleStops.length !== 3 || !a.titleStops.every(hex)) a.titleStops = [...DEFAULT_APPEARANCE.titleStops];
   if (!hex(a.titleColor)) a.titleColor = DEFAULT_APPEARANCE.titleColor;
   a.depth = Math.max(0, Math.min(100, Number.isFinite(+a.depth) ? +a.depth : DEFAULT_APPEARANCE.depth));
+  if (!SCENES[a.scene]) a.scene = DEFAULT_APPEARANCE.scene;
+  // the type: one family for text and titles; the old pairs go to theirs
+  a.font = FONT_OF[a.font] || a.font;
+  if (!RV_FONTS.includes(a.font)) a.font = 'sistem';
   if (!['glass', 'solid', 'gradient'].includes(a.chartBg)) a.chartBg = 'glass';
   if (!hex(a.chartColor2)) a.chartColor2 = DEFAULT_APPEARANCE.chartColor2;
   return a;
@@ -344,29 +360,50 @@ export function revealPage() {
   requestAnimationFrame(() => document.documentElement.classList.remove('booting'));
 }
 
-// The light behind the glass (Apple's "Liquid Glass" stage): sheets of dark
-// silk that overlap, each lit along its crest — a crisp rim of the theme's
-// light and a glow that falls inside the sheet and fades into the dark.
-// Colours come from CSS variables, so a theme change repaints it as is.
+// The light behind the glass, one of a few scenes the user picks (Görünüm →
+// Tema → Arka plan): sheets of dark silk, two lit waves, rings of light,
+// ridges — each lit along its crests in the theme's colours (CSS variables,
+// so a theme change repaints it as is) — or a plain page. `p` prefixes the
+// SVG's ids, so a small preview can sit beside the real one.
 const SILK = [
-  // [path, light falls from, fill direction (x2 y2), rim stroke id]
-  ['M1700,-100 L860,-100 C1000,70 1150,170 1240,340 C1340,530 1300,720 1430,880 C1510,980 1610,1020 1700,1030 Z', 'a', '0 0 1 0', 'b'],
-  ['M-100,-100 L720,-100 C580,40 400,130 210,160 C80,182 -20,240 -100,310 Z', 'c', '0 1 0 0', 'c'],
-  ['M-100,1100 L-100,760 C100,700 260,560 430,520 C650,468 770,568 990,476 C1190,392 1310,210 1490,168 C1570,150 1640,172 1700,200 L1700,1100 Z', 'a', '0 0 0 1', 'a'],
-  ['M-100,1100 L-100,990 C200,910 420,830 650,810 C910,788 1090,868 1310,826 C1470,796 1590,706 1700,646 L1700,1100 Z', 'b', '0 0 0 1', 'b'],
+  ['M1700,-100 L860,-100 C1000,70 1150,170 1240,340 C1340,530 1300,720 1430,880 C1510,980 1610,1020 1700,1030 Z', 'a', '0 0 1 0', 'B'],
+  ['M-100,-100 L720,-100 C580,40 400,130 210,160 C80,182 -20,240 -100,310 Z', 'c', '0 1 0 0', 'C'],
+  ['M-100,1100 L-100,760 C100,700 260,560 430,520 C650,468 770,568 990,476 C1190,392 1310,210 1490,168 C1570,150 1640,172 1700,200 L1700,1100 Z', 'a', '0 0 0 1', 'A'],
+  ['M-100,1100 L-100,990 C200,910 420,830 650,810 C910,788 1090,868 1310,826 C1470,796 1590,706 1700,646 L1700,1100 Z', 'b', '0 0 0 1', 'B'],
 ];
-const AMBIENT_SVG = `<svg class="waves" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-<defs>
-<filter id="sGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="22"/></filter>
-<filter id="sHalo" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>
-<linearGradient id="srA" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--o1);stop-opacity:.15"/><stop offset=".35" style="stop-color:var(--o3);stop-opacity:.95"/><stop offset=".62" style="stop-color:var(--crest);stop-opacity:1"/><stop offset="1" style="stop-color:var(--o1);stop-opacity:.25"/></linearGradient>
-<linearGradient id="srB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o1);stop-opacity:.9"/><stop offset=".5" style="stop-color:var(--crest);stop-opacity:.85"/><stop offset="1" style="stop-color:var(--o2);stop-opacity:.2"/></linearGradient>
-<linearGradient id="srC" x1="1" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o3);stop-opacity:.7"/><stop offset="1" style="stop-color:var(--o1);stop-opacity:.1"/></linearGradient>
-${SILK.map(([, , dir], i) => { const [x1, y1, x2, y2] = dir.split(' '); return `<linearGradient id="sf${i}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"><stop offset="0" style="stop-color:var(--silk-hi)"/><stop offset=".55" style="stop-color:var(--silk-lo)"/></linearGradient>`; }).join('')}
-${SILK.map(([d], i) => `<clipPath id="sc${i}"><path d="${d}"/></clipPath>`).join('')}
-</defs>
-${SILK.map(([d, glow, , rim], i) => `<g class="silk s${i}"><path d="${d}" fill="url(#sf${i})"/><path d="${d}" fill="none" class="glow g${glow}" stroke-width="70" clip-path="url(#sc${i})" filter="url(#sGlow)"/><path d="${d}" fill="none" stroke="url(#sr${rim.toUpperCase()})" stroke-width="5" opacity=".55" filter="url(#sHalo)"/><path d="${d}" fill="none" stroke="url(#sr${rim.toUpperCase()})" stroke-width="1.4"/></g>`).join('')}
-</svg>`;
+const RIDGES = [
+  'M-100,1100 L-100,420 C180,360 420,470 700,410 C980,350 1220,250 1700,330 L1700,1100 Z',
+  'M-100,1100 L-100,560 C260,500 520,610 820,560 C1120,510 1380,420 1700,470 L1700,1100 Z',
+  'M-100,1100 L-100,700 C220,660 480,760 780,710 C1080,660 1360,600 1700,640 L1700,1100 Z',
+  'M-100,1100 L-100,840 C300,800 560,880 860,850 C1160,820 1420,770 1700,800 L1700,1100 Z',
+];
+const defsCommon = (p) => `<filter id="${p}Glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="22"/></filter>
+<filter id="${p}Halo" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>
+<linearGradient id="${p}rA" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--o1);stop-opacity:.15"/><stop offset=".35" style="stop-color:var(--o3);stop-opacity:.95"/><stop offset=".62" style="stop-color:var(--crest);stop-opacity:1"/><stop offset="1" style="stop-color:var(--o1);stop-opacity:.25"/></linearGradient>
+<linearGradient id="${p}rB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o1);stop-opacity:.9"/><stop offset=".5" style="stop-color:var(--crest);stop-opacity:.85"/><stop offset="1" style="stop-color:var(--o2);stop-opacity:.2"/></linearGradient>
+<linearGradient id="${p}rC" x1="1" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o3);stop-opacity:.7"/><stop offset="1" style="stop-color:var(--o1);stop-opacity:.1"/></linearGradient>`;
+/** A lit sheet: its fill, a glow falling inside from the crest, a halo and a crisp rim. */
+const sheetOf = (p, i, d, glow, dir, rim) => {
+  const [x1, y1, x2, y2] = dir.split(' ');
+  return `<linearGradient id="${p}f${i}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"><stop offset="0" style="stop-color:var(--silk-hi)"/><stop offset=".55" style="stop-color:var(--silk-lo)"/></linearGradient><clipPath id="${p}c${i}"><path d="${d}"/></clipPath>
+<g class="silk"><path d="${d}" fill="url(#${p}f${i})"/><path d="${d}" fill="none" class="glow g${glow}" stroke-width="70" clip-path="url(#${p}c${i})" filter="url(#${p}Glow)"/><path d="${d}" fill="none" stroke="url(#${p}r${rim})" stroke-width="5" opacity=".55" filter="url(#${p}Halo)"/><path d="${d}" fill="none" stroke="url(#${p}r${rim})" stroke-width="1.4"/></g>`;
+};
+const CREST_A = 'M-60,640 C200,590 350,380 620,340 C900,300 1080,480 1300,430 C1460,394 1550,300 1660,250';
+const CREST_B = 'M-60,930 C280,880 520,700 820,720 C1100,740 1270,600 1660,560';
+const wave = (p, crest, fill, rim) => `<path d="${crest} L1660,1060 L-60,1060 Z" style="fill:var(${fill})" fill-opacity=".22"/><path d="${crest}" fill="none" stroke="url(#${p}r${rim})" stroke-width="9" opacity=".5" filter="url(#${p}Halo)"/><path d="${crest}" fill="none" stroke="url(#${p}r${rim})" stroke-width="1.6"/>`;
+const ring = (p, r, k) => `<circle cx="1380" cy="1080" r="${r}" fill="url(#${p}rf${k})"/><circle cx="1380" cy="1080" r="${r}" fill="none" class="glow g${'abc'[k % 3]}" stroke-width="60" clip-path="url(#${p}rc${k})" filter="url(#${p}Glow)"/><circle cx="1380" cy="1080" r="${r}" fill="none" stroke="url(#${p}rA)" stroke-width="5" opacity=".5" filter="url(#${p}Halo)"/><circle cx="1380" cy="1080" r="${r}" fill="none" stroke="url(#${p}rA)" stroke-width="1.4"/>`;
+
+export const SCENES = {
+  ipek: { name: 'İpek', svg: (p) => SILK.map(([d, g, dir, rim], i) => sheetOf(p, i, d, g, dir, rim)).join('') },
+  dalga: { name: 'Dalga', svg: (p) => wave(p, CREST_A, '--o1', 'A') + wave(p, CREST_B, '--o2', 'B') },
+  halka: { name: 'Halka', svg: (p) => [980, 760, 540].map((r, k) => `<radialGradient id="${p}rf${k}" cx="1380" cy="1080" r="${r}" gradientUnits="userSpaceOnUse"><stop offset=".55" style="stop-color:var(--silk-lo)"/><stop offset="1" style="stop-color:var(--silk-hi)"/></radialGradient><clipPath id="${p}rc${k}"><circle cx="1380" cy="1080" r="${r}"/></clipPath>${ring(p, r, k)}`).join('') },
+  sirt: { name: 'Sırt', svg: (p) => RIDGES.map((d, i) => sheetOf(p, i, d, 'abca'[i], '0 0 0 1', 'AB'[i % 2])).join('') },
+  duz: { name: 'Düz', svg: null },
+};
+export const sceneSvg = (id, p = 'a') => {
+  const s = SCENES[id] || SCENES.ipek;
+  return s.svg ? `<svg class="waves" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>${defsCommon(p)}</defs>${s.svg(p)}</svg>` : '';
+};
 
 /** Paint the page: CSS variables and data attributes on <html>. */
 export function applyAppearance(input, root = document.documentElement, { page = 'chart' } = {}) {
@@ -406,10 +443,12 @@ export function applyAppearance(input, root = document.documentElement, { page =
   opt('--neg', a.neg);
   opt('--chart-bg', a.chartBg === 'gradient' ? `linear-gradient(180deg, ${a.chartColor}, ${a.chartColor2})` : a.chartBg === 'solid' ? a.chartColor : null);
   // the studio design's light orbs live in one fixed layer behind everything
-  if (document.body && !document.body.querySelector(':scope > .ambient')) {
-    const amb = h('div.ambient', { 'aria-hidden': 'true' });
-    amb.innerHTML = AMBIENT_SVG;
-    document.body.prepend(amb);
+  if (document.body) {
+    let amb = document.body.querySelector(':scope > .ambient');
+    if (!amb) { amb = h('div.ambient', { 'aria-hidden': 'true' }); document.body.prepend(amb); }
+    // the chart keeps a plain page; the app pages show the chosen scene
+    const scene = page === 'chart' ? 'duz' : a.scene;
+    if (amb.dataset.scene !== scene) { amb.innerHTML = sceneSvg(scene); amb.dataset.scene = scene; }
   }
   set('--accent', accent);
   set('--accent-ink', inkFor(accent));

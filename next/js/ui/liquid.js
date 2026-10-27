@@ -77,7 +77,8 @@ function bend(el) {
   const scale = Math.max(10, Math.min(34, Math.min(w, h) * 0.5));
   f.innerHTML = `<feImage href="${edgeMap(w, h, radius, band)}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="map"/>`
     + `<feDisplacementMap in="SourceGraphic" in2="map" scale="${scale.toFixed(1)}" xChannelSelector="R" yChannelSelector="G"/>`;
-  el.style.backdropFilter = `url(#${id}) blur(${el.matches('.rv-side, .rv-rail') ? 10 : 4}px) saturate(180%) brightness(1.06)`;
+  // frosted as in the CSS, the bend on top of it
+  el.style.backdropFilter = `blur(${el.matches('.rv-side, .rv-rail, .rv-crumbs, .ds-sheet') ? 20 : 14}px) url(#${id}) saturate(170%) brightness(1.04)`;
   el.dataset.lg = key;
 }
 
