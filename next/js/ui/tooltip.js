@@ -1,7 +1,7 @@
 // Tooltips: the browser's plain title boxes replaced by small glass labels,
 // shown after a short pause, with the keyboard shortcut as a key chip when
 // the text ends in one, e.g. "Kapat (Esc)". Mouse only; touch keeps nothing.
-import { h } from './dom.js?v=c20cb1ba70';
+import { h } from './dom.js?v=5cd63cafc3';
 
 let tip = null;
 let timer = 0;

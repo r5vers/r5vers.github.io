@@ -1,8 +1,8 @@
 // Data tab: the 15-year data packs up top, then the user's datasets and
 // (folded away) CSV import and custom downloads.
-import { api } from '../api.js?v=c20cb1ba70';
-import * as F from '../format.js?v=c20cb1ba70';
-import { confirmBox, field, h, icon, modal, toast } from './dom.js?v=c20cb1ba70';
+import { api } from '../api.js?v=5cd63cafc3';
+import * as F from '../format.js?v=5cd63cafc3';
+import { confirmBox, field, h, icon, modal, toast } from './dom.js?v=5cd63cafc3';
 
 const DAY = 86400;
 const PACK_COLORS = { EURUSD: '#5b8cff', NAS100: '#c6ff3d', XAUUSD: '#ffd23f', GBPUSD: '#c77dff', USDCAD: '#ff6b6b', SPX500: '#4fd1c5' };
