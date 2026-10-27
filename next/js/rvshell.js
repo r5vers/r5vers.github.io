@@ -3,13 +3,14 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=5cd63cafc3';
-import * as F from './format.js?v=5cd63cafc3';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, useProfileStorage } from './ui/dom.js?v=5cd63cafc3';
-import { configureICT } from './chart/sessions.js?v=5cd63cafc3';
-import { settingsDialog } from './ui/dialogs.js?v=5cd63cafc3';
-import { openPalette } from './ui/palette.js?v=5cd63cafc3';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=5cd63cafc3';
+import { api } from './api.js?v=446247be79';
+import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=446247be79';
+import * as F from './format.js?v=446247be79';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=446247be79';
+import { configureICT } from './chart/sessions.js?v=446247be79';
+import { settingsDialog } from './ui/dialogs.js?v=446247be79';
+import { openPalette } from './ui/palette.js?v=446247be79';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=446247be79';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };
@@ -24,7 +25,7 @@ export const host = {
   get theme() { return 'dark'; },
   saveSettings() {
     store('rt:settings', shell.settings);
-    try { localStorage.setItem('nx-last-look', JSON.stringify(shell.settings.appearance)); } catch { /* private mode */ }
+    try { localStorage.setItem(LOCAL_NAMES.lastLook, JSON.stringify(shell.settings.appearance)); } catch { /* private mode */ }
   },
   previewAppearance(a) { applyAppearance(a, undefined, { page: 'home' }); },
   applySettings() { applyAppearance(shell.settings.appearance, undefined, { page: 'home' }); shell.onRepaint(); },
@@ -139,7 +140,7 @@ export function appFrame({ current, sections = null, section = null, crumbs = []
       h('nav.rv-side-list', {}, sections.map((s) => s === '-' ? h('hr') : h(`button.rv-side-item${s.id === section ? '.on' : ''}${s.soon ? '.soon' : ''}`, { type: 'button', onclick: s.soon ? null : s.onclick, disabled: !!s.soon },
         h(`span.rv-side-ic.c-${s.tone || 'accent'}`, {}, icon(s.icon, 17)), h('span', {}, s.label), s.soon ? h('small', {}, 'Yakında') : s.count != null ? h('small.rv-count', {}, String(s.count)) : null))),
       promo || h('span'),
-      h('button.rv-side-me', { type: 'button', onclick: () => profileDrawer('profile') }, avatar({ ...p, locked: false }, 'sm'), h('span', {}, h('b', {}, p.name), h('small', {}, 'RV Next · test sürümü'))));
+      h('button.rv-side-me', { type: 'button', onclick: () => profileDrawer('profile') }, avatar({ ...p, locked: false }, 'sm'), h('span', {}, h('b', {}, p.name), h('small', {}, SITE_TAG))));
   } else side?.remove();
 
   let top = document.getElementById('rv-top');
@@ -373,17 +374,29 @@ export function profileDrawer(which = 'profile') {
     }
     sh?.setTitle('Hesap'); sh?.setLead(null);
     body.replaceChildren(
-      h('div.rv-acc', {}, h('span.rv-acc-av', {}, avatar({ ...p, locked: false }, 'lg'), h('i')), h('h3', {}, p.name), h('span', {}, '@rv-next · test sürümü')),
+      h('div.rv-acc', {}, h('span.rv-acc-av', {}, avatar({ ...p, locked: false }, 'lg'), h('i')), h('h3', {}, p.name), h('span', {}, TEST_COPY ? '@rv-next · test sürümü' : SITE_TAG)),
       group([
         { icon: 'user', title: 'Profil', sub: 'Profil değiştir, yeni profil', onclick: async () => { await flushStorage(); await api.leaveProfile(); window.location.replace('profiles.html'); } },
         { icon: 'palette', title: 'Görünüm', sub: 'Tema, renk, yazı ve grafik', onclick: () => { which = 'look'; paint(); } },
       ], null, { mono: true }),
       group([
         { icon: 'sliders', title: 'Tercihler', sub: 'Saat dilimi, hesap, işlem varsayılanları', onclick: () => { closeSheet(); settingsDialog(host); } },
-        { icon: 'home', title: 'Ana site', sub: 'r5vers.github.io', onclick: () => { window.location.href = '../home.html'; } },
+        TEST_COPY ? { icon: 'home', title: 'Ana site', sub: 'r5vers.github.io', onclick: () => { window.location.href = '../home.html'; } } : cloudRow(),
       ], null, { mono: true }),
-      group([{ icon: 'refresh', title: 'Test sürümünü sıfırla', sub: 'Ana siteden yeniden kopyalar', danger: true, onclick: () => { window.location.href = 'sifirla.html'; } }], null, { mono: true }));
+      ...(TEST_COPY ? [group([{ icon: 'refresh', title: 'Test sürümünü sıfırla', sub: 'Ana siteden yeniden kopyalar', danger: true, onclick: () => { window.location.href = 'sifirla.html'; } }], null, { mono: true })] : []));
   };
+  // the main site: the group's cloud, linked or not, and a sync now
+  let cloud = null;
+  const cloudRow = () => ({
+    icon: 'cloud', title: 'Bulut',
+    sub: !cloud ? 'Durum soruluyor…' : cloud.linked ? (cloud.error ? `Eşitlenemedi: ${cloud.error}` : `Bağlı · son eşitleme ${cloud.last_sync ? new Date(cloud.last_sync).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' }) : 'henüz'}`) : 'Bağlı değil · grup şifresiyle bağlan',
+    onclick: async () => {
+      if (!cloud?.linked) { await flushStorage(); await api.leaveProfile(); window.location.replace('profiles.html'); return; }
+      try { cloud = await api.cloudSync(); toast('Bulut eşitlendi', 'ok'); } catch (err) { cloud = { ...cloud, error: err.message }; }
+      if (which === 'profile') paint();
+    },
+  });
+  if (!TEST_COPY) api.cloudStatus().then((c) => { cloud = c; if (which === 'profile') paint(); }, () => {});
   sh = sheet({ title: which === 'look' ? 'Görünüm' : 'Hesap', cls: 'account', body, banner: true });
   paint();
   return sh;

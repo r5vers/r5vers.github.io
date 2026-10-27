@@ -1,1 +1,70 @@
-var b=Object.defineProperty;var f=(a,e)=>b(a,"name",{value:e,configurable:!0});import{parseTf as k}from"../core/timeframes.js?v=73a9f08a15";import{aggregate as z,normalize as C,parseCsv as S,tfFromSeconds as T}from"./csv.js?v=73a9f08a15";import{defaults as A}from"./instruments.js?v=73a9f08a15";import{chooseScale as h,encode as g}from"./rtc.js?v=73a9f08a15";import{mergeCols as v,readAll as x,replaceSeries as M}from"./series.js?v=73a9f08a15";import{createDataset as $,datasetJson as y,HttpError as i}from"./server.js?v=73a9f08a15";const D=300*1024*1024,U=2**31-1;function F(a){try{return new TextDecoder("utf-8",{fatal:!0}).decode(a)}catch{return new TextDecoder("windows-1254").decode(a)}}f(F,"decodeText");const I=f(a=>{const e=Float64Array.from(a).sort(),r=e.length>>1;return e.length%2?e[r]:(e[r-1]+e[r])/2},"median");function p(a){let e=0;for(const r of["o","h","l","c"])for(const s of a[r])Math.abs(s)>e&&(e=Math.abs(s));return e}f(p,"peak");export async function importCsvFile(a,e,r){if(!r)throw new i(422,"boş dosya");if(r.byteLength>D)throw new i(413,"dosya çok büyük");let s;try{s=S(F(r),{tz:e.tz||"UTC",dateOrder:e.date_order||"auto"})}catch(t){throw new i(t.status||422,t.message)}if(s.spacing<=0)throw new i(422,"zaman aralığı belirlenemedi (en az iki farklı zamanlı satır gerekli)");const c=T(s.spacing).id;let o;if(e.dataset_id!=null&&e.dataset_id!==""){if(o=await a.get("datasets",String(e.dataset_id)),!o)throw new i(404,`dataset ${e.dataset_id} not found`);if(o.base_tf!==c)throw new i(422,`dosya ${c} verisi, veri seti ${o.base_tf} - aynı zaman dilimi olmalı`)}else{const t=String(e.symbol||"").trim().toUpperCase()||"CSV",d=A(t,I(s.candles.c),s.decimals);o=await $(a,{symbol:t,name:e.name||`${t} · CSV · ${c}`,source:"csv",base_tf:c,...d})}const l=z(C(s.candles),k(o.base_tf),o.align);let m,n;if(o.bar_count){const t=await x(a,o);n=p(l)*10**t.scale<=U?t.scale:h(p(l),t.scale);let d=t.cols;if(n!==t.scale){const _=10**(t.scale-n);d={...t.cols};for(const w of["o","h","l","c"])d[w]=Int32Array.from(t.cols[w],u=>Math.round(u/_))}m=v(d,g(l,n))}else n=h(p(l),o.decimals),m=g(l,n);return o=await M(a,o,m,n),{dataset:y(o),rows:s.rows,skipped:s.skipped,repaired:s.repaired,base_tf:c,detected:s.detected}}f(importCsvFile,"importCsvFile");
+// CSV upload on the device: the server's POST /api/datasets/import, with
+// the file parsed in the browser (csv.js mirrors csv_import.py).
+import { parseTf } from '../core/timeframes.js?v=446247be79';
+import { aggregate, normalize, parseCsv, tfFromSeconds } from './csv.js?v=446247be79';
+import { defaults } from './instruments.js?v=446247be79';
+import { chooseScale, encode } from './rtc.js?v=446247be79';
+import { mergeCols, readAll, replaceSeries } from './series.js?v=446247be79';
+import { createDataset, datasetJson, HttpError } from './server.js?v=446247be79';
+
+const MAX_UPLOAD = 300 * 1024 * 1024;
+const UNIT_MAX = 2 ** 31 - 1;
+
+function decodeText(buf) {
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch { return new TextDecoder('windows-1254').decode(buf); }
+}
+
+const median = (xs) => {
+  const s = Float64Array.from(xs).sort();
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+
+function peak(cols) {
+  let p = 0;
+  for (const f of ['o', 'h', 'l', 'c']) for (const x of cols[f]) if (Math.abs(x) > p) p = Math.abs(x);
+  return p;
+}
+
+export async function importCsvFile(db, query, body) {
+  if (!body) throw new HttpError(422, 'boş dosya');
+  if (body.byteLength > MAX_UPLOAD) throw new HttpError(413, 'dosya çok büyük');
+  let parsed;
+  try {
+    parsed = parseCsv(decodeText(body), { tz: query.tz || 'UTC', dateOrder: query.date_order || 'auto' });
+  } catch (e) {
+    throw new HttpError(e.status || 422, e.message);
+  }
+  if (parsed.spacing <= 0) throw new HttpError(422, 'zaman aralığı belirlenemedi (en az iki farklı zamanlı satır gerekli)');
+  const baseTf = tfFromSeconds(parsed.spacing).id;
+  let ds;
+  if (query.dataset_id != null && query.dataset_id !== '') {
+    ds = await db.get('datasets', String(query.dataset_id));
+    if (!ds) throw new HttpError(404, `dataset ${query.dataset_id} not found`);
+    if (ds.base_tf !== baseTf) throw new HttpError(422, `dosya ${baseTf} verisi, veri seti ${ds.base_tf} - aynı zaman dilimi olmalı`);
+  } else {
+    const symbol = String(query.symbol || '').trim().toUpperCase() || 'CSV';
+    const fields = defaults(symbol, median(parsed.candles.c), parsed.decimals);
+    ds = await createDataset(db, { symbol, name: query.name || `${symbol} · CSV · ${baseTf}`, source: 'csv', base_tf: baseTf, ...fields });
+  }
+  // store.write_candles: normalized onto the base timeframe, merged, new bars win
+  const fresh = aggregate(normalize(parsed.candles), parseTf(ds.base_tf), ds.align);
+  let cols, scale;
+  if (ds.bar_count) {
+    // Series._scale_for: keep the stored scale while the new prices fit it
+    const old = await readAll(db, ds);
+    scale = peak(fresh) * 10 ** old.scale <= UNIT_MAX ? old.scale : chooseScale(peak(fresh), old.scale);
+    let stored = old.cols;
+    if (scale !== old.scale) {
+      const step = 10 ** (old.scale - scale);
+      stored = { ...old.cols };
+      for (const f of ['o', 'h', 'l', 'c']) stored[f] = Int32Array.from(old.cols[f], (x) => Math.round(x / step));
+    }
+    cols = mergeCols(stored, encode(fresh, scale));
+  } else {
+    scale = chooseScale(peak(fresh), ds.decimals);
+    cols = encode(fresh, scale);
+  }
+  ds = await replaceSeries(db, ds, cols, scale);
+  return { dataset: datasetJson(ds), rows: parsed.rows, skipped: parsed.skipped, repaired: parsed.repaired, base_tf: baseTf, detected: parsed.detected };
+}

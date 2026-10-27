@@ -1,6 +1,7 @@
 // Small DOM helpers: element builder, toasts, modals, icons.
-import '../local/boot.js?v=5cd63cafc3';
-import { escapeHtml } from '../format.js?v=5cd63cafc3';
+import '../local/boot.js?v=446247be79';
+import { LOCAL_NAMES } from '../local/site.js?v=446247be79';
+import { escapeHtml } from '../format.js?v=446247be79';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -291,13 +292,13 @@ export function download(filename, text, type = 'text/csv') {
 
 // Per-profile state (settings, look, drawings, editor code) lives on the
 // server, so it survives reloads, other browsers and private windows. A copy
-// is kept in localStorage ("rt:x" as "nx:p<id>:x": the test copy keeps its
-// own keys, apart from the main site's "rt:") as a cache and as a
+// is kept in localStorage ("rt:x" as "rt:p<id>:x" on the main site, as
+// "nx:p<id>:x" in the test copy, apart from the main site's) as a cache and as a
 // fallback when the server cannot be reached. Writes are batched; keys not yet
 // confirmed by the server are listed in localStorage too, so a write cut off
 // by closing the page (or made while offline) is sent on the next visit
 // instead of being replaced by the older server copy.
-let prefix = 'nx:';
+let prefix = LOCAL_NAMES.scope;
 let profile = null;
 let legacy = false;
 let cache = null;          // the server's values for this profile, once loaded
@@ -316,7 +317,7 @@ const dirtyKey = () => `${prefix}__unsent`;
 function localRead(key) {
   try {
     let v = localStorage.getItem(scoped(key));
-    if (v == null && legacy) v = localStorage.getItem(`nx:${key.slice(3)}`);
+    if (v == null && legacy) v = localStorage.getItem(`${LOCAL_NAMES.scope}${key.slice(3)}`);
     return v == null ? undefined : JSON.parse(v);
   } catch { return undefined; }
 }
@@ -367,7 +368,7 @@ addEventListener('visibilitychange', () => { if (document.visibilityState === 'h
 
 /** Load this profile's state from the server (call once, before reading). */
 export async function useProfileStorage(profileId, inheritLegacy = false) {
-  prefix = `nx:p${profileId}:`;
+  prefix = `${LOCAL_NAMES.scope}p${profileId}:`;
   profile = profileId;
   legacy = inheritLegacy;
   try { dirty = new Set(JSON.parse(localStorage.getItem(dirtyKey()) || '[]')); } catch { dirty = new Set(); }
@@ -384,7 +385,7 @@ export async function useProfileStorage(profileId, inheritLegacy = false) {
       const k = localStorage.key(i);
       if (k === dirtyKey()) continue;
       if (k.startsWith(prefix)) keys.add(`rt:${k.slice(prefix.length)}`);
-      else if (legacy && /^nx:(?!p\d+:)/.test(k)) keys.add(`rt:${k.slice(3)}`);
+      else if (legacy && k.startsWith(LOCAL_NAMES.scope) && !/^p\d+:/.test(k.slice(LOCAL_NAMES.scope.length))) keys.add(`rt:${k.slice(LOCAL_NAMES.scope.length)}`);
     }
   } catch { /* storage blocked */ }
   for (const k of keys) {

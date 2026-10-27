@@ -32,6 +32,9 @@ export function drawingStylePatch(d, patch) {
 }
 export const drawingOpacity = (value, fallback = 100) => Math.min(100, Math.max(0, Number.isFinite(value) ? value : fallback)) / 100;
 const TOL = 6;
+// what Shift holds: lines to 0 / 45 / 90 degrees, boxes to a square
+const LINES = new Set(['trend', 'ray', 'arrow', 'fib', 'measure']);
+const BOXES = new Set(['rect', 'ellipse']);
 
 function distToSegment(px, py, ax, ay, bx, by) {
   const dx = bx - ax, dy = by - ay;
@@ -124,14 +127,23 @@ export class DrawingManager {
     }
     this._onMove = (e) => this._move(e);
     this._onUp = (e) => this._up(e);
+    // Shift pressed or let go while a point is held: the line follows at once
+    this._onShift = (e) => {
+      if (e.key !== 'Shift' || !this._mouse || !(this.creating || (this.drag && !this.drag.external))) return;
+      this._move({ ...this._mouse, shiftKey: e.type === 'keydown', buttons: 1, preventDefault() {} });
+    };
     window.addEventListener('mousemove', this._onMove, true);
     window.addEventListener('mouseup', this._onUp, true);
+    window.addEventListener('keydown', this._onShift, true);
+    window.addEventListener('keyup', this._onShift, true);
   }
 
   /** The chart goes away (a split chart closed). */
   destroy() {
     window.removeEventListener('mousemove', this._onMove, true);
     window.removeEventListener('mouseup', this._onUp, true);
+    window.removeEventListener('keydown', this._onShift, true);
+    window.removeEventListener('keyup', this._onShift, true);
     this.tc.candles.detachPrimitive?.(this.primitive);
   }
 
@@ -230,6 +242,37 @@ export class DrawingManager {
     const i = Math.floor(l);
     const time = fine ? this.tc.logicalToTime(i) + (l - i) * this.tc.tfSeconds : this.tc.logicalToTime(l);
     return { time, price, logical: l };
+  }
+
+  /** The point a drawing's point `i` is held to with Shift, if any: the
+   *  other end of a line or a box, the previous corner of a triangle. */
+  _anchorOf(d, i) {
+    const P = d.points;
+    if (LINES.has(d.type) || BOXES.has(d.type)) return i <= 1 ? P[1 - i] : null;
+    if (d.type === 'channel') return i <= 1 ? P[1 - i] : null;
+    if (d.type === 'triangle') return P[i > 0 ? i - 1 : 1] || null;
+    return null;
+  }
+
+  /** Where point `i` goes with Shift held, as on TradingView: a line kept
+   *  level, upright or at 45 degrees from its anchor, a box kept square. */
+  _held(d, i, x, y) {
+    const a = this._anchorOf(d, i);
+    const A = a && this._px(a);
+    if (!A || A.x == null || A.y == null) return this._pointAt(x, y);
+    const dx = x - A.x, dy = y - A.y;
+    if (BOXES.has(d.type)) {
+      const s = Math.max(Math.abs(dx), Math.abs(dy));
+      return this._pointAt(A.x + (dx < 0 ? -s : s), A.y + (dy < 0 ? -s : s), false);
+    }
+    const step = Math.PI / 4, k = Math.round(Math.atan2(dy, dx) / step);
+    const ux = Math.round(Math.cos(k * step) * 1e9) / 1e9, uy = Math.round(Math.sin(k * step) * 1e9) / 1e9;
+    const t = dx * ux + dy * uy;
+    const pt = this._pointAt(A.x + ux * t, A.y + uy * t, false);
+    if (!pt) return null;
+    if (uy === 0) pt.price = a.price;   // level: the very same price
+    if (ux === 0) pt.time = a.time;     // upright: the very same bar
+    return pt;
   }
 
   _handles(d) {
@@ -355,7 +398,7 @@ export class DrawingManager {
       this._take(e);
       const c = this.creating;
       if (c.pen) { this._finishCreate(); return; }
-      const pt = this._pointAt(x, y);
+      const pt = e.shiftKey ? this._held(c.d, c.i, x, y) : this._pointAt(x, y);
       if (pt) this._setPoint(c.d, c.i, pt);
       if (!this._nextPoint(x, y)) this._finishCreate();
       return;
@@ -382,13 +425,14 @@ export class DrawingManager {
     if (hit.d.locked) return;
     const pt = this._pointAt(x, y, false);
     this.drag = {
-      d: hit.d, handle: hit.handle, start: pt,
+      d: hit.d, handle: hit.handle, start: pt, sx: x, sy: y,
       orig: JSON.parse(JSON.stringify({ points: hit.d.points, target: hit.d.target, stop: hit.d.stop })),
       moved: false,
     };
   }
 
   _move(e) {
+    this._mouse = { clientX: e.clientX, clientY: e.clientY };
     const { x, y } = this._xy(e);
     if (this.drag?.external) { this.drag.external.move?.(x, y, e); return; }
     if (this.creating) {
@@ -399,7 +443,7 @@ export class DrawingManager {
         if (pt) { c.d.points.push({ time: pt.time, price: pt.price }); c.px.push({ x, y }); c.lx = x; c.ly = y; this.redraw(); }
         return;
       }
-      const pt = this._pointAt(x, y);
+      const pt = e.shiftKey ? this._held(c.d, c.i, x, y) : this._pointAt(x, y);
       if (pt) { this._setPoint(c.d, c.i, pt); this.redraw(); }
       return;
     }
@@ -578,14 +622,14 @@ export class DrawingManager {
         d.points[1] = { time: d.points[1].time, price: pt.price };
       } else {
         const i = Number(g.handle.slice(1));
-        let price = pt.price;
-        // shift: keep a trend line horizontal
-        if (shift && d.type === 'trend') price = d.points[1 - i].price;
-        d.points[i] = { time: pt.time, price };
+        const held = shift ? this._held(d, i, x, y) : pt;
+        if (held) d.points[i] = { time: held.time, price: held.price };
       }
     } else {
-      const dl = Math.round(pt.logical - g.start.logical);
-      const dp = d.type === 'vline' ? 0 : pt.price - g.start.price;
+      // shift: the drawing slides along one axis only, the way it moves most
+      const across = shift && Math.abs(x - g.sx) >= Math.abs(y - g.sy), along = shift && !across;
+      const dl = along ? 0 : Math.round(pt.logical - g.start.logical);
+      const dp = d.type === 'vline' || across ? 0 : pt.price - g.start.price;
       const dlx = d.type === 'hline' ? 0 : dl;
       d.points = o.points.map((p) => this._shift(p, dlx, dp));
       if (o.target != null) d.target = o.target + dp;

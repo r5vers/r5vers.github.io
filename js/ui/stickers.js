@@ -1,1 +1,368 @@
-var J=Object.defineProperty;var n=(t,e)=>J(t,"name",{value:e,configurable:!0});import{h as r,icon as M,modal as Q,storage as V,store as tt}from"./dom.js?v=73a9f08a15";import{paperArt as et}from"./paper.js?v=73a9f08a15";export const STICKERS=[{id:"eye",name:"Göz",src:"/stickers/eye.svg",ratio:1893/1875},{id:"skull",name:"Kafatası",src:"/stickers/skull.png",ratio:629/658},{id:"moon",name:"Ay",src:"/stickers/moon.svg",ratio:1173/1170},{id:"burst",name:"Patlama",src:"/stickers/burst.png",ratio:464/477},{id:"star",name:"Kayan yıldız",src:"/stickers/star.svg",ratio:1956/666},{id:"cute-skull",name:"Sevimli kafatası",src:"/stickers/cute-skull.svg",ratio:1998/1770},{id:"flame",name:"Alevli kafa",src:"/stickers/flame.svg",ratio:1032/1584},{id:"tribal",name:"Tribal kafatası",src:"/stickers/tribal.svg",ratio:1308/2211},{id:"bang",name:"Ünlem",src:"/stickers/bang.svg",ratio:927/1284},{id:"king",name:"Şah",src:"/stickers/king.png",ratio:302/636,photo:!0},{id:"saturn",name:"Satürn",src:"/stickers/saturn.png",ratio:662/415,photo:!0},{id:"halftone",name:"Noktalı üçgenler",src:"/stickers/halftone.png",ratio:658/444,photo:!0}];const S=Object.fromEntries(STICKERS.map(t=>[t.id,t]));export const STICKER_COLORS={white:"#ffffff",black:"#0b0b0d"};const _="rt:stickers",D=36,T=.15,q=n(t=>STICKER_COLORS[t]||(/^#[0-9a-f]{6}$/i.test(t||"")?t:STICKER_COLORS.white),"inkOf"),C=n(t=>Number.isFinite(t)?z(t,T,1):1,"opacityOf");function X(t,e,o,s="span.sticker-art",l=null){const p=r(`${s}${t.photo?".photo":""}`,{style:{"--src":`url("${t.src}")`}});return p._st=t,t.photo&&p.append(r("img",{src:t.src,alt:"",draggable:"false"})),L(p,e,o,l),p}n(X,"artEl");const E=n(t=>({on:!!t.p,w:t.w}),"paperOf"),N=n((t,e)=>z(Math.ceil(Math.max(t,t/e.ratio)*Math.min(3,window.devicePixelRatio||1)/240)*240,480,1440),"printSize");function L(t,e,o,s=null){const l=t._st,p=s?.on&&l&&!l.photo?`${q(e)}|${N(s.w,l)}`:null;p!==t._paper&&(t._paper=p,p?et(l.src,l.ratio,q(e),N(s.w,l),l.id).then(k=>{t._paper===p&&(t.style.backgroundImage=`url("${k}")`,t.classList.add("paper"))}).catch(()=>{}):(t.classList.remove("paper"),t.style.backgroundImage="")),t.classList.contains("photo")?(t.style.setProperty("--ink",/^#/.test(e||"")?q(e):"#ffffff"),t.classList.toggle("inv",e==="white")):t.style.setProperty("--ink",q(e)),t.style.opacity=String(C(o))}n(L,"paintArt");let A=n(()=>"desk","device"),d=null,f=null,O="white";function H(){return V(_,{})||{}}n(H,"all");function b(){const t=H()[A()];return Array.isArray(t)?t.filter(e=>e&&S[e.s]):[]}n(b,"list");function B(t){const e={...H()};e[A()]=t,tt(_,e)}n(B,"save");function w(t,e){B(b().map(o=>o.k===t?{...o,...e}:o))}n(w,"update");export function mountStickers(t,e){A=e,d?.remove(),d=r("div.sticker-layer",{"aria-label":"Stickerlar"}),t.append(d);for(const s of b())d.append(Y(s));const o=f&&b().find(s=>s.k===f);(!o||o.lock&&!document.body.classList.contains("editing"))&&(f=null),f&&P(f)}n(mountStickers,"mountStickers");function v(){return d?.clientWidth||1}n(v,"widthOf");function K(t,e){const o=S[e.s];t.style.left=`${e.x*v()}px`,t.style.top=`${e.y}px`,t.style.width=`${e.w}px`,t.style.height=`${e.w/o.ratio}px`,t.style.transform=`translate(-50%, -50%) rotate(${e.r||0}deg)`,t.style.zIndex=String(e.z||1)}n(K,"place");function Y(t){const e=S[t.s],o=X(e,t.c,t.o,void 0,E(t)),s=r(`div.sticker${t.lock?".locked":""}`,{"data-k":t.k,role:"img","aria-label":`${e.name} sticker`},o,r("span.sticker-frame",{}),r("span.sticker-turn",{"data-act":"turn",title:"Döndür"}),r("span.sticker-size",{"data-act":"size",title:"Boyut"}));return K(s,t),s.addEventListener("pointerdown",l=>nt(l,s)),s}n(Y,"stickerEl");function P(t){f=t;for(const e of d.querySelectorAll(".sticker"))e.classList.toggle("on",e.dataset.k===t);W()}n(P,"pick");export function unpick(){f=null,d?.querySelectorAll(".sticker.on").forEach(t=>t.classList.remove("on")),d?.querySelector(".sticker-bar")?.remove()}n(unpick,"unpick");function W(){d.querySelector(".sticker-bar")?.remove();const t=b().find(i=>i.k===f);if(!t)return;const e=n(()=>d.querySelector(`[data-k="${t.k}"] .sticker-art`),"art"),o=n(i=>{O=i,t.c=i,w(t.k,{c:i}),L(e(),i,t.o,E(t)),c()},"setColor"),s=n((i,h)=>r("button.sb-swatch",{type:"button",title:h,"aria-label":h,"data-c":i,style:{"--sw":STICKER_COLORS[i]},onclick:n(()=>o(i),"onclick")}),"swatch"),l=/^#/.test(t.c||"")?t.c:"#9fa8ff",p=r("input",{type:"color",value:l,"aria-label":"Renk seç",oninput:n(i=>{t.p||L(e(),i.target.value,t.o),k.style.setProperty("--sw",i.target.value),k.dataset.c=i.target.value},"oninput"),onchange:n(i=>o(i.target.value),"onchange")}),k=r("label.sb-swatch.custom",{title:"Renk seç","data-c":l,style:{"--sw":l}},p),c=n(()=>{for(const i of a.querySelectorAll(".sb-swatch"))i.classList.toggle("on",i.classList.contains("custom")?/^#/.test(t.c||""):i.dataset.c===t.c)},"markSwatches"),y=r("output.sb-val",{},`%${Math.round(C(t.o)*100)}`),g=r("input.sb-range",{type:"range",min:String(T*100),max:"100",step:"1",value:String(Math.round(C(t.o)*100)),"aria-label":"Opaklık",oninput:n(i=>{const h=Number(i.target.value)/100;L(e(),t.c,h,E(t)),y.textContent=`%${i.target.value}`},"oninput"),onchange:n(i=>{t.o=Number(i.target.value)/100,w(t.k,{o:t.o})},"onchange")}),u=S[t.s].photo?null:r(`button.sb-toggle${t.p?".on":""}`,{type:"button",title:"Kağıt: yırtık kenar ve noktalı baskı (tekrar basınca düz)","aria-pressed":String(!!t.p),onclick:n(()=>{t.p=!t.p,w(t.k,{p:t.p}),L(e(),t.c,t.o,E(t)),u.classList.toggle("on",t.p),u.setAttribute("aria-pressed",String(t.p))},"onclick")},r("span.sb-knob"),"Kağıt"),a=r("div.sticker-bar",{role:"toolbar","aria-label":"Sticker"},r("div.sb-row",{},s("white","Beyaz"),s("black","Siyah"),k,r("span.sb-sep"),r("button.sb-btn",{type:"button",title:"Öne getir","aria-label":"Öne getir",onclick:n(()=>{w(t.k,{z:F()+1}),I(t.k)},"onclick")},M("up",16)),r("button.sb-btn",{type:"button",title:"Düz yap","aria-label":"Düz yap",onclick:n(()=>{w(t.k,{r:0}),I(t.k)},"onclick")},M("refresh",16)),t.lock?r("button.sb-btn.on",{type:"button",title:"Kilidi aç","aria-label":"Kilidi aç",onclick:n(()=>{w(t.k,{lock:!1}),I(t.k)},"onclick")},M("unlock",16)):r("button.sb-btn",{type:"button",title:"Kilitle: dokununca altındaki çalışır (düzenleme modunda yine düzenlenir)","aria-label":"Kilitle",onclick:n(()=>{w(t.k,{lock:!0}),unpick(),I(t.k)},"onclick")},M("lock",16)),r("button.sb-btn.danger",{type:"button",title:"Kaldır","aria-label":"Kaldır",onclick:n(()=>G(t.k),"onclick")},M("trash",16))),r("div.sb-row.sb-fade",{},r("span.sb-label",{},"Opaklık"),g,y,u));for(const i of a.querySelectorAll("button, input, label"))i.addEventListener("pointerdown",h=>h.stopPropagation());d.append(a),c(),j(a,t)}n(W,"showBar");function j(t,e){const o=S[e.s],s=(e.r||0)*Math.PI/180,l=(Math.abs(e.w*Math.sin(s))+Math.abs(e.w/o.ratio*Math.cos(s)))/2,p=t.offsetWidth/2+6,k=t.offsetHeight,c=Math.min(Math.max(e.x*v(),p),Math.max(p,v()-p)),y=e.y+l+34,g=d.getBoundingClientRect().top+y+k+8<window.innerHeight;t.style.left=`${c}px`,t.style.top=`${g?y:Math.max(0,e.y-l-56-k)}px`}n(j,"placeBar");const F=n(()=>Math.max(1,...b().map(t=>t.z||1)),"topZ");function I(t){const e=b().find(l=>l.k===t),o=d.querySelector(`[data-k="${t}"]`);if(!e){o?.remove();return}const s=Y(e);o?o.replaceWith(s):d.append(s),f===t&&P(t)}n(I,"refresh");function G(t){B(b().filter(o=>o.k!==t));const e=d.querySelector(`[data-k="${t}"]`);unpick(),e&&(e.classList.add("leaving"),setTimeout(()=>e.remove(),220))}n(G,"remove");const m=new Map;let $=null;function nt(t,e){if(t.button>0)return;t.stopPropagation();const o=e.dataset.k,s=b().find(u=>u.k===o);if(!s)return;const l=f===o;if(l||P(o),t.pointerType!=="mouse"&&!l&&!t.target.dataset.act)return;t.preventDefault(),e.setPointerCapture?.(t.pointerId),m.set(t.pointerId,{x:t.clientX,y:t.clientY});const p=d.getBoundingClientRect(),k={x:p.left+s.x*v(),y:p.top+s.y},c=t.target.dataset.act||"move";if(m.size===2){const[u,a]=[...m.values()];$={kind:"pinch",s,el:e,d0:Math.hypot(a.x-u.x,a.y-u.y),a0:Math.atan2(a.y-u.y,a.x-u.x),w0:s.w,r0:s.r||0}}else $={kind:c,s,el:e,x0:t.clientX,y0:t.clientY,sx:s.x,sy:s.y,w0:s.w,r0:s.r||0,centre:k,d0:Math.hypot(t.clientX-k.x,t.clientY-k.y)||1,a0:Math.atan2(t.clientY-k.y,t.clientX-k.x),moved:!1};e.classList.add("held"),d.querySelector(".sticker-bar")?.classList.add("quiet");const y=n(u=>{if(!m.has(u.pointerId)||!$)return;m.set(u.pointerId,{x:u.clientX,y:u.clientY});const a=$,i={...a.s};if(a.kind==="pinch"&&m.size>=2){const[h,x]=[...m.values()];i.w=U(a.w0*(Math.hypot(x.x-h.x,x.y-h.y)/(a.d0||1))),i.r=Z(a.r0+(Math.atan2(x.y-h.y,x.x-h.x)-a.a0)*180/Math.PI)}else a.kind==="move"?(i.x=z((a.sx*v()+u.clientX-a.x0)/v(),0,1),i.y=z(a.sy+u.clientY-a.y0,0,d.clientHeight)):a.kind==="size"?i.w=U(a.w0*(Math.hypot(u.clientX-a.centre.x,u.clientY-a.centre.y)/a.d0)):a.kind==="turn"&&(i.r=Z(a.r0+(Math.atan2(u.clientY-a.centre.y,u.clientX-a.centre.x)-a.a0)*180/Math.PI));a.moved=!0,a.now=i,K(a.el,i)},"onMove"),g=n(u=>{if(m.delete(u.pointerId),m.size)return;e.removeEventListener("pointermove",y),e.removeEventListener("pointerup",g),e.removeEventListener("pointercancel",g),e.classList.remove("held");const a=$;if($=null,a?.moved&&a.now){const{x:i,y:h,w:x}=a.now,R=Math.round((a.now.r||0)*10)/10;w(o,{x:i,y:h,w:x,r:R}),K(a.el,{...a.now,r:R}),a.now.p&&L(a.el.querySelector(".sticker-art"),a.now.c,a.now.o,E(a.now))}f===o&&W()},"onUp");m.size===1&&(e.addEventListener("pointermove",y),e.addEventListener("pointerup",g),e.addEventListener("pointercancel",g))}n(nt,"onDown");const z=n((t,e,o)=>Math.min(o,Math.max(e,t)),"clamp"),U=n(t=>z(t,D,Math.max(D*2,Math.min(1100,v()*1.2))),"clampW");function Z(t){const e=(t%360+540)%360-180,o=Math.round(e/90)*90;return Math.abs(e-o)<3?o:e}n(Z,"snap"),document.addEventListener("pointerdown",t=>{f&&!t.target.closest?.(".sticker.on, .sticker-bar")&&unpick()},!0),document.addEventListener("keydown",t=>{!f||t.target.closest?.("input, textarea, select, [contenteditable]")||(t.key==="Escape"&&unpick(),(t.key==="Delete"||t.key==="Backspace")&&(t.preventDefault(),G(f)))}),window.addEventListener("resize",()=>{if(!d)return;for(const o of b()){const s=d.querySelector(`[data-k="${o.k}"]`);s&&K(s,o)}const t=d.querySelector(".sticker-bar"),e=b().find(o=>o.k===f);t&&e&&j(t,e)});export function stickerSheet(){let t=O;const e=b().filter(c=>c.lock).length,o=r("div.sticker-pick"),s=n(()=>{o.replaceChildren(...STICKERS.map(c=>r("button.sp-item",{type:"button",title:c.name,"aria-label":`${c.name} ekle`,onclick:n(()=>{ot(c.id,t),k.close()},"onclick")},X(c,t,1,"span.sp-art")))),o.dataset.color=t;for(const c of l.querySelectorAll("button"))c.classList.toggle("on",c.dataset.c===t)},"paint"),l=r("div.seg.sticker-colors",{role:"group","aria-label":"Renk"},...Object.entries({white:"Beyaz",black:"Siyah"}).map(([c,y])=>r("button",{type:"button","data-c":c,onclick:n(()=>{t=c,O=c,s()},"onclick")},r("i",{style:{background:STICKER_COLORS[c]}}),y)));s();const p=r("div.sticker-sheet",{},l,o,r("p.muted.sticker-help",{},"Ekledikten sonra sürükle; köşeden büyüt, üstteki noktadan döndür. Telefonda önce dokun, sonra sürükle ya da iki parmakla büyüt ve döndür."),e?r("button.btn.small.outline",{type:"button",onclick:n(()=>{B(b().map(c=>({...c,lock:!1}))),k.close();for(const c of b())I(c.k)},"onclick")},M("lock",14),`${e} kilitli sticker’ın kilidini aç`):null),k=Q({title:"Sticker ekle",body:p})}n(stickerSheet,"stickerSheet");function ot(t,e){const o=S[t],s=A()==="phone",l=d.getBoundingClientRect(),p=s?120:170,k={k:Math.random().toString(36).slice(2,10),s:t,c:e,x:.5,y:z(window.innerHeight/2-l.top,40,Math.max(40,d.clientHeight-40)),w:o.ratio>2?p*1.5:p,r:Math.round((Math.random()*10-5)*10)/10,z:F()+1};B([...b(),k]);const c=Y(k);c.classList.add("landing"),d.append(c),setTimeout(()=>c.classList.remove("landing"),600),P(k.k)}n(ot,"add");
+// Stickers on the home screen: marks stuck anywhere on the page, as on a
+// notebook. A sticker sits where it was put (left as a share of the page's
+// width, top in pixels, so it stays by the same card), at its size and
+// angle, colour (white, black or any) and opacity. Tap or click one to pick
+// it: drag to move, the corner to resize, the knob on top to turn (two
+// fingers do both on a phone), and a small bar to recolour, fade, bring
+// forward, lock or remove it. A photo sticker (the chess king) keeps its own
+// shades: black is as it is, white turns it over, a colour tints it. Paper
+// mode prints any other mark like those photos: halftone dots on a sheet
+// with a torn edge (paper.js); off again, it is flat as before. A locked
+// sticker lets taps through to what is under it; in the home screen's edit
+// mode it can be picked, changed and unlocked again. They are kept with the
+// profile (rt:stickers), apart for phones and laptops like the layout.
+import { h, icon, modal, storage, store } from './dom.js?v=446247be79';
+import { paperArt } from './paper.js?v=446247be79';
+
+// the art files sit beside the pages (the test copy lives under /next/)
+function art(file) { return new URL(`../../stickers/${file}`, import.meta.url).href; }
+
+export const STICKERS = [
+  { id: 'eye', name: 'Göz', src: art('eye.svg'), ratio: 1893 / 1875 },
+  { id: 'skull', name: 'Kafatası', src: art('skull.png'), ratio: 629 / 658 },
+  { id: 'moon', name: 'Ay', src: art('moon.svg'), ratio: 1173 / 1170 },
+  { id: 'burst', name: 'Patlama', src: art('burst.png'), ratio: 464 / 477 },
+  { id: 'star', name: 'Kayan yıldız', src: art('star.svg'), ratio: 1956 / 666 },
+  { id: 'cute-skull', name: 'Sevimli kafatası', src: art('cute-skull.svg'), ratio: 1998 / 1770 },
+  { id: 'flame', name: 'Alevli kafa', src: art('flame.svg'), ratio: 1032 / 1584 },
+  { id: 'tribal', name: 'Tribal kafatası', src: art('tribal.svg'), ratio: 1308 / 2211 },
+  { id: 'bang', name: 'Ünlem', src: art('bang.svg'), ratio: 927 / 1284 },
+  { id: 'king', name: 'Şah', src: art('king.png'), ratio: 302 / 636, photo: true },
+  { id: 'saturn', name: 'Satürn', src: art('saturn.png'), ratio: 662 / 415, photo: true },
+  { id: 'halftone', name: 'Noktalı üçgenler', src: art('halftone.png'), ratio: 658 / 444, photo: true },
+];
+const BY_ID = Object.fromEntries(STICKERS.map((s) => [s.id, s]));
+export const STICKER_COLORS = { white: '#ffffff', black: '#0b0b0d' };
+const KEY = 'rt:stickers';
+const MIN_W = 36;
+const MIN_OPACITY = 0.15;
+const inkOf = (c) => STICKER_COLORS[c] || (/^#[0-9a-f]{6}$/i.test(c || '') ? c : STICKER_COLORS.white);
+const opacityOf = (o) => (Number.isFinite(o) ? clamp(o, MIN_OPACITY, 1) : 1);
+
+/** The mark itself: one colour through the shape, or the photo as it is
+ *  (white), turned over (black) or tinted (a colour). */
+function artEl(st, c, o, tag = 'span.sticker-art', paper = null) {
+  const art = h(`${tag}${st.photo ? '.photo' : ''}`, { style: { '--src': `url("${st.src}")` } });
+  art._st = st;
+  if (st.photo) art.append(h('img', { src: st.src, alt: '', draggable: 'false' }));
+  paintArt(art, c, o, paper);
+  return art;
+}
+const paperOf = (s) => ({ on: !!s.p, w: s.w });
+// the paper print's size: enough pixels for the sticker on this screen, in
+// steps (a resize redraws it only when it needs more)
+const printSize = (w, st) => clamp(Math.ceil((Math.max(w, w / st.ratio) * Math.min(3, window.devicePixelRatio || 1)) / 240) * 240, 480, 1440);
+/** Colour, opacity and paper mode (`paper`: { on, w }) onto a mark. The
+ *  paper print is drawn off to the side; the flat mark shows until it is
+ *  ready. */
+function paintArt(art, c, o, paper = null) {
+  const st = art._st;
+  const want = paper?.on && st && !st.photo ? `${inkOf(c)}|${printSize(paper.w, st)}` : null;
+  if (want !== art._paper) {
+    art._paper = want;
+    if (!want) {
+      art.classList.remove('paper');
+      art.style.backgroundImage = '';
+    } else {
+      paperArt(st.src, st.ratio, inkOf(c), printSize(paper.w, st), st.id).then((url) => {
+        if (art._paper !== want) return;
+        art.style.backgroundImage = `url("${url}")`;
+        art.classList.add('paper');
+      }).catch(() => {});
+    }
+  }
+  if (art.classList.contains('photo')) {
+    // the king is dark: black is the photo itself, white turns it over
+    art.style.setProperty('--ink', /^#/.test(c || '') ? inkOf(c) : '#ffffff');
+    art.classList.toggle('inv', c === 'white');
+  } else {
+    art.style.setProperty('--ink', inkOf(c));
+  }
+  art.style.opacity = String(opacityOf(o));
+}
+
+let device = () => 'desk';
+let layer = null;
+let selected = null;               // key of the picked sticker
+let lastColor = 'white';
+
+function all() { return storage(KEY, {}) || {}; }
+function list() {
+  const items = all()[device()];
+  return Array.isArray(items) ? items.filter((s) => s && BY_ID[s.s]) : [];
+}
+function save(items) { const a = { ...all() }; a[device()] = items; store(KEY, a); }
+function update(key, patch) { save(list().map((s) => (s.k === key ? { ...s, ...patch } : s))); }
+
+/** Draw the stickers into `root` (the home page's content); call after every render. */
+export function mountStickers(root, deviceOf) {
+  device = deviceOf;
+  layer?.remove();
+  layer = h('div.sticker-layer', { 'aria-label': 'Stickerlar' });
+  root.append(layer);
+  for (const s of list()) layer.append(stickerEl(s));
+  // (out of edit mode a locked sticker is not picked: it lets taps through)
+  const sel = selected && list().find((x) => x.k === selected);
+  if (!sel || (sel.lock && !document.body.classList.contains('editing'))) selected = null;
+  if (selected) pick(selected);
+}
+
+function widthOf() { return layer?.clientWidth || 1; }
+function place(el, s) {
+  const st = BY_ID[s.s];
+  el.style.left = `${s.x * widthOf()}px`;
+  el.style.top = `${s.y}px`;
+  el.style.width = `${s.w}px`;
+  el.style.height = `${s.w / st.ratio}px`;
+  el.style.transform = `translate(-50%, -50%) rotate(${s.r || 0}deg)`;
+  el.style.zIndex = String(s.z || 1);
+}
+
+function stickerEl(s) {
+  const st = BY_ID[s.s];
+  const art = artEl(st, s.c, s.o, undefined, paperOf(s));
+  const el = h(`div.sticker${s.lock ? '.locked' : ''}`, { 'data-k': s.k, role: 'img', 'aria-label': `${st.name} sticker` },
+    art,
+    h('span.sticker-frame', {}),
+    h('span.sticker-turn', { 'data-act': 'turn', title: 'Döndür' }),
+    h('span.sticker-size', { 'data-act': 'size', title: 'Boyut' }));
+  place(el, s);
+  el.addEventListener('pointerdown', (e) => onDown(e, el));
+  return el;
+}
+
+// ── picking ───────────────────────────────────────────────────────────────
+function pick(key) {
+  selected = key;
+  for (const el of layer.querySelectorAll('.sticker')) el.classList.toggle('on', el.dataset.k === key);
+  showBar();
+}
+export function unpick() {
+  selected = null;
+  layer?.querySelectorAll('.sticker.on').forEach((el) => el.classList.remove('on'));
+  layer?.querySelector('.sticker-bar')?.remove();
+}
+
+function showBar() {
+  layer.querySelector('.sticker-bar')?.remove();
+  const s = list().find((x) => x.k === selected);
+  if (!s) return;
+  const art = () => layer.querySelector(`[data-k="${s.k}"] .sticker-art`);
+  const setColor = (c) => { lastColor = c; s.c = c; update(s.k, { c }); paintArt(art(), c, s.o, paperOf(s)); markSwatches(); };
+  const swatch = (c, label) => h('button.sb-swatch', { type: 'button', title: label, 'aria-label': label, 'data-c': c, style: { '--sw': STICKER_COLORS[c] }, onclick: () => setColor(c) });
+  // any colour: the browser's own picker, the sticker follows while choosing
+  const custom = /^#/.test(s.c || '') ? s.c : '#9fa8ff';
+  const picker = h('input', { type: 'color', value: custom, 'aria-label': 'Renk seç',
+    // (a paper print is redrawn once the colour is chosen, not on every step)
+    oninput: (e) => { if (!s.p) paintArt(art(), e.target.value, s.o); customBtn.style.setProperty('--sw', e.target.value); customBtn.dataset.c = e.target.value; },
+    onchange: (e) => setColor(e.target.value) });
+  const customBtn = h('label.sb-swatch.custom', { title: 'Renk seç', 'data-c': custom, style: { '--sw': custom } }, picker);
+  const markSwatches = () => {
+    for (const b of bar.querySelectorAll('.sb-swatch')) b.classList.toggle('on', b.classList.contains('custom') ? /^#/.test(s.c || '') : b.dataset.c === s.c);
+  };
+  const pct = h('output.sb-val', {}, `%${Math.round(opacityOf(s.o) * 100)}`);
+  const fade = h('input.sb-range', { type: 'range', min: String(MIN_OPACITY * 100), max: '100', step: '1', value: String(Math.round(opacityOf(s.o) * 100)), 'aria-label': 'Opaklık',
+    oninput: (e) => { const o = Number(e.target.value) / 100; paintArt(art(), s.c, o, paperOf(s)); pct.textContent = `%${e.target.value}`; },
+    onchange: (e) => { s.o = Number(e.target.value) / 100; update(s.k, { o: s.o }); } });
+  // paper mode: the torn sheet and the dots of the photo stickers, on any mark
+  const paperBtn = BY_ID[s.s].photo ? null : h(`button.sb-toggle${s.p ? '.on' : ''}`, { type: 'button', title: 'Kağıt: yırtık kenar ve noktalı baskı (tekrar basınca düz)', 'aria-pressed': String(!!s.p),
+    onclick: () => {
+      s.p = !s.p;
+      update(s.k, { p: s.p });
+      paintArt(art(), s.c, s.o, paperOf(s));
+      paperBtn.classList.toggle('on', s.p);
+      paperBtn.setAttribute('aria-pressed', String(s.p));
+    } }, h('span.sb-knob'), 'Kağıt');
+  const bar = h('div.sticker-bar', { role: 'toolbar', 'aria-label': 'Sticker' },
+    h('div.sb-row', {},
+      swatch('white', 'Beyaz'), swatch('black', 'Siyah'), customBtn,
+      h('span.sb-sep'),
+      h('button.sb-btn', { type: 'button', title: 'Öne getir', 'aria-label': 'Öne getir', onclick: () => { update(s.k, { z: topZ() + 1 }); refresh(s.k); } }, icon('up', 16)),
+      h('button.sb-btn', { type: 'button', title: 'Düz yap', 'aria-label': 'Düz yap', onclick: () => { update(s.k, { r: 0 }); refresh(s.k); } }, icon('refresh', 16)),
+      // a locked one is picked only in the home screen's edit mode: there it can be opened again
+      s.lock
+        ? h('button.sb-btn.on', { type: 'button', title: 'Kilidi aç', 'aria-label': 'Kilidi aç', onclick: () => { update(s.k, { lock: false }); refresh(s.k); } }, icon('unlock', 16))
+        : h('button.sb-btn', { type: 'button', title: 'Kilitle: dokununca altındaki çalışır (düzenleme modunda yine düzenlenir)', 'aria-label': 'Kilitle', onclick: () => { update(s.k, { lock: true }); unpick(); refresh(s.k); } }, icon('lock', 16)),
+      h('button.sb-btn.danger', { type: 'button', title: 'Kaldır', 'aria-label': 'Kaldır', onclick: () => remove(s.k) }, icon('trash', 16))),
+    h('div.sb-row.sb-fade', {}, h('span.sb-label', {}, 'Opaklık'), fade, pct, paperBtn));
+  for (const b of bar.querySelectorAll('button, input, label')) b.addEventListener('pointerdown', (e) => e.stopPropagation());
+  layer.append(bar);
+  markSwatches();
+  placeBar(bar, s);
+}
+/** The bar goes under the sticker, clear of its corner handle; above it
+ *  (clear of the turning knob) when there is no room on screen below. */
+function placeBar(bar, s) {
+  const st = BY_ID[s.s];
+  const a = ((s.r || 0) * Math.PI) / 180;
+  const half = (Math.abs(s.w * Math.sin(a)) + Math.abs((s.w / st.ratio) * Math.cos(a))) / 2;
+  const hw = bar.offsetWidth / 2 + 6, bh = bar.offsetHeight;
+  const x = Math.min(Math.max(s.x * widthOf(), hw), Math.max(hw, widthOf() - hw));
+  const below = s.y + half + 34;
+  const roomBelow = layer.getBoundingClientRect().top + below + bh + 8 < window.innerHeight;
+  bar.style.left = `${x}px`;
+  bar.style.top = `${roomBelow ? below : Math.max(0, s.y - half - 56 - bh)}px`;
+}
+const topZ = () => Math.max(1, ...list().map((s) => s.z || 1));
+
+function refresh(key) {
+  const s = list().find((x) => x.k === key);
+  const old = layer.querySelector(`[data-k="${key}"]`);
+  if (!s) { old?.remove(); return; }
+  const fresh = stickerEl(s);
+  old ? old.replaceWith(fresh) : layer.append(fresh);
+  if (selected === key) pick(key);
+}
+
+function remove(key) {
+  save(list().filter((s) => s.k !== key));
+  const el = layer.querySelector(`[data-k="${key}"]`);
+  unpick();
+  if (!el) return;
+  el.classList.add('leaving');
+  setTimeout(() => el.remove(), 220);
+}
+
+// ── moving, sizing, turning ───────────────────────────────────────────────
+const touches = new Map();          // pointerId -> {x, y} on the picked sticker
+let gesture = null;
+
+function onDown(e, el) {
+  if (e.button > 0) return;
+  e.stopPropagation();               // not a long press on the page (edit mode)
+  const key = el.dataset.k;
+  const s = list().find((x) => x.k === key);
+  if (!s) return;
+  const wasPicked = selected === key;
+  if (!wasPicked) pick(key);
+  // on a touch screen the first tap only picks: the page still scrolls under
+  // a sticker that is not picked
+  if (e.pointerType !== 'mouse' && !wasPicked && !e.target.dataset.act) return;
+  e.preventDefault();
+  el.setPointerCapture?.(e.pointerId);
+  touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const rect = layer.getBoundingClientRect();
+  const centre = { x: rect.left + s.x * widthOf(), y: rect.top + s.y };
+  const act = e.target.dataset.act || 'move';
+  if (touches.size === 2) {
+    const [a, b] = [...touches.values()];
+    gesture = { kind: 'pinch', s, el, d0: Math.hypot(b.x - a.x, b.y - a.y), a0: Math.atan2(b.y - a.y, b.x - a.x), w0: s.w, r0: s.r || 0 };
+  } else {
+    gesture = { kind: act, s, el, x0: e.clientX, y0: e.clientY, sx: s.x, sy: s.y, w0: s.w, r0: s.r || 0, centre,
+      d0: Math.hypot(e.clientX - centre.x, e.clientY - centre.y) || 1, a0: Math.atan2(e.clientY - centre.y, e.clientX - centre.x), moved: false };
+  }
+  el.classList.add('held');
+  layer.querySelector('.sticker-bar')?.classList.add('quiet');
+  const onMove = (ev) => {
+    if (!touches.has(ev.pointerId) || !gesture) return;
+    touches.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    const g = gesture, now = { ...g.s };
+    if (g.kind === 'pinch' && touches.size >= 2) {
+      const [a, b] = [...touches.values()];
+      now.w = clampW(g.w0 * (Math.hypot(b.x - a.x, b.y - a.y) / (g.d0 || 1)));
+      now.r = snap(g.r0 + ((Math.atan2(b.y - a.y, b.x - a.x) - g.a0) * 180) / Math.PI);
+    } else if (g.kind === 'move') {
+      now.x = clamp((g.sx * widthOf() + ev.clientX - g.x0) / widthOf(), 0, 1);
+      now.y = clamp(g.sy + ev.clientY - g.y0, 0, layer.clientHeight);
+    } else if (g.kind === 'size') {
+      now.w = clampW(g.w0 * (Math.hypot(ev.clientX - g.centre.x, ev.clientY - g.centre.y) / g.d0));
+    } else if (g.kind === 'turn') {
+      now.r = snap(g.r0 + ((Math.atan2(ev.clientY - g.centre.y, ev.clientX - g.centre.x) - g.a0) * 180) / Math.PI);
+    }
+    g.moved = true;
+    g.now = now;
+    place(g.el, now);
+  };
+  const onUp = (ev) => {
+    touches.delete(ev.pointerId);
+    if (touches.size) return;        // the other finger is still down
+    el.removeEventListener('pointermove', onMove);
+    el.removeEventListener('pointerup', onUp);
+    el.removeEventListener('pointercancel', onUp);
+    el.classList.remove('held');
+    const g = gesture;
+    gesture = null;
+    if (g?.moved && g.now) {
+      const { x, y, w } = g.now;
+      const r = Math.round((g.now.r || 0) * 10) / 10;
+      update(key, { x, y, w, r });
+      place(g.el, { ...g.now, r });
+      // a paper print made bigger may need more pixels
+      if (g.now.p) paintArt(g.el.querySelector('.sticker-art'), g.now.c, g.now.o, paperOf(g.now));
+    }
+    if (selected === key) showBar();
+  };
+  if (touches.size === 1) {
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointercancel', onUp);
+  }
+}
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const clampW = (w) => clamp(w, MIN_W, Math.max(MIN_W * 2, Math.min(1100, widthOf() * 1.2)));
+// a sticker turned to within 3° of straight (or a right angle) goes straight
+function snap(r) {
+  const n = ((r % 360) + 540) % 360 - 180;
+  const near = Math.round(n / 90) * 90;
+  return Math.abs(n - near) < 3 ? near : n;
+}
+
+// a tap or click anywhere else lets the picked sticker go
+document.addEventListener('pointerdown', (e) => {
+  if (selected && !e.target.closest?.('.sticker.on, .sticker-bar')) unpick();
+}, true);
+document.addEventListener('keydown', (e) => {
+  if (!selected || e.target.closest?.('input, textarea, select, [contenteditable]')) return;
+  if (e.key === 'Escape') unpick();
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); remove(selected); }
+});
+// the left of each sticker is a share of the page's width: follow it
+window.addEventListener('resize', () => {
+  if (!layer) return;
+  for (const s of list()) { const el = layer.querySelector(`[data-k="${s.k}"]`); if (el) place(el, s); }
+  const bar = layer.querySelector('.sticker-bar'); const s = list().find((x) => x.k === selected);
+  if (bar && s) placeBar(bar, s);
+});
+
+// ── adding ────────────────────────────────────────────────────────────────
+/** The sticker sheet: pick a colour and a mark; it lands in the middle of
+ *  what is on screen. */
+export function stickerSheet() {
+  let color = lastColor;
+  const locked = list().filter((s) => s.lock).length;
+  const grid = h('div.sticker-pick');
+  const paint = () => {
+    grid.replaceChildren(...STICKERS.map((st) => h('button.sp-item', { type: 'button', title: st.name, 'aria-label': `${st.name} ekle`, onclick: () => { add(st.id, color); dlg.close(); } },
+      artEl(st, color, 1, 'span.sp-art'))));
+    grid.dataset.color = color;
+    for (const b of seg.querySelectorAll('button')) b.classList.toggle('on', b.dataset.c === color);
+  };
+  const seg = h('div.seg.sticker-colors', { role: 'group', 'aria-label': 'Renk' },
+    ...Object.entries({ white: 'Beyaz', black: 'Siyah' }).map(([c, label]) => h('button', { type: 'button', 'data-c': c, onclick: () => { color = c; lastColor = c; paint(); } },
+      h('i', { style: { background: STICKER_COLORS[c] } }), label)));
+  paint();
+  const body = h('div.sticker-sheet', {}, seg, grid,
+    h('p.muted.sticker-help', {}, 'Ekledikten sonra sürükle; köşeden büyüt, üstteki noktadan döndür. Telefonda önce dokun, sonra sürükle ya da iki parmakla büyüt ve döndür.'),
+    locked ? h('button.btn.small.outline', { type: 'button', onclick: () => { save(list().map((s) => ({ ...s, lock: false }))); dlg.close(); for (const s of list()) refresh(s.k); } },
+      icon('lock', 14), `${locked} kilitli sticker’ın kilidini aç`) : null);
+  const dlg = modal({ title: 'Sticker ekle', body });
+}
+
+function add(id, color) {
+  const st = BY_ID[id];
+  const phone = device() === 'phone';
+  const rect = layer.getBoundingClientRect();
+  const w = phone ? 120 : 170;
+  const s = {
+    k: Math.random().toString(36).slice(2, 10), s: id, c: color,
+    x: 0.5, y: clamp(window.innerHeight / 2 - rect.top, 40, Math.max(40, layer.clientHeight - 40)),
+    w: st.ratio > 2 ? w * 1.5 : w, r: Math.round((Math.random() * 10 - 5) * 10) / 10, z: topZ() + 1,
+  };
+  save([...list(), s]);
+  const el = stickerEl(s);
+  el.classList.add('landing');
+  layer.append(el);
+  setTimeout(() => el.classList.remove('landing'), 600);
+  pick(s.k);
+}

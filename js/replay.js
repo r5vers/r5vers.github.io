@@ -1,1 +1,203 @@
-var v=Object.defineProperty;var g=(T,t)=>v(T,"name",{value:t,configurable:!0});import{api as f}from"./api.js?v=73a9f08a15";import{BarBuilder as b,columnsToBars as a}from"./core/aggregate.js?v=73a9f08a15";import{parseTf as d}from"./core/timeframes.js?v=73a9f08a15";const p=3e3,o=5e3,x=1500,_=2e4,c=class c{constructor(t){this.ds=t,this.baseTf=d(t.base_tf),this.align=t.align,this.tf=null,this.cursor=null,this.builder=null,this.feed=[],this.pos=0,this.exhausted=!1,this._fetching=null,this.firstTs=t.first_ts,this.lastTs=t.last_ts,this.current=null}get bars(){return this.builder?this.builder.bars:[]}get remaining(){return this.feed.length-this.pos}get atEnd(){return this.exhausted&&this.remaining===0}async load(t,i){const e=await f.replay(this.ds.id,{tf:t,to:i,history:p,feed:o});return this.tf=d(e.tf),this.cursor=e.cursor,this.builder=new b(this.tf,this.align,a(e.bars)),this.feed=a(e.feed),this.pos=0,this.exhausted=e.feed.t.length<o,this.current=a(e.current)[0]||null,this.firstTs=e.first_ts,this.lastTs=e.last_ts,this.bars}async setTf(t){const i=await f.bars(this.ds.id,{tf:t,to:this.cursor,limit:p});return this.tf=d(i.tf),this.builder=new b(this.tf,this.align,a(i)),this.bars}async loadOlder(t=2e3){const i=this.bars[0];if(!i)return 0;const e=await f.bars(this.ds.id,{tf:this.tf.id,before:i.time,limit:t}),s=a(e);return this.builder.bars.unshift(...s),s.length}ensureFeed(){if(this.exhausted||this._fetching||this.remaining>x)return this._fetching;const t=this.feed[this.feed.length-1],i=t?t.time:this.cursor;return this._fetching=f.bars(this.ds.id,{tf:this.baseTf.id,after:i,limit:o}).then(e=>{const s=a(e);this.feed=this.feed.slice(this.pos).concat(s),this.pos=0,s.length<o&&(this.exhausted=!0),this.feedError=null,this._feedFails=0}).catch(e=>{this._feedFails=(this._feedFails||0)+1,this._feedFails>=3&&(this.feedError=e.message||"bağlantı hatası")}).finally(()=>{this._fetching=null}),this._fetching}peek(){return this.pos<this.feed.length?this.feed[this.pos]:null}_advance(t,i,e=1/0){const s=this.builder.bars;let r=s.length?s.length-1:0,n=0;const l=[];for(;n<e;){const h=this.peek();if(!h||!i(h,n))break;if(this.pos++,n++,t){const m=t.onBar({t:h.time,o:h.open,h:h.high,l:h.low,c:h.close});m.length&&l.push(...m)}this.builder.push(h),this.cursor=h.time,this.current=h}let u=0;return s.length>_&&(u=s.length-_+6e3,s.splice(0,u),r=0),this.ensureFeed(),{count:n,firstChanged:r,events:l,trimmed:u}}step(t){return this._advance(t,()=>!0,1)}stepChartBar(t){let i=null;return this._advance(t,(e,s)=>{const r=this.builder.label(e.time);return s===0&&(i=r),r===i})}async advanceTo(t,i,e){const s={count:0,firstChanged:Math.max(0,this.bars.length-1),events:[],trimmed:0};for(;;){const r=this._advance(t,l=>l.time<=i,5e4);s.count+=r.count,s.events.push(...r.events),s.trimmed+=r.trimmed,s.firstChanged=s.trimmed?0:Math.min(s.firstChanged,r.firstChanged),e?.(s);const n=this.peek();if(n&&n.time>i||!n&&this.exhausted)break;n||await(this.ensureFeed()||Promise.resolve())}return s}};g(c,"ReplayEngine");export let ReplayEngine=c;
+// Replay engine: holds the chart as it looked at the cursor and feeds the
+// following base bars one at a time into the chart builder and the broker.
+import { api } from './api.js?v=446247be79';
+import { BarBuilder, columnsToBars } from './core/aggregate.js?v=446247be79';
+import { parseTf } from './core/timeframes.js?v=446247be79';
+
+const HISTORY = 3000;
+const FEED_CHUNK = 5000;
+const FEED_LOW_WATER = 1500;
+const MAX_CHART_BARS = 20000;
+
+export class ReplayEngine {
+  constructor(ds) {
+    this.ds = ds;
+    this.baseTf = parseTf(ds.base_tf);
+    this.align = ds.align;
+    this.tf = null;
+    this.cursor = null;
+    this.builder = null;
+    this.feed = [];
+    this.pos = 0;
+    this.exhausted = false;
+    this._fetching = null;
+    this.firstTs = ds.first_ts;
+    this.lastTs = ds.last_ts;
+    this.current = null; // base bar at the cursor
+    // other timeframes of this market for split charts, fed the same base bars:
+    // tf id -> { builder, users, from } (from: first bar changed since read)
+    this.views = new Map();
+  }
+
+  get bars() { return this.builder ? this.builder.bars : []; }
+  get remaining() { return this.feed.length - this.pos; }
+  get atEnd() { return this.exhausted && this.remaining === 0; }
+
+  /** Load the market as it was at base time `to`. */
+  async load(tfId, to) {
+    const r = await api.replay(this.ds.id, { tf: tfId, to, history: HISTORY, feed: FEED_CHUNK });
+    this.tf = parseTf(r.tf);
+    this.cursor = r.cursor;
+    this.builder = new BarBuilder(this.tf, this.align, columnsToBars(r.bars));
+    this.feed = columnsToBars(r.feed);
+    this.pos = 0;
+    this.exhausted = r.feed.t.length < FEED_CHUNK;
+    this.current = columnsToBars(r.current)[0] || null;
+    this.firstTs = r.first_ts;
+    this.lastTs = r.last_ts;
+    return this.bars;
+  }
+
+  async setTf(tfId) {
+    const r = await api.bars(this.ds.id, { tf: tfId, to: this.cursor, limit: HISTORY });
+    this.tf = parseTf(r.tf);
+    this.builder = new BarBuilder(this.tf, this.align, columnsToBars(r));
+    return this.bars;
+  }
+
+  /** Another timeframe of this market, as it is at the cursor, kept up to
+   *  date with every base bar from now on (a second chart). Shared by the
+   *  charts that show it; `dropView` when one is closed. */
+  async addView(tfId) {
+    const id = parseTf(tfId).id;
+    const have = this.views.get(id);
+    if (have) { have.users++; return have; }
+    const at = this.cursor;
+    const r = await api.bars(this.ds.id, { tf: id, to: at, limit: HISTORY });
+    const raced = this.views.get(id);
+    if (raced) { raced.users++; return raced; }
+    const view = { builder: new BarBuilder(parseTf(r.tf), this.align, columnsToBars(r)), users: 1, from: Infinity };
+    // base bars that came while the history was read
+    if (this.cursor > at) {
+      const more = columnsToBars(await api.bars(this.ds.id, { tf: this.baseTf.id, start: at + 1, end: this.cursor }));
+      for (const b of more) if (b.time <= this.cursor) view.builder.push(b);
+    }
+    this.views.set(id, view);
+    return view;
+  }
+
+  dropView(tfId) {
+    const id = parseTf(tfId).id;
+    const v = this.views.get(id);
+    if (v && --v.users <= 0) this.views.delete(id);
+  }
+
+  /** Older bars of a view for scrolling back. */
+  async loadOlderView(tfId, limit = 2000) {
+    const v = this.views.get(parseTf(tfId).id);
+    const first = v?.builder.bars[0];
+    if (!first) return 0;
+    const older = columnsToBars(await api.bars(this.ds.id, { tf: v.builder.tf.id, before: first.time, limit }));
+    v.builder.bars.unshift(...older);
+    return older.length;
+  }
+
+  /** Older (closed) chart bars for scrolling back. Returns how many were added. */
+  async loadOlder(limit = 2000) {
+    const first = this.bars[0];
+    if (!first) return 0;
+    const r = await api.bars(this.ds.id, { tf: this.tf.id, before: first.time, limit });
+    const older = columnsToBars(r);
+    this.builder.bars.unshift(...older);
+    return older.length;
+  }
+
+  ensureFeed() {
+    if (this.exhausted || this._fetching || this.remaining > FEED_LOW_WATER) return this._fetching;
+    const last = this.feed[this.feed.length - 1];
+    const after = last ? last.time : this.cursor;
+    this._fetching = api.bars(this.ds.id, { tf: this.baseTf.id, after, limit: FEED_CHUNK })
+      .then((r) => {
+        const more = columnsToBars(r);
+        // drop what was already consumed to keep memory flat
+        this.feed = this.feed.slice(this.pos).concat(more);
+        this.pos = 0;
+        if (more.length < FEED_CHUNK) this.exhausted = true;
+        this.feedError = null;
+        this._feedFails = 0;
+      })
+      .catch((err) => {
+        // a few retries, then the player stops and says why (no endless loop)
+        this._feedFails = (this._feedFails || 0) + 1;
+        if (this._feedFails >= 3) this.feedError = err.message || 'bağlantı hatası';
+      })
+      .finally(() => { this._fetching = null; });
+    return this._fetching;
+  }
+
+  peek() { return this.pos < this.feed.length ? this.feed[this.pos] : null; }
+
+  /**
+   * Consume base bars while `more(bar, count)` is true (at most `max`).
+   * Calls broker.onBar for each. Returns { count, firstChanged, events, trimmed }.
+   */
+  _advance(broker, more, max = Infinity) {
+    const bars = this.builder.bars;
+    let firstChanged = bars.length ? bars.length - 1 : 0;
+    let count = 0;
+    const events = [];
+    while (count < max) {
+      const b = this.peek();
+      if (!b || !more(b, count)) break;
+      this.pos++;
+      count++;
+      if (broker) {
+        const ev = broker.onBar({ t: b.time, o: b.open, h: b.high, l: b.low, c: b.close });
+        if (ev.length) events.push(...ev);
+      }
+      this.builder.push(b);
+      for (const v of this.views.values()) {
+        const n = v.builder.bars.length;
+        v.builder.push(b);
+        v.from = Math.min(v.from, Math.max(0, n - 1));
+      }
+      this.cursor = b.time;
+      this.current = b;
+    }
+    for (const v of this.views.values()) {
+      if (v.builder.bars.length > MAX_CHART_BARS) { v.builder.bars.splice(0, v.builder.bars.length - MAX_CHART_BARS + 6000); v.from = -1; }
+    }
+    let trimmed = 0;
+    if (bars.length > MAX_CHART_BARS) {
+      // trim in big steps: each trim redraws the whole chart
+      trimmed = bars.length - MAX_CHART_BARS + 6000;
+      bars.splice(0, trimmed);
+      firstChanged = 0;
+    }
+    this.ensureFeed();
+    return { count, firstChanged, events, trimmed };
+  }
+
+  /** One base bar. */
+  step(broker) { return this._advance(broker, () => true, 1); }
+
+  /** Until the current chart bar is complete (and at least one bar). */
+  stepChartBar(broker) {
+    // finish the chart bar the first consumed base bar lands in: the forming
+    // bar if there is one, otherwise the next bar
+    let started = null;
+    return this._advance(broker, (b, n) => {
+      const lab = this.builder.label(b.time);
+      if (n === 0) started = lab;
+      return lab === started;
+    });
+  }
+
+  /** Every base bar up to and including time `t`. Awaits more feed as needed. */
+  async advanceTo(broker, t, onChunk) {
+    const total = { count: 0, firstChanged: Math.max(0, this.bars.length - 1), events: [], trimmed: 0 };
+    for (;;) {
+      const r = this._advance(broker, (b) => b.time <= t, 50000);
+      total.count += r.count;
+      total.events.push(...r.events);
+      total.trimmed += r.trimmed;
+      total.firstChanged = total.trimmed ? 0 : Math.min(total.firstChanged, r.firstChanged);
+      onChunk?.(total);
+      const next = this.peek();
+      if (next && next.time > t) break;
+      if (!next && this.exhausted) break;
+      if (!next) await (this.ensureFeed() || Promise.resolve());
+    }
+    return total;
+  }
+}

@@ -5,14 +5,15 @@
 // the actions, centred; then the apps as five equal tiles, the markets as
 // a three-by-two grid, the numbers as four equal tiles, and where you left
 // off beside your recents, in two equal halves.
-import { api } from './api.js?v=5cd63cafc3';
-import * as F from './format.js?v=5cd63cafc3';
-import { brandMark, h, icon } from './ui/dom.js?v=5cd63cafc3';
-import { SESSION_SETS } from './chart/sessions.js?v=5cd63cafc3';
-import { nyOffset } from './core/timeframes.js?v=5cd63cafc3';
-import { openPalette, wirePalette } from './ui/palette.js?v=5cd63cafc3';
-import { wireTooltips } from './ui/tooltip.js?v=5cd63cafc3';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=5cd63cafc3';
+import { api } from './api.js?v=446247be79';
+import { SITE_TAG } from './local/site.js?v=446247be79';
+import * as F from './format.js?v=446247be79';
+import { brandMark, h, icon } from './ui/dom.js?v=446247be79';
+import { SESSION_SETS } from './chart/sessions.js?v=446247be79';
+import { nyOffset } from './core/timeframes.js?v=446247be79';
+import { openPalette, wirePalette } from './ui/palette.js?v=446247be79';
+import { wireTooltips } from './ui/tooltip.js?v=446247be79';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=446247be79';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
@@ -76,7 +77,7 @@ function render() {
   dock({ left: markButton('home'), center: searchPill(items), right: { icon: 'plus', label: 'Yeni replay oturumu', onclick: () => go(chartUrl({ new: 'replay' })) } });
 }
 
-const foot = () => h('footer.hub-foot', {}, 'RV Next · test sürümü · veriler Dukascopy (geçmiş), OANDA / Binance (canlı)');
+const foot = () => h('footer.hub-foot', {}, `${SITE_TAG} · veriler Dukascopy (geçmiş), OANDA / Binance (canlı)`);
 
 // ── the apps: large cards (phone), a row of tiles (wide) ────────────────
 function appRow(wide) {

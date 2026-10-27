@@ -1,1 +1,122 @@
-var T=Object.defineProperty;var o=(e,t)=>T(e,"name",{value:t,configurable:!0});export const DATA_URL="/data/";const A=6e5;let f=null,y=0;export async function getManifest(e=null,t=!1){if(!t&&f&&Date.now()-y<6e5)return f;let a;try{a=await getBytes(`${DATA_URL}manifest.json`,{fetchFn:e,fresh:!0})}catch(n){throw Object.assign(new Error(`veri deposuna ulaşılamadı (${n.message})`),{status:502,retry:n.status!==404})}return f=JSON.parse(new TextDecoder().decode(a)),y=Date.now(),f}o(getManifest,"getManifest");let p=null;export function useFetch(e){p=e,f=null}o(useFetch,"useFetch");export const STALL_MS=25e3,sleep=o(e=>new Promise(t=>{setTimeout(t,e)?.unref?.()}),"sleep");export function getBytes(e,{fetchFn:t=null,fresh:a=!1,onProgress:n=null}={}){return t||(t=p),t||typeof XMLHttpRequest>"u"?(t||fetch)(e,a?{cache:"no-cache"}:void 0).then(s=>{if(!s.ok)throw Object.assign(new Error(`HTTP ${s.status}`),{status:s.status});return s.arrayBuffer()}):new Promise((s,i)=>{const r=new XMLHttpRequest;let u=Date.now(),w=!1;const c=o((l,g)=>{w||(w=!0,clearInterval(b),l(g))},"end"),b=setInterval(()=>{Date.now()-u>STALL_MS&&(c(i,Object.assign(new Error("bağlantı durdu"),{retry:!0})),r.abort())},2e3);r.open("GET",e),r.responseType="arraybuffer",a&&r.setRequestHeader("Cache-Control","no-cache"),r.onprogress=l=>{u=Date.now(),n?.(l.loaded)},r.onload=()=>r.status>=200&&r.status<300?c(s,r.response):c(i,Object.assign(new Error(`HTTP ${r.status}`),{status:r.status,retry:r.status>=500})),r.onerror=()=>c(i,Object.assign(new Error("bağlantı koptu"),{retry:!0})),r.onabort=()=>c(i,Object.assign(new Error("bağlantı durdu"),{retry:!0})),r.send()})}o(getBytes,"getBytes");let d=null;export async function gunzip(e){d||(d=await import("../../vendor/fflate.js?v=73a9f08a15"));const t=d.gunzipSync(new Uint8Array(e));return t.byteOffset===0&&t.byteLength===t.buffer.byteLength?t.buffer:t.buffer.slice(t.byteOffset,t.byteOffset+t.byteLength)}o(gunzip,"gunzip");export async function sha256(e){const t=await crypto.subtle.digest("SHA-256",e);return[...new Uint8Array(t)].map(a=>a.toString(16).padStart(2,"0")).join("")}o(sha256,"sha256");async function h(e,t,a=4){for(let n=1;;n++){try{return await getBytes(e,t)}catch(s){if(s.status===404||n>=a)throw Object.assign(s,{message:`indirilemedi (${s.message})`})}await sleep(1500*n)}}o(h,"fetchGz");export async function fetchFile(e,t,a=4){return gunzip(await h(e,t,a))}o(fetchFile,"fetchFile");const m="rv-data-1";export async function fetchFileCached(e,t,a={}){let n=null;try{typeof caches<"u"&&(n=await within(caches.open(m),5e3,""))}catch{n=null}if(n)try{const r=await within(n.match(e),5e3,"");if(r){const u=await gunzip(await r.arrayBuffer());if(!t||await sha256(u)===t)return u;n.delete(e).catch(()=>{})}}catch{}const s=await h(e,a),i=await gunzip(s);return n&&within(n.put(e,new Response(s)),3e4,"").catch(()=>{}),i}o(fetchFileCached,"fetchFileCached");export function within(e,t,a){let n;return Promise.race([e,new Promise((s,i)=>{n=setTimeout(()=>i(Object.assign(new Error(a),{retry:!0})),t),n?.unref?.()})]).finally(()=>clearTimeout(n))}o(within,"within");
+// The site's data folder over the network: the manifest and the gzip files
+// of the packs (tools/publish_data.py, tools/publish_agg.mjs), for the
+// downloader (packs.js) and for reading packs straight from the site
+// (series.js, StreamRows).
+
+// next to the site itself (GitHub Pages: r5vers.github.io/data/); same
+// address, so no cross-site rules apply
+export const DATA_URL = '/data/';
+const MANIFEST_TTL = 10 * 60 * 1000;
+
+let manifest = null, manifestAt = 0;
+export async function getManifest(fetchFn = null, force = false) {
+  if (!force && manifest && Date.now() - manifestAt < MANIFEST_TTL) return manifest;
+  let buf;
+  try { buf = await getBytes(`${DATA_URL}manifest.json`, { fetchFn, fresh: true }); } catch (e) {
+    throw Object.assign(new Error(`veri deposuna ulaşılamadı (${e.message})`), { status: 502, retry: e.status !== 404 });
+  }
+  manifest = JSON.parse(new TextDecoder().decode(buf));
+  manifestAt = Date.now();
+  return manifest;
+}
+
+let defaultFetch = null;
+/** Tests: answer every request of this module with `fn` (fetch's signature). */
+export function useFetch(fn) { defaultFetch = fn; manifest = null; }
+
+export const STALL_MS = 25_000;
+export const sleep = (ms) => new Promise((r) => { const t = setTimeout(r, ms); t?.unref?.(); });
+
+/** The bytes at `url`. In the browser over XMLHttpRequest, not fetch's
+ *  streams: Safari 26 can hold back the last piece of a streamed body until
+ *  more arrives (WebKit bug 322545), and for a file that piece never comes,
+ *  so the download sat at 0%. XHR also says how far it got, and a transfer
+ *  that goes quiet for STALL_MS (a phone that slept, a lost network) is
+ *  dropped, to be tried again. `fetchFn` (tests) takes fetch's place. */
+export function getBytes(url, { fetchFn = null, fresh = false, onProgress = null } = {}) {
+  fetchFn ||= defaultFetch;
+  if (fetchFn || typeof XMLHttpRequest === 'undefined') {
+    return (fetchFn || fetch)(url, fresh ? { cache: 'no-cache' } : undefined).then((r) => {
+      if (!r.ok) throw Object.assign(new Error(`HTTP ${r.status}`), { status: r.status });
+      return r.arrayBuffer();
+    });
+  }
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    let last = Date.now(), over = false;
+    const end = (fn, v) => { if (over) return; over = true; clearInterval(watch); fn(v); };
+    const watch = setInterval(() => {
+      if (Date.now() - last > STALL_MS) { end(reject, Object.assign(new Error('bağlantı durdu'), { retry: true })); x.abort(); }
+    }, 2000);
+    x.open('GET', url);
+    x.responseType = 'arraybuffer';
+    if (fresh) x.setRequestHeader('Cache-Control', 'no-cache');
+    x.onprogress = (e) => { last = Date.now(); onProgress?.(e.loaded); };
+    x.onload = () => (x.status >= 200 && x.status < 300 ? end(resolve, x.response) : end(reject, Object.assign(new Error(`HTTP ${x.status}`), { status: x.status, retry: x.status >= 500 })));
+    x.onerror = () => end(reject, Object.assign(new Error('bağlantı koptu'), { retry: true }));
+    x.onabort = () => end(reject, Object.assign(new Error('bağlantı durdu'), { retry: true }));
+    x.send();
+  });
+}
+
+/** gzip, unpacked in JavaScript (fflate): the same on every browser, with no
+ *  stream in between that a browser could stall. */
+let fflate = null;
+export async function gunzip(buf) {
+  fflate ||= await import('../../vendor/fflate.js?v=446247be79');
+  const out = fflate.gunzipSync(new Uint8Array(buf));
+  return out.byteOffset === 0 && out.byteLength === out.buffer.byteLength ? out.buffer : out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
+}
+
+export async function sha256(buf) {
+  const d = await crypto.subtle.digest('SHA-256', buf);
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** One data file, as sent (gzip), tried again after a dropped or stalled
+ *  connection; a missing file is not tried again. */
+async function fetchGz(url, opts, tries = 4) {
+  for (let i = 1; ; i++) {
+    try {
+      return await getBytes(url, opts);
+    } catch (e) {
+      if (e.status === 404 || i >= tries) throw Object.assign(e, { message: `indirilemedi (${e.message})` });
+    }
+    await sleep(1500 * i);
+  }
+}
+
+/** One data file, unpacked. */
+export async function fetchFile(url, opts, tries = 4) {
+  return gunzip(await fetchGz(url, opts, tries));
+}
+
+/** One data file, unpacked, kept in the browser's file cache (Cache API)
+ *  for the next visit: light mode's store of candles. A kept copy that no
+ *  longer matches `sha` (the year was updated) is fetched again. */
+const DATA_CACHE = 'rv-data-1';
+export async function fetchFileCached(url, sha, opts = {}) {
+  let cache = null;
+  try { if (typeof caches !== 'undefined') cache = await within(caches.open(DATA_CACHE), 5000, ''); } catch { cache = null; }
+  if (cache) {
+    try {
+      const hit = await within(cache.match(url), 5000, '');
+      if (hit) {
+        const raw = await gunzip(await hit.arrayBuffer());
+        if (!sha || (await sha256(raw)) === sha) return raw;
+        cache.delete(url).catch(() => {});
+      }
+    } catch { /* a cache that does not answer: the network */ }
+  }
+  const gz = await fetchGz(url, opts);
+  const raw = await gunzip(gz);
+  if (cache) within(cache.put(url, new Response(gz)), 30_000, '').catch(() => {});
+  return raw;
+}
+
+/** `p`, or an error once `ms` pass without it (storage that stopped answering). */
+export function within(p, ms, message) {
+  let t;
+  return Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(Object.assign(new Error(message), { retry: true })), ms); t?.unref?.(); })]).finally(() => clearTimeout(t));
+}
+

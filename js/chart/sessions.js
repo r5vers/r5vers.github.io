@@ -1,1 +1,132 @@
-var I=Object.defineProperty;var s=(t,o)=>I(t,"name",{value:o,configurable:!0});import{nyOffset as V}from"../core/timeframes.js?v=73a9f08a15";const r=s((t,o=0)=>t*60+o,"m");export const SESSION_SETS=[{name:"Seanslar",zones:[{name:"ASIA",short:"AS",from:r(19),to:r(4),color:"#bf5af2"},{name:"LONDON",short:"LDN",from:r(3),to:r(12),color:"#0a84ff"},{name:"NEW YORK",short:"NY",from:r(8),to:r(17),color:"#ff9f0a"}]},{name:"ICT kill zone",zones:[{name:"ASIA",short:"AS",from:r(20),to:r(0),color:"#bf5af2"},{name:"LONDON",short:"LDN",from:r(2),to:r(5),color:"#0a84ff"},{name:"NY AM",short:"NY",from:r(7),to:r(10),color:"#ff9f0a"},{name:"LONDON CLOSE",short:"LC",from:r(10),to:r(12),color:"#30d158"},{name:"NY PM",short:"PM",from:r(13,30),to:r(16),color:"#ff375f"}]}];export function configureICT(t){if(t.ictPresetVersion===1)return!1;t.ictPreviousSettings||(t.ictPreviousSettings={tz:t.tz||"UTC",indicators:structuredClone(t.indicators||[])}),t.tz="America/New_York";const o=Array.isArray(t.indicators)?t.indicators:[],e=o.find(a=>a.type==="sessions"),n={...e||{id:"ict-default",type:"sessions"},params:{...e?.params||{},mode:1,fill:6,labels:1,zones1:SESSION_SETS[1].zones.map(a=>({...a,on:!0}))}};return t.indicators=[...o.filter(a=>a.type!=="sessions"),n],t.ictPresetVersion=1,!0}s(configureICT,"configureICT");export function zonesFor(t){const o=Math.max(0,Math.min(SESSION_SETS.length-1,Math.round(t?.mode||0))),e=t?.[`zones${o}`];return(Array.isArray(e)&&e.length?e:SESSION_SETS[o].zones).filter(n=>n.on!==!1&&/^#[0-9a-f]{6}$/i.test(n.color||""))}s(zonesFor,"zonesFor");const Y=s((t,o)=>o.from<o.to?t>=o.from&&t<o.to:t>=o.from||t<o.to,"inside");function S(t,o){const e=parseInt(t.slice(1),16);return`rgba(${e>>16}, ${e>>8&255}, ${e&255}, ${o})`}s(S,"rgba");const M=class M{constructor(o,e){this.tc=o,this.params=e;const n={draw:s(()=>{},"draw"),drawBackground:s(a=>a.useMediaCoordinateSpace(h=>this._draw(h.context,h.mediaSize)),"drawBackground")};this._views=[{zOrder:s(()=>"normal","zOrder"),renderer:s(()=>n,"renderer")}]}attached({requestUpdate:o}){this.requestUpdate=o}detached(){}updateAllViews(){}paneViews(){return this._views}_draw(o,e){const n=this.tc;if(!n.tf||n.tf.kind!=="intraday"||n.tf.seconds>3600)return;const a=n.chart.timeScale(),h=a.getVisibleLogicalRange(),d=n.bars;if(!h||!d.length)return;const w=zonesFor(this.params),O=Number.isFinite(this.params.fill)?Math.max(0,Math.min(.4,this.params.fill/100)):.075,C=this.params.labels!==0,y=a.options().barSpacing,T=Math.max(0,Math.floor(h.from)-1),N=Math.min(d.length-1,Math.ceil(h.to)+1),$=n.theme==="light",b=getComputedStyle(document.documentElement).getPropertyValue("--display").trim()||"sans-serif",L=Math.max(n.tf.seconds*3,3*3600);w.forEach(c=>{let m=null;const p=s(i=>{const f=a.logicalToCoordinate(m)-y/2,l=a.logicalToCoordinate(i)+y/2-f;if(!(l>0)||(o.fillStyle=S(c.color,O),o.fillRect(f,0,l,e.height),o.fillStyle=S(c.color,.55),o.fillRect(f,0,l,2),!C||!c.name))return;o.save(),o.font=`700 16px ${b}`;let u=c.name;o.measureText(u).width>l-10&&(u=c.short||c.name.slice(0,3));const E=o.measureText(u).width,A=Math.min(16,16*((l-10)/E));if(A<8){o.restore();return}o.beginPath(),o.rect(f,0,l,e.height),o.clip(),o.font=`700 ${A.toFixed(1)}px ${b}`,o.textAlign="center",o.textBaseline="bottom",o.fillStyle=S(c.color,$?.5:.42),o.fillText(u,f+l/2,Math.round(e.height*.85)-6),o.restore()},"flush");for(let i=T;i<=N;i++){const f=d[i].time,g=Math.floor(((f+V(f))%86400+86400)%86400/60),l=Y(g,c);l&&m!==null&&i>0&&f-d[i-1].time>L&&(p(i-1),m=null),l&&m===null&&(m=i),!l&&m!==null&&(p(i-1),m=null)}m!==null&&p(N)})}};s(M,"SessionsPrimitive");export let SessionsPrimitive=M;
+// Session / ICT kill-zone bands, defined in New York time (DST aware). Each
+// band is tinted in its colour, has a thin line along the top and its name
+// written faintly inside it, so the zone is readable at a glance.
+import { nyOffset } from '../core/timeframes.js?v=446247be79';
+
+const m = (hh, mm = 0) => hh * 60 + mm;
+
+export const SESSION_SETS = [
+  {
+    name: 'Seanslar',
+    zones: [
+      { name: 'ASIA', short: 'AS', from: m(19), to: m(4), color: '#bf5af2' },
+      { name: 'LONDON', short: 'LDN', from: m(3), to: m(12), color: '#0a84ff' },
+      { name: 'NEW YORK', short: 'NY', from: m(8), to: m(17), color: '#ff9f0a' },
+    ],
+  },
+  {
+    // ICT kill zones (New York local time)
+    name: 'ICT kill zone',
+    zones: [
+      { name: 'ASIA', short: 'AS', from: m(20), to: m(0), color: '#bf5af2' },
+      { name: 'LONDON', short: 'LDN', from: m(2), to: m(5), color: '#0a84ff' },
+      { name: 'NY AM', short: 'NY', from: m(7), to: m(10), color: '#ff9f0a' },
+      { name: 'LONDON CLOSE', short: 'LC', from: m(10), to: m(12), color: '#30d158' },
+      { name: 'NY PM', short: 'PM', from: m(13, 30), to: m(16), color: '#ff375f' },
+    ],
+  },
+];
+
+// A one-time profile setup; later user changes remain authoritative.
+export function configureICT(settings) {
+  if (settings.ictPresetVersion === 1) return false;
+  settings.ictPreviousSettings ||= { tz: settings.tz || 'UTC', indicators: structuredClone(settings.indicators || []) };
+  settings.tz = 'America/New_York';
+  const list = Array.isArray(settings.indicators) ? settings.indicators : [];
+  const existing = list.find(i => i.type === 'sessions');
+  const indicator = { ...(existing || { id: 'ict-default', type: 'sessions' }), params: {
+    ...(existing?.params || {}), mode: 1, fill: 6, labels: 1,
+    zones1: SESSION_SETS[1].zones.map(z => ({ ...z, on: true })),
+  } };
+  settings.indicators = [...list.filter(i => i.type !== 'sessions'), indicator];
+  settings.ictPresetVersion = 1;
+  return true;
+}
+
+/** The zones drawn for these params: the user's own list for the mode, else the defaults. */
+export function zonesFor(params) {
+  const mode = Math.max(0, Math.min(SESSION_SETS.length - 1, Math.round(params?.mode || 0)));
+  const own = params?.[`zones${mode}`];
+  return (Array.isArray(own) && own.length ? own : SESSION_SETS[mode].zones).filter((z) => z.on !== false && /^#[0-9a-f]{6}$/i.test(z.color || ''));
+}
+
+const inside = (min, z) => (z.from < z.to ? min >= z.from && min < z.to : min >= z.from || min < z.to);
+
+function rgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
+export class SessionsPrimitive {
+  constructor(tc, params) {
+    this.tc = tc;
+    this.params = params;
+    // drawBackground paints under the candles
+    const renderer = { draw: () => {}, drawBackground: (target) => target.useMediaCoordinateSpace((s) => this._draw(s.context, s.mediaSize)) };
+    this._views = [{ zOrder: () => 'normal', renderer: () => renderer }];
+  }
+
+  attached({ requestUpdate }) { this.requestUpdate = requestUpdate; }
+  detached() {}
+  updateAllViews() {}
+  paneViews() { return this._views; }
+
+  _draw(ctx, size) {
+    const tc = this.tc;
+    if (!tc.tf || tc.tf.kind !== 'intraday' || tc.tf.seconds > 3600) return;
+    const ts = tc.chart.timeScale();
+    const range = ts.getVisibleLogicalRange();
+    const bars = tc.bars;
+    if (!range || !bars.length) return;
+    const zones = zonesFor(this.params);
+    const fill = Number.isFinite(this.params.fill) ? Math.max(0, Math.min(0.4, this.params.fill / 100)) : 0.075;
+    const labels = this.params.labels !== 0;
+    const spacing = ts.options().barSpacing;
+    const from = Math.max(0, Math.floor(range.from) - 1), to = Math.min(bars.length - 1, Math.ceil(range.to) + 1);
+    const light = tc.theme === 'light';
+    const family = getComputedStyle(document.documentElement).getPropertyValue('--display').trim() || 'sans-serif';
+    // a weekend or data gap ends a band even if both sides are in the zone
+    const maxGap = Math.max(tc.tf.seconds * 3, 3 * 3600);
+    zones.forEach((z) => {
+      let start = null;
+      const flush = (end) => {
+        const x0 = ts.logicalToCoordinate(start) - spacing / 2;
+        const x1 = ts.logicalToCoordinate(end) + spacing / 2;
+        const w = x1 - x0;
+        if (!(w > 0)) return;
+        ctx.fillStyle = rgba(z.color, fill);
+        ctx.fillRect(x0, 0, w, size.height);
+        ctx.fillStyle = rgba(z.color, 0.55);
+        ctx.fillRect(x0, 0, w, 2);
+        // the zone's name, faint, just above the volume bars (the legend
+        // sits at the top); the short name when the band is narrow
+        if (!labels || !z.name) return;
+        ctx.save();
+        ctx.font = `700 16px ${family}`;
+        let label = z.name;
+        if (ctx.measureText(label).width > w - 10) label = z.short || z.name.slice(0, 3);
+        const full = ctx.measureText(label).width;
+        const fontSize = Math.min(16, 16 * ((w - 10) / full));
+        if (fontSize < 8) { ctx.restore(); return; }
+        ctx.beginPath();
+        ctx.rect(x0, 0, w, size.height);
+        ctx.clip();
+        ctx.font = `700 ${fontSize.toFixed(1)}px ${family}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle = rgba(z.color, light ? 0.5 : 0.42);
+        ctx.fillText(label, x0 + w / 2, Math.round(size.height * 0.85) - 6);
+        ctx.restore();
+      };
+      for (let i = from; i <= to; i++) {
+        const t = bars[i].time;
+        const min = Math.floor((((t + nyOffset(t)) % 86400) + 86400) % 86400 / 60);
+        const hit = inside(min, z);
+        if (hit && start !== null && i > 0 && t - bars[i - 1].time > maxGap) { flush(i - 1); start = null; }
+        if (hit && start === null) start = i;
+        if (!hit && start !== null) { flush(i - 1); start = null; }
+      }
+      if (start !== null) flush(to);
+    });
+  }
+}

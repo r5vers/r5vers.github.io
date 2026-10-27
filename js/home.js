@@ -1,1 +1,778 @@
-var ve=Object.defineProperty;var o=(n,e)=>ve(n,"name",{value:e,configurable:!0});import{EXTRA_WIDGETS as O,extraWidget as Se,widgetSettings as oe,refreshWidgetClocks as $e}from"./ui/homewidgets.js?v=73a9f08a15";import{api as B}from"./api.js?v=73a9f08a15";import*as y from"./format.js?v=73a9f08a15";import{avatar as re,brandMark as Ae,confirmBox as Ee,flushStorage as F,h as t,icon as p,sparkline as Y,storage as U,store as Z,toast as H,useProfileStorage as De,wirePointerLight as Le}from"./ui/dom.js?v=73a9f08a15";import{SESSION_SETS as Te,configureICT as Pe}from"./chart/sessions.js?v=73a9f08a15";import{nyOffset as Be}from"./core/timeframes.js?v=73a9f08a15";import{settingsDialog as K}from"./ui/dialogs.js?v=73a9f08a15";import{openPalette as ie,wirePalette as ze}from"./ui/palette.js?v=73a9f08a15";import{wireTooltips as Me}from"./ui/tooltip.js?v=73a9f08a15";import{BACKGROUNDS as Ce,DEFAULT_APPEARANCE as Ie,PRESETS as Oe,applyAppearance as V,metalPicker as Ke,normalizeAppearance as Re,paintLastLook as Ne,revealPage as se,rimControls as xe,titleControls as Ue}from"./ui/look.js?v=73a9f08a15";import{modal as le}from"./ui/dom.js?v=73a9f08a15";import{mountStickers as Ge,stickerSheet as J}from"./ui/stickers.js?v=73a9f08a15";const ce={EURUSD:"Euro / Dolar",NAS100:"NASDAQ 100",XAUUSD:"Altın / Dolar",GBPUSD:"Sterlin / Dolar",USDCAD:"Dolar / Kanada doları",SPX500:"S&P 500",USATECHIDXUSD:"NASDAQ 100",USA500IDXUSD:"S&P 500"},de=Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC",d={me:null,datasets:[],sessions:[],filter:"all",sort:"recent",markets:new Map,more:{tests:!1,replays:!1}},_e={tests:6,replays:5};let w={};const D={mode:"browse",get settings(){return w},get theme(){return document.documentElement.dataset.theme||"dark"},saveSettings(){Z("rt:settings",w);try{localStorage.setItem("rt-last-look",JSON.stringify(w.appearance))}catch{}},previewAppearance(n){V(n,void 0,{page:"home"})},applySettings(){V(w.appearance,void 0,{page:"home"}),g()},onApiChanged(){}},M=o(()=>w.tz||de,"tz"),G=o(n=>n?.currency||"USD","ccy"),me=o(n=>n==="inf"?"∞":y.num(n,2),"pf");function je(){const n=Number(new Intl.DateTimeFormat("tr-TR",{hour:"numeric",hourCycle:"h23",timeZone:M()}).format(new Date));return n<5?"İyi geceler":n<12?"Günaydın":n<18?"İyi günler":"İyi akşamlar"}o(je,"greeting");const We=o((n={})=>{const e=new URLSearchParams(Object.entries(n).filter(([,a])=>a!=null&&a!==""));return`/chart.html${e.toString()?`?${e}`:""}`},"chartUrl"),k=o(async(n={view:"chart"})=>{document.body.classList.add("leaving"),await Promise.all([F(),new Promise(e=>setTimeout(e,160))]),window.location.href=We(n)},"go");window.addEventListener("pageshow",()=>document.body.classList.remove("leaving"));async function Fe(){Ne("home"),Le();let n;try{n=await B.me()}catch(s){se(),H(`Sunucuya ulaşılamadı: ${s.message}`,"err",8e3);return}if(!n.profile){window.location.replace("/profiles.html");return}d.me=n,await De(n.profile.id,n.first),w=U("rt:settings",{})||{},w.appearance=Re(w.appearance||Ie),Pe(w)&&D.saveSettings(),w.tz||(w.tz=de),w.volume??(w.volume=!0),w.account={balance:1e4,spreadPips:.8,commission:0,sameBar:"path",...w.account||{}},V(w.appearance,void 0,{page:"home"}),se(),Ye(),g(),Je(document.getElementById("home")),document.getElementById("home").addEventListener("widget-config",s=>oe(s.detail,g)),document.getElementById("home").addEventListener("widget-refresh",g),setInterval(()=>$e(),1e4),pe.addEventListener?.("change",()=>g()),window.addEventListener("keydown",s=>{s.key==="Escape"&&z&&!document.querySelector(".modal-back")&&j(!1)}),ze(ee,{typeToSearch:!0}),setInterval(()=>document.querySelector(".sessions-now")?.replaceWith(ye()),3e4),Me();const[e,a]=await Promise.all([B.datasets().catch(()=>[]),B.sessions().catch(()=>[])]);d.datasets=e,d.sessions=a,d.loaded=!0;const r=document.getElementById("home");r.classList.add("intro"),g(),setTimeout(()=>r.classList.remove("intro"),1400),lt(),window.addEventListener("rv-synced",async s=>{const i=new Set(s.detail.changed.map(m=>m.kind));if(i.has("kv")||i.has("profile")){await F?.(),window.location.reload();return}d.sessions=await B.sessions().catch(()=>d.sessions),g(),H("Diğer cihazdaki değişiklikler geldi","ok")})}o(Fe,"boot");function Ye(){const n=d.me.profile;document.getElementById("brand-tile").replaceChildren(Ae(26));const e=document.getElementById("home-profile");e.replaceChildren(re({...n,locked:!1},"sm"),t("span.pname",{},n.name)),e.onclick=()=>He(e),document.getElementById("home-look").onclick=()=>K(D,{section:"look"}),document.getElementById("home-search").onclick=()=>ie(ee),document.getElementById("home-search").replaceChildren(p("search",16),t("span.lbl",{},"Ara"),t("kbd",{},"Ctrl K")),document.getElementById("home-look").replaceChildren(p("palette",18)),document.getElementById("home-chart").replaceChildren(p("chart",16),t("span.lbl",{},"Grafiği aç")),document.getElementById("home-chart").onclick=()=>k(),document.getElementById("home-chart").setAttribute("aria-label","Grafiği aç");const a=t("button.btn.icon",{id:"home-edit",type:"button",title:"Ana ekranı düzenle","aria-label":"Ana ekranı düzenle",onclick:o(()=>j(!0),"onclick")},p("edit",17));document.getElementById("home-look").before(a),document.body.append(t("div.edit-bar",{role:"toolbar","aria-label":"Düzenleme"},t("button.edit-pill",{type:"button",title:"Özelleştir","aria-label":"Özelleştir",onclick:tt},p("brush",18)),t("button.edit-pill",{id:"layout-undo",type:"button",onclick:Ve},"Geri al"),t("button.edit-pill",{type:"button",title:"Bitti","aria-label":"Bitti",onclick:o(()=>j(!1),"onclick")},p("check",20))),t("div.edit-add",{},t("button.edit-pill",{type:"button",onclick:et},p("plus",16),"Widget ekle"),t("button.edit-pill",{type:"button",onclick:J},p("sticker",16),"Sticker ekle")),t("nav.home-dock",{id:"home-dock","aria-label":"Kısayollar",hidden:!0}))}o(Ye,"renderShell");function ee(){const n=[],e=o((a,r,s,i={})=>n.push({group:a,label:r,run:s,...i}),"add");e("Komutlar","Grafik",()=>k(),{icon:"chart"}),e("Komutlar","Replay başlat",()=>k({new:"replay"}),{icon:"replay",keys:"yeni oturum"}),e("Komutlar","Strateji testi",()=>k({tab:"strategy"}),{icon:"flask",keys:"backtest"}),e("Komutlar","Veri paketleri",()=>k({tab:"data"}),{icon:"data"}),e("Komutlar","Görünüm",()=>K(D,{section:"look"}),{icon:"palette",keys:"tema renk font"}),e("Komutlar","Sticker ekle",()=>J(),{icon:"sticker",keys:"çıkartma etiket"}),e("Komutlar","Ayarlar",()=>K(D),{icon:"sliders"});for(const a of q())e("Piyasalar",a.symbol,()=>k({ds:a.id}),{sub:ce[a.symbol]||a.name,icon:"chart"});for(const a of d.sessions.filter(r=>r.kind!=="backtest").slice(0,12))e("Replay oturumları",a.name,()=>k({session:a.id}),{sub:X(a.updated_at),icon:"replay"});for(const a of d.sessions.filter(r=>r.kind==="backtest").slice(0,12))e("Strateji testleri",a.summary?.strategy||a.name,()=>k({backtest:a.id}),{sub:`${a.summary?.symbol||""} ${a.summary?.tf||""} · ${y.pct(a.summary?.returnPct,1)}`,icon:"flask"});for(const a of Oe)e("Tema",a.name,()=>{Object.assign(w.appearance,{preset:a.id,bg:a.bg,accent:a.accent,up:a.up,down:a.down,font:a.font}),D.saveSettings(),D.applySettings()},{sub:"hazır görünüm",icon:"palette"});return n}o(ee,"paletteItems");let T=null;function He(n){if(T){T.remove(),T=null;return}const e=d.me.profile;T=t("div.popover.glass-pop",{role:"menu"},t("div.who",{},re({...e,locked:!1},"md"),t("div",{},t("b",{},e.name),t("span.muted",{style:{fontSize:"12px"}},"Oturumlar, testler ve görünüm bu profile ait"))),t("button.item",{onclick:o(async()=>{await F(),await B.leaveProfile(),window.location.replace("/profiles.html")},"onclick")},p("swap",16),t("span.t.plain",{},"Profil değiştir")),t("button.item",{onclick:o(()=>{R(),j(!0)},"onclick")},p("edit",16),t("span",{},t("span.t.plain",{},"Ana ekranı düzenle"),t("span.s",{},"kartlar, sıra, dock, yazı ve metal"))),t("button.item",{onclick:o(()=>{R(),J()},"onclick")},p("sticker",16),t("span",{},t("span.t.plain",{},"Sticker ekle"),t("span.s",{},"ana ekrana istediğin yere yapıştır"))),t("button.item",{onclick:o(()=>{R(),K(D,{section:"look"})},"onclick")},p("palette",16),t("span",{},t("span.t.plain",{},"Görünüm"),t("span.s",{},"tema, renkler, cam, yazı tipi"))),t("button.item",{onclick:o(()=>{R(),K(D)},"onclick")},p("sliders",16),t("span",{},t("span.t.plain",{},"Ayarlar"),t("span.s",{},"saat dilimi, hesap, API anahtarı"))),d.me.auth?t("button.item",{onclick:o(async()=>{await F(),await B.logout(),window.location.replace("/login.html")},"onclick")},p("power",16),t("span.t.plain",{},"Siteden çıkış")):null),document.body.append(T);const a=n.getBoundingClientRect();Object.assign(T.style,{top:`${a.bottom+8}px`,right:`${Math.max(8,window.innerWidth-a.right)}px`}),setTimeout(()=>document.addEventListener("pointerdown",ue,!0),0)}o(He,"openProfileMenu");function ue(n){T&&!T.contains(n.target)&&!n.target.closest("#home-profile")&&R()}o(ue,"outside");function R(){T?.remove(),T=null,document.removeEventListener("pointerdown",ue,!0)}o(R,"closeMenu");function g(){const n=document.getElementById("home");if(!d.me)return;const e=d.sessions.filter(h=>h.kind!=="backtest"),a=d.sessions.filter(h=>h.kind==="backtest"),r=S(),s={hero:o(()=>nt(e,a),"hero"),actions:rt,resume:o(()=>it(e),"resume"),markets:ke,...Object.fromEntries(O.map(([h])=>[h,()=>Se(h,w)])),performance:o(()=>ct(e,a),"performance"),tests:o(()=>dt(a),"tests"),replays:o(()=>ut(e),"replays")},i=r.order.filter(h=>!r.hidden.includes(h)).map(h=>fe(s[h](),h,r));n.replaceChildren(...[d.me.ephemeral?t("div.banner.warn",{},p("warn",16),t("span",{},t("b",{},"Kalıcı disk bağlı değil. "),"Railway’de bu servise bir Volume eklenmezse her güncellemede profiller, oturumlar, testler ve indirilen veri silinir. Servis → Settings → Volumes → mount path ",t("code",{},"/data"),".")):null,...i,t("footer.home-foot",{},"RV · Replay Terminal · veriler Dukascopy (geçmiş) ve OANDA / Binance (canlı) kaynaklıdır")].filter(Boolean)),Ge(n,P),Ze(r);const m=document.getElementById("layout-undo");m&&(m.disabled=!_[P()].length)}o(g,"renderAll");const te=[["hero","Selam ve seanslar"],["actions","Kısayollar"],["resume","Kaldığın yer"],["markets","Piyasalar"],["performance","Performans"],["tests","Strateji testleri"],["replays","Replay oturumları"],...O.map(([n,e])=>[n,e])],C=Object.fromEntries(te),I={chart:{label:"Grafik",icon:"chart",run:o(()=>k(),"run")},replay:{label:"Replay",icon:"replay",run:o(()=>k({new:"replay"}),"run")},strategy:{label:"Strateji testi",icon:"flask",run:o(()=>k({tab:"strategy"}),"run")},data:{label:"Veri",icon:"data",run:o(()=>k({tab:"data"}),"run")},live:{label:"Canlı",icon:"live",run:o(()=>k({mode:"live"}),"run")},search:{label:"Ara",icon:"search",run:o(()=>ie(ee),"run")},look:{label:"Görünüm",icon:"palette",run:o(()=>K(D,{section:"look"}),"run")}},ne=6,pe=window.matchMedia("(max-width: 760px)"),P=o(()=>pe.matches?"phone":"desk","device");let z=!1;const _={phone:[],desk:[]};function Ve(){const n=_[P()].pop();if(!n)return;const e=U("rt:homeLayout",{})||{};e[P()]=n,Z("rt:homeLayout",e),g()}o(Ve,"undoLayout");function S(){const n=(U("rt:homeLayout",{})||{})[P()]||{},e=te.map(([s])=>s),a=Array.isArray(n.order)?n.order.filter(s=>e.includes(s)):[],r={on:P()==="phone",items:["chart","replay","strategy","data"],...n.dock||{}};return r.items=(Array.isArray(r.items)?r.items:[]).filter((s,i,m)=>I[s]&&m.indexOf(s)===i).slice(0,ne),{order:[...a,...e.filter(s=>!a.includes(s))],hidden:[...new Set([...Array.isArray(n.hidden)?n.hidden.filter(s=>e.includes(s)):[],...O.map(([s])=>s).filter(s=>!a.includes(s))])],size:n.size&&typeof n.size=="object"?n.size:{},dock:r}}o(S,"layout");function E(n){_[P()].push(structuredClone(S())),_[P()].length>30&&_[P()].shift();const e={...U("rt:homeLayout",{})||{}};e[P()]=n,Z("rt:homeLayout",e)}o(E,"saveLayout");const Xe=o(n=>S().size[n]==="compact","compact");function fe(n,e,a=S()){return n?(n.classList.add("widget"),n.dataset.widget=e,n.dataset.label=C[e],n.classList.toggle("w-compact",a.size[e]==="compact"),z&&n.append(t("button.w-minus",{type:"button",title:`${C[e]}: kaldır`,"aria-label":`${C[e]} kartını kaldır`,onclick:o(r=>{r.stopPropagation(),qe(e,n)},"onclick")}),t("button.w-size",{type:"button",title:a.size[e]==="compact"?"Büyüt":"Küçült","aria-label":a.size[e]==="compact"?"Büyüt":"Küçült",onclick:o(r=>{r.stopPropagation(),Qe(e)},"onclick")},p(a.size[e]==="compact"?"expand":"shrink",13)),O.some(r=>r[0]===e)?t("button.w-config",{type:"button",title:"Widget ayarları","aria-label":`${C[e]} ayarları`,onclick:o(r=>{r.stopPropagation(),oe(e,g)},"onclick")},p("sliders",13)):document.createDocumentFragment(),t("span.w-name",{},C[e])),n):null}o(fe,"decorate");function j(n){z!==n&&(z=n,document.body.classList.toggle("editing",n),R(),g())}o(j,"setEditing");function qe(n,e){const a=S();a.hidden.includes(n)||a.hidden.push(n),E(a),e.classList.add("w-leaving"),setTimeout(g,220)}o(qe,"removeWidget");function Qe(n){const e=S();e.size[n]==="compact"?delete e.size[n]:e.size[n]="compact",E(e),g()}o(Qe,"toggleSize");function Ze(n){const e=document.getElementById("home-dock");if(!e)return;const a=n.dock.on&&n.dock.items.length>0;if(document.body.classList.toggle("has-dock",a),e.hidden=!a,!a){e.replaceChildren();return}e.replaceChildren(...n.dock.items.map(r=>t("div.dock-cell",{},t("button.dock-app",{type:"button",title:I[r].label,"aria-label":I[r].label,onclick:o(()=>{z||I[r].run()},"onclick")},p(I[r].icon,22)),z?t("button.w-minus",{type:"button","aria-label":`${I[r].label}: dock'tan kaldır`,onclick:o(()=>{const s=S();s.dock.items=s.dock.items.filter(i=>i!==r),E(s),g()},"onclick")}):null)))}o(Ze,"renderDock");function Je(n){let e=null,a=null;const r=o(()=>[...n.querySelectorAll("section.widget")],"boards"),s=o(()=>{e?.timer&&clearTimeout(e.timer),e=null},"cancelPress"),i=o(l=>{const f=r().filter(v=>v!==a.el),$=new Map(f.map(v=>[v,v.offsetTop]));l();for(const v of f){const L=$.get(v)-v.offsetTop;L&&(v.style.transition="none",v.style.transform=`translate3d(0, ${L}px, 0)`,v.offsetHeight,v.style.transition="transform 0.34s cubic-bezier(.2,.8,.2,1)",v.style.transform="")}},"flip"),m=o(()=>{const l=a.el,f=n.getBoundingClientRect().top+l.offsetTop;l.style.transform=`translate3d(0, ${a.y-a.grab-f}px, 0) scale(1.015)`},"place"),h=o(l=>{a.y=l;const f=a.el,$=n.getBoundingClientRect().top,v=r(),L=v.indexOf(f);for(let N=0;N<v.length;N++){const x=v[N];if(x===f)continue;const ae=$+x.offsetTop+x.offsetHeight/2;if(N>L&&l>ae){i(()=>x.after(f));break}if(N<L&&l<ae){i(()=>x.before(f));break}}m()},"move"),c=o(()=>{if(!a)return;const l=90,f=a.y,$=f<l?-(l-f)/5:f>window.innerHeight-l?(f-window.innerHeight+l)/5:0;$&&(window.scrollBy(0,$),h(f)),a.raf=requestAnimationFrame(c)},"scrollLoop"),u=o((l,f)=>{const $=l.getBoundingClientRect();a={el:l,y:f,grab:f-$.top,raf:0},document.body.classList.add("drag-active"),l.classList.add("dragging"),m(),a.raf=requestAnimationFrame(c)},"start"),b=o(()=>{if(!a)return;const{el:l}=a;cancelAnimationFrame(a.raf),l.style.transition="transform 0.3s cubic-bezier(.2,.8,.2,1)",l.style.transform="";const f=r().map(L=>L.dataset.widget);a=null,setTimeout(()=>{l.classList.remove("dragging"),l.style.transition="",document.body.classList.remove("drag-active")},300);const $=S();let v=0;$.order=$.order.map(L=>f.includes(L)?f[v++]:L),E($)},"finish");n.addEventListener("pointerdown",l=>{if(l.button>0)return;const f=l.target.closest("section.widget");if(!f||l.target.closest(".w-minus, .w-size, .w-config"))return;if(!z){if(l.pointerType==="mouse"||l.target.closest("button, a, input, select, textarea"))return;e={x:l.clientX,y:l.clientY,timer:setTimeout(()=>{e=null,j(!0)},520)};return}l.preventDefault();const $=l.pointerType==="mouse";e={el:f,x:l.clientX,y:l.clientY,mouse:$,timer:$?0:setTimeout(()=>{if(e){const v=e;e=null,u(v.el,v.y)}},180)}}),window.addEventListener("pointermove",l=>{if(a){h(l.clientY);return}if(!e)return;const f=Math.hypot(l.clientX-e.x,l.clientY-e.y);if(e.mouse&&e.el&&f>4){const $=e;e=null,u($.el,$.y),h(l.clientY);return}f>9&&s()}),window.addEventListener("pointerup",()=>{s(),b()}),window.addEventListener("pointercancel",()=>{s(),b()}),n.addEventListener("touchmove",l=>{a&&l.preventDefault()},{passive:!1}),n.addEventListener("contextmenu",l=>{(z||e)&&l.preventDefault()})}o(Je,"wireEditGestures");function et(){const n=S(),e=t("div.widget-pick",{},n.hidden.length?n.hidden.map(s=>t("button.widget-pick-row",{type:"button",onclick:o(()=>{const i=S();i.hidden=i.hidden.filter(m=>m!==s),E(i),r.close(),g(),document.querySelector(`[data-widget="${s}"]`)?.scrollIntoView({behavior:"smooth",block:"center"})},"onclick")},t("span.wp-ic",{},p("plus",16)),t("span",{},t("b",{},C[s]),t("small",{style:{display:"block",marginTop:"5px",color:"var(--muted)"}},O.find(i=>i[0]===s)?.[2]||"Ana ekran kartını geri ekle")))):t("p.muted",{},"Tüm widget’lar eklendi. Kaldırdığın kartları buradan yeniden ekleyebilirsin.")),a=t("input.ctl",{type:"search",placeholder:"Widget ara…","aria-label":"Widget ara",oninput:o(s=>{for(const i of e.querySelectorAll(".widget-pick-row"))i.hidden=!i.textContent.toLocaleLowerCase("tr").includes(s.target.value.toLocaleLowerCase("tr"))},"oninput")}),r=le({title:"Widget ekle",body:t("div",{},a,e),actions:[{label:"Kapat"}]})}o(et,"addWidgetDialog");function tt(){let n="theme";const e=t("div.custom-sheet"),a=w.appearance,r=o((m=!0)=>{D.saveSettings(),V(w.appearance,void 0,{page:"home"}),m&&i()},"saveLook"),s=o((m,h,c)=>t("div.seg",{},m.map(([u,b])=>t(`button${h===u?".on":""}`,{type:"button",onclick:o(()=>c(u),"onclick")},b))),"seg"),i=o(()=>{const m=S(),h={theme:o(()=>[...Ke(a,r),t("h4",{},"Arka plan"),t("div.swatch-row",{},Object.entries(Ce).filter(([c])=>c!=="custom").map(([c,u])=>t(`button.swatch.wide${a.bg===c?".on":""}`,{type:"button",title:u.name,"aria-label":u.name,style:{background:u.css},onclick:o(()=>{a.bg=c,a.preset=null,r()},"onclick")})))],"theme"),text:o(()=>Ue(a,r),"text"),cards:o(()=>[...xe(a,r),t("h4",{},"Kartlar"),t("button.btn.small.outline",{type:"button",onclick:o(()=>{const c=S();c.hidden=O.map(([u])=>u),c.order=te.map(([u])=>u),c.size={},E(c),g(),i()},"onclick")},"Bu cihazın düzenini sıfırla"),t("p.look-lead",{},"Ana ekranda sürükleyerek de sıralayabilirsin."),t("div.widget-list",{},m.order.map((c,u)=>t("div.widget-line",{},t("span.wl-name",{},C[c]),s([["full","Büyük"],["compact","Küçük"]],m.size[c]==="compact"?"compact":"full",b=>{const l=S();b==="compact"?l.size[c]="compact":delete l.size[c],E(l),g(),i()}),t("button.btn.icon.small",{type:"button",title:"Yukarı","aria-label":"Yukarı taşı",disabled:u===0,onclick:o(()=>{const b=S();[b.order[u-1],b.order[u]]=[b.order[u],b.order[u-1]],E(b),g(),i()},"onclick")},p("up",15)),t("button.btn.icon.small",{type:"button",title:"Aşağı","aria-label":"Aşağı taşı",disabled:u===m.order.length-1,onclick:o(()=>{const b=S();[b.order[u+1],b.order[u]]=[b.order[u],b.order[u+1]],E(b),g(),i()},"onclick")},p("down",15)),t("label.switch.mini",{title:"Göster"},t("input",{type:"checkbox",checked:!m.hidden.includes(c),onchange:o(b=>{const l=S();l.hidden=b.target.checked?l.hidden.filter(f=>f!==c):[...l.hidden,c],E(l),g(),i()},"onchange")}),t("span.track",{},t("span.knob"))))))],"cards"),dock:o(()=>[t("label.switch",{},t("input",{type:"checkbox",checked:m.dock.on,onchange:o(c=>{const u=S();u.dock.on=c.target.checked,E(u),g(),i()},"onchange")}),t("span.track",{},t("span.knob")),t("span.switch-label",{},"Dock’u göster",t("small",{},"Ekranın altında sabit kısayollar"))),t("h4",{},`Kısayollar (en çok ${ne})`),t("div.dock-pick",{},Object.entries(I).map(([c,u])=>{const b=m.dock.items.includes(c);return t(`button.dock-chip${b?".on":""}`,{type:"button",disabled:!b&&m.dock.items.length>=ne,onclick:o(()=>{const l=S();l.dock.items=b?l.dock.items.filter(f=>f!==c):[...l.dock.items,c],E(l),g(),i()},"onclick")},p(u.icon,18),t("span",{},u.label))}))],"dock")};e.replaceChildren(s([["theme","Tema"],["text","Yazı"],["cards","Kartlar"],["dock","Dock"]],n,c=>{n=c,i()}),t("div.custom-pane",{},...h[n]()))},"paint");i(),le({title:"Özelleştir",body:e,actions:[{label:"Bitti",kind:"primary"}],note:"Bu profile kaydedilir"})}o(tt,"customiseDialog");function nt(n,e){const a=d.me.profile,r=new Intl.DateTimeFormat("tr-TR",{weekday:"long",day:"numeric",month:"long",timeZone:M()}).format(new Date);return t("section.hero",{},t("div.hero-date",{},r),t("h1",{},`${je()}, ${a.name}`),ye(),t("p.lead",{},d.loaded?d.datasets.length?`${q().length} piyasa hazır · ${n.length} replay oturumu · ${e.length} strateji testi`:`Bu cihazda henüz piyasa verisi yok · ${n.length} replay oturumu · ${e.length} strateji testi`:"Yükleniyor…"))}o(nt,"hero");const at={ASIA:"Asya",LONDON:"Londra","NEW YORK":"New York"},W=o(n=>{const e=Math.max(0,Math.round(n));return e>=60?`${Math.floor(e/60)} sa ${e%60} dk`:`${e} dk`},"hm");function ot(n=Date.now()/1e3){const e=n+Be(n),a=new Date(e*1e3).getUTCDay(),r=Math.floor((e%86400+86400)%86400/60);return a===6||a===5&&r>=17*60||a===0&&r<17*60?{closed:!0,toOpen:(a===5?2:a===6?1:0)*1440+1020-r}:{closed:!1,zones:Te[0].zones.map(i=>{const m=i.from<i.to?r>=i.from&&r<i.to:r>=i.from||r<i.to,h=o(c=>((c-r)%1440+1440)%1440,"until");return{name:at[i.name]||i.name,color:i.color,open:m,left:h(m?i.to:i.from)}})}}o(ot,"sessionsNow");function ye(){const n=ot();return n.closed?t("div.sessions-now",{},t("span.sess.off",{},t("i"),"Forex kapalı"),t("span.sess-note",{},`açılışa ${W(n.toOpen)}`)):t("div.sessions-now",{},n.zones.map(e=>t(`span.sess${e.open?".on":""}`,{style:{"--c":e.color},title:e.open?`${e.name} seansı açık, ${W(e.left)} sonra kapanır`:`${e.name} seansı ${W(e.left)} sonra açılır`},t("i"),e.name,t("small",{},e.open?`${W(e.left)} kaldı`:`${W(e.left)} sonra`))))}o(ye,"sessionStrip");function rt(){const n=o((e,a,r,s,i="")=>t(`button.action${i}`,{type:"button",onclick:s},t("span.action-ic",{},p(e,20)),t("span.action-t",{},a),t("span.action-d",{},r),t("span.action-go",{},p("arrow",16))),"card");return t("section.actions",{},n("chart","Grafik","Son baktığın piyasa ve zaman dilimi",()=>k(),".primary"),n("replay","Replay başlat","Geçmişte bir tarihe dön, bar bar işlem yap",()=>k({new:"replay"})),n("flask","Strateji testi","Kodunla yıllarca veride otomatik backtest",()=>k({tab:"strategy"})),n("data","Veri","15 yıllık EURUSD, NASDAQ, altın paketleri",()=>k({tab:"data"})))}o(rt,"actions");function it(n){const e=n[0];if(!e)return null;const a=e.summary||{},r=a.spark?.length>1?Y(a.spark,{color:(a.net??0)>=0?"var(--up)":"var(--down)",width:220,height:56}):null;return t("section.resume.glass",{},t("div.resume-l",{},t("span.eyebrow",{},p("clock",14),"Kaldığın yer"),t("h2",{},e.name),t("div.resume-meta",{},t("span",{},t("b",{},a.symbol||"—"),a.tf?` · ${a.tf}`:""),t("span",{},`Grafik zamanı ${y.dateTime(a.cursor,M())}`),t("span",{},`Son açılış ${X(e.updated_at)}`))),t("div.resume-stats",{},A("Net",y.signedMoney(a.net,G(a)),y.cls(a.net)),A("İşlem",String(a.trades??0)),A("Kazanma",y.pct(a.winRate,0)),a.open?A("Açık",String(a.open)):null),r?t("div.resume-spark",{},r):null,t("button.btn.primary",{onclick:o(()=>k({session:e.id}),"onclick")},p("play",14),"Devam et"))}o(it,"resume");function A(n,e,a=""){return t("div.stat",{},t("span.k",{},n),t(`span.v${a?`.${a}`:""}`,{},e))}o(A,"stat");function X(n){const e=Date.now()/1e3-n;return e<90?"az önce":e<3600?`${Math.round(e/60)} dk önce`:e<86400?`${Math.round(e/3600)} saat önce`:e<7*86400?`${Math.round(e/86400)} gün önce`:y.dateOnly(n,M())}o(X,"relTime");function q(){const n=d.datasets.filter(a=>a.bar_count&&a.source!=="demo");return[...n.length?n:d.datasets.filter(a=>a.bar_count)].sort((a,r)=>!!r.meta?.pack-!!a.meta?.pack||r.bar_count-a.bar_count).slice(0,6)}o(q,"marketList");function ke(){const n=q(),e=t("div.sec-head",{},t("h3",{},"Piyasalar"),t("button.btn.small.outline",{onclick:o(()=>k({tab:"data"}),"onclick")},"Veri yönetimi"));return d.loaded?n.length?t("section",{id:"markets"},e,t("div.grid-markets",{},n.map(st))):t("section",{id:"markets"},e,t("div.empty-card",{},t("p",{},"Henüz piyasa verisi yok. 15 yıllık EURUSD, NASDAQ 100 ve altın verisini tek tıkla indir."),t("button.btn.primary",{onclick:o(()=>k({tab:"data"}),"onclick")},p("download",14),"Veri paketlerini aç"))):t("section",{id:"markets"},e,t("div.grid-markets",{},[0,1,2].map(()=>t("div.market.skeleton"))))}o(ke,"markets");function st(n){const e=d.markets.get(n.id),a=e?.closes.at(-1),r=e?.closes.at(-2),s=a!=null&&r?a/r-1:null,i=n.first_ts&&n.last_ts?(n.last_ts-n.first_ts)/(365.25*86400):0;return t("button.market.glass",{type:"button",onclick:o(()=>k({ds:n.id}),"onclick")},t("div.market-top",{},t("div",{},t("div.market-sym",{},n.symbol),t("div.market-name",{},ce[n.symbol]||n.name)),s!=null?t(`span.chg.${y.cls(s)}`,{},`${s>0?"+":""}${y.pct(s,2)}`):null),t("div.market-price",{},a!=null?y.price(a,n.decimals):"—"),t("div.market-spark",{},e?Y(e.closes,{color:e.closes.at(-1)>=e.closes[0]?"var(--up)":"var(--down)",width:260,height:54}):null),t("div.market-foot",{},t("span",{},i>=1?`${Math.floor(i)} yıl veri`:`${Math.max(1,Math.round(i*12))} ay veri`),t("span",{},`son: ${y.dateOnly(n.last_ts,M())}`)))}o(st,"marketCard");async function lt(){await Promise.all(q().map(async e=>{const a=e.timeframes?.includes("1D")?"1D":e.timeframes?.at(-1);if(a)try{const r=await B.bars(e.id,{tf:a,limit:90});r?.c?.length&&d.markets.set(e.id,{closes:Array.from(r.c)})}catch{}}));const n=fe(ke(),"markets");n&&!S().hidden.includes("markets")&&document.getElementById("markets")?.replaceWith(n)}o(lt,"loadMarkets");function ct(n,e){const a=[...n,...e];if(!a.length)return null;const r=o(c=>c.reduce((u,b)=>u+(Number.isFinite(b)?b:0),0),"sum"),s=r(a.map(c=>c.summary?.trades)),i=a.map(c=>c.summary?.winRate).filter(Number.isFinite),m=e.filter(c=>Number.isFinite(c.summary?.returnPct)).sort((c,u)=>u.summary.returnPct-c.summary.returnPct)[0],h=r(n.map(c=>c.summary?.net));return t("section",{},t("div.sec-head",{},t("h3",{},"Performans")),t("div.kpi-row",{},Q("Replay net",y.signedMoney(h,G(n[0]?.summary)),y.cls(h),`${n.length} oturum`),Q("Toplam işlem",s.toLocaleString("tr-TR"),"","replay + test"),Q("Ortalama kazanma",i.length?y.pct(r(i)/i.length,0):"—","","oturum başına"),Q("En iyi test",m?y.pct(m.summary.returnPct,1):"—",m?y.cls(m.summary.returnPct):"",m?m.summary.strategy:"henüz test yok")))}o(ct,"performance");function Q(n,e,a,r){return t("div.kpi-card.glass",{},t("span.k",{},n),t(`span.v${a?`.${a}`:""}`,{},e),r?t("span.s",{},r):null)}o(Q,"kpi");function dt(n){const e=[...new Set(n.map(i=>i.summary?.symbol).filter(Boolean))];d.filter!=="all"&&!e.includes(d.filter)&&(d.filter="all");let a=n.filter(i=>d.filter==="all"||i.summary?.symbol===d.filter);const r={recent:o(i=>-i.created_at,"recent"),net:o(i=>-(i.summary?.returnPct??-1/0),"net"),win:o(i=>-(i.summary?.winRate??-1),"win")}[d.sort];a=[...a].sort((i,m)=>r(i)-r(m));const s=o((i,m,h)=>t("div.seg.compact",{},i.map(([c,u])=>t(`button${m===c?".on":""}`,{type:"button",onclick:o(()=>{h(c),g()},"onclick")},u))),"seg");return t("section",{id:"tests"},t("div.sec-head",{},t("h3",{},"Strateji testleri",t("span.count",{},String(n.length))),n.length?t("div.sec-tools",{},e.length>1?s([["all","Tümü"],...e.map(i=>[i,i])],d.filter,i=>{d.filter=i}):null,s([["recent","En yeni"],["net","Getiri"],["win","Kazanma"]],d.sort,i=>{d.sort=i})):null),n.length?t("div.list.glass",{},be(a,"tests").map(mt),ge(a,"tests")):t("div.empty-card",{},t("p",{},"Strateji testleri burada birikir: her çalıştırma sonuçlarıyla birlikte otomatik kaydedilir."),t("button.btn.outline",{onclick:o(()=>k({tab:"strategy"}),"onclick")},p("flask",14),"İlk testini çalıştır")))}o(dt,"testHistory");function mt(n){const e=n.summary||{},a=(e.net??0)>=0;return t("div.row",{},t("button.row-main",{type:"button",onclick:o(()=>k({backtest:n.id}),"onclick"),title:"Sonuçları grafikte aç"},t("div.row-title",{},t("b",{},e.strategy||n.name),t("span.tag",{},`${e.symbol||"—"} · ${e.tf||""}`)),t("div.row-sub",{},`${y.dateOnly(e.from,"UTC")} → ${y.dateOnly(e.to,"UTC")} · ${X(n.created_at)}`)),t("div.row-spark",{},e.spark?.length>1?Y(e.spark,{color:a?"var(--up)":"var(--down)",width:110,height:30,fill:!1}):null),t("div.row-stats",{},A("Getiri",y.pct(e.returnPct,1),y.cls(e.returnPct)),A("Net",y.signedMoney(e.net,G(e)),y.cls(e.net)),A("İşlem",String(e.trades??0)),A("Kazanma",y.pct(e.winRate,0)),A("K. faktörü",me(e.profitFactor)),A("Maks. düşüş",y.pct(e.maxDrawdownPct,1))),t("div.row-actions",{},t("button.btn.small.outline",{onclick:o(()=>k({backtest:n.id}),"onclick")},"Aç"),t("button.btn.icon.small",{title:"Sil","aria-label":"Testi sil",onclick:o(()=>we(n,"Testi sil"),"onclick")},p("trash",15))))}o(mt,"testRow");const he=o(n=>Xe(n)?3:_e[n],"shown"),be=o((n,e)=>d.more[e]?n:n.slice(0,he(e)),"limited");function ge(n,e){return n.length<=he(e)?null:t("button.list-more",{type:"button",onclick:o(()=>{d.more[e]=!d.more[e],g()},"onclick")},d.more[e]?"Daha az göster":`Tümünü göster (${n.length})`)}o(ge,"moreButton");function ut(n){return t("section",{},t("div.sec-head",{},t("h3",{},"Replay oturumları",t("span.count",{},String(n.length))),t("button.btn.small.outline",{onclick:o(()=>k({new:"replay"}),"onclick")},p("plus",14),"Yeni oturum")),n.length?t("div.list.glass",{},be(n,"replays").map(pt),ge(n,"replays")):t("div.empty-card",{},t("p",{},"Bir tarih seç, grafik o ana kadar olanı göstersin; bar bar ilerleyip gerçek gibi işlem aç. Oturumlar kaldığın yerden devam eder."),t("button.btn.outline",{onclick:o(()=>k({new:"replay"}),"onclick")},p("replay",14),"İlk replay oturumunu başlat")))}o(ut,"replayList");function pt(n){const e=n.summary||{},a=(e.net??0)>=0;return t("div.row",{},t("button.row-main",{type:"button",onclick:o(()=>k({session:n.id}),"onclick"),title:"Kaldığın yerden devam et"},t("div.row-title",{},t("b",{},n.name),t("span.tag",{},`${e.symbol||"—"}${e.tf?` · ${e.tf}`:""}`)),t("div.row-sub",{},`${y.dateTime(e.startTime,M())} → ${y.dateTime(e.cursor,M())} · ${X(n.updated_at)}`)),t("div.row-spark",{},e.spark?.length>1?Y(e.spark,{color:a?"var(--up)":"var(--down)",width:110,height:30,fill:!1}):null),t("div.row-stats",{},A("Net",y.signedMoney(e.net,G(e)),y.cls(e.net)),A("Bakiye",y.money(e.balance,G(e))),A("İşlem",String(e.trades??0)),A("Kazanma",y.pct(e.winRate,0)),A("K. faktörü",me(e.profitFactor)),A("Maks. düşüş",y.pct(e.maxDrawdownPct,1))),t("div.row-actions",{},t("button.btn.small.primary",{onclick:o(()=>k({session:n.id}),"onclick")},"Devam et"),t("button.btn.icon.small",{title:"Sil","aria-label":"Oturumu sil",onclick:o(()=>we(n,"Oturumu sil"),"onclick")},p("trash",15))))}o(pt,"replayRow");async function we(n,e){if(await Ee(e,`“${n.name}” silinsin mi? Bu geri alınamaz.`,"Sil","danger"))try{await B.deleteSession(n.id),d.sessions=d.sessions.filter(a=>a.id!==n.id),U("rt:settings",{})?.resume===n.id&&(w.resume=null,D.saveSettings()),g(),H("Silindi","ok")}catch(a){H(a.message,"err")}}o(we,"remove"),Fe();
+// Home screen: where everything starts after picking a profile. Markets,
+// the replay you left off, every saved replay session and strategy test with
+// its numbers, and one tap into the chart.
+import { EXTRA_WIDGETS, extraWidget, widgetSettings, refreshWidgetClocks } from './ui/homewidgets.js?v=446247be79';
+import { api } from './api.js?v=446247be79';
+import { LOCAL_NAMES } from './local/site.js?v=446247be79';
+import * as F from './format.js?v=446247be79';
+import { avatar, brandMark, confirmBox, flushStorage, h, icon, sparkline, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=446247be79';
+import { SESSION_SETS, configureICT } from './chart/sessions.js?v=446247be79';
+import { nyOffset } from './core/timeframes.js?v=446247be79';
+import { settingsDialog } from './ui/dialogs.js?v=446247be79';
+import { openPalette, wirePalette } from './ui/palette.js?v=446247be79';
+import { wireTooltips } from './ui/tooltip.js?v=446247be79';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance, metalPicker, normalizeAppearance, paintLastLook, revealPage, rimControls, titleControls } from './ui/look.js?v=446247be79';
+import { modal } from './ui/dom.js?v=446247be79';
+import { mountStickers, stickerSheet } from './ui/stickers.js?v=446247be79';
+
+const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'NASDAQ 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'NASDAQ 100', USA500IDXUSD: 'S&P 500' };
+const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+const state = { me: null, datasets: [], sessions: [], filter: 'all', rfilter: 'all', sort: 'recent', markets: new Map(), more: { tests: false, replays: false } };
+const SHOWN = { tests: 6, replays: 5 };
+let settings = {};
+
+// a minimal stand-in for the chart app, enough for the settings dialog
+const host = {
+  mode: 'browse',
+  get settings() { return settings; },
+  get theme() { return document.documentElement.dataset.theme || 'dark'; },
+  saveSettings() {
+    store('rt:settings', settings);
+    try { localStorage.setItem(LOCAL_NAMES.lastLook, JSON.stringify(settings.appearance)); } catch { /* private mode */ }
+  },
+  previewAppearance(a) { applyAppearance(a, undefined, { page: 'home' }); },
+  applySettings() { applyAppearance(settings.appearance, undefined, { page: 'home' }); renderAll(); },
+  onApiChanged() {},
+};
+
+const tz = () => settings.tz || LOCAL_TZ;
+const ccy = (sm) => sm?.currency || 'USD';
+const pf = (x) => (x === 'inf' ? '∞' : F.num(x, 2));
+
+function greeting() {
+  const hr = Number(new Intl.DateTimeFormat('tr-TR', { hour: 'numeric', hourCycle: 'h23', timeZone: tz() }).format(new Date()));
+  if (hr < 5) return 'İyi geceler';
+  if (hr < 12) return 'Günaydın';
+  if (hr < 18) return 'İyi günler';
+  return 'İyi akşamlar';
+}
+
+const chartUrl = (params = {}) => {
+  const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v != null && v !== ''));
+  return `chart.html${q.toString() ? `?${q}` : ''}`;
+};
+// every link says what it opens; a bare /chart.html is a reload and resumes a replay
+const go = async (params = { view: 'chart' }) => {
+  // a short fade before the next page, so the change feels like one motion
+  document.body.classList.add('leaving');
+  await Promise.all([flushStorage(), new Promise((r) => setTimeout(r, 160))]);
+  window.location.href = chartUrl(params);
+};
+// coming back with the browser's back button shows the page again
+window.addEventListener('pageshow', () => document.body.classList.remove('leaving'));
+
+async function boot() {
+  paintLastLook('home');
+  wirePointerLight();
+  let me;
+  try { me = await api.me(); } catch (err) { revealPage(); toast(`Sunucuya ulaşılamadı: ${err.message}`, 'err', 8000); return; }
+  if (!me.profile) { window.location.replace('profiles.html'); return; }
+  state.me = me;
+  await useProfileStorage(me.profile.id, me.first);
+  settings = storage('rt:settings', {}) || {};
+  settings.appearance = normalizeAppearance(settings.appearance || DEFAULT_APPEARANCE);
+  if (configureICT(settings)) host.saveSettings();
+  // the chart fills in the rest; the settings dialog needs these
+  settings.tz ||= LOCAL_TZ;
+  settings.volume ??= true;
+  settings.account = { balance: 10000, spreadPips: 0.8, commission: 0, sameBar: 'path', ...(settings.account || {}) };
+  applyAppearance(settings.appearance, undefined, { page: 'home' });
+  revealPage();
+  renderShell();
+  renderAll();
+  wireEditGestures(document.getElementById('home'));
+  document.getElementById('home').addEventListener('widget-config', e => widgetSettings(e.detail, renderAll));
+  document.getElementById('home').addEventListener('widget-refresh', renderAll);
+  setInterval(() => refreshWidgetClocks(), 10000);
+  PHONE.addEventListener?.('change', () => renderAll());
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && editing && !document.querySelector('.modal-back')) setEditing(false); });
+  wirePalette(paletteItems, { typeToSearch: true });
+  // the session strip counts down without redrawing the page
+  setInterval(() => document.querySelector('.sessions-now')?.replaceWith(sessionStrip()), 30000);
+  wireTooltips();
+  const [datasets, sessions] = await Promise.all([
+    api.datasets().catch(() => []),
+    api.sessions().catch(() => []),
+  ]);
+  state.datasets = datasets;
+  state.sessions = sessions;
+  state.loaded = true;
+  // the entrance plays once, on the first full render
+  const root = document.getElementById('home');
+  root.classList.add('intro');
+  renderAll();
+  setTimeout(() => root.classList.remove('intro'), 1400);
+  loadMarkets();
+  // a cloud profile changed on another device: the look and layout come with
+  // a reload, sessions are simply read again
+  window.addEventListener('rv-synced', async (e) => {
+    const kinds = new Set(e.detail.changed.map((c) => c.kind));
+    if (kinds.has('kv') || kinds.has('profile')) { await flushStorage?.(); window.location.reload(); return; }
+    state.sessions = await api.sessions().catch(() => state.sessions);
+    renderAll();
+    toast('Diğer cihazdaki değişiklikler geldi', 'ok');
+  });
+}
+
+// ── shell: top bar ─────────────────────────────────────────────────────────
+function renderShell() {
+  const p = state.me.profile;
+  document.getElementById('brand-tile').replaceChildren(brandMark(26));
+  const chip = document.getElementById('home-profile');
+  chip.replaceChildren(avatar({ ...p, locked: false }, 'sm'), h('span.pname', {}, p.name));
+  chip.onclick = () => openProfileMenu(chip);
+  document.getElementById('home-look').onclick = () => settingsDialog(host, { section: 'look' });
+  document.getElementById('home-search').onclick = () => openPalette(paletteItems);
+  document.getElementById('home-search').replaceChildren(icon('search', 16), h('span.lbl', {}, 'Ara'), h('kbd', {}, 'Ctrl K'));
+  document.getElementById('home-look').replaceChildren(icon('palette', 18));
+  document.getElementById('home-chart').replaceChildren(icon('chart', 16), h('span.lbl', {}, 'Grafiği aç'));
+  document.getElementById('home-chart').onclick = () => go();
+  document.getElementById('home-chart').setAttribute('aria-label', 'Grafiği aç');
+  const edit = h('button.btn.icon', { id: 'home-edit', type: 'button', title: 'Ana ekranı düzenle', 'aria-label': 'Ana ekranı düzenle', onclick: () => setEditing(true) }, icon('edit', 17));
+  document.getElementById('home-look').before(edit);
+  // while editing: customise on the left, done on the right (as on an iPhone)
+  document.body.append(
+    h('div.edit-bar', { role: 'toolbar', 'aria-label': 'Düzenleme' },
+      h('button.edit-pill', { type: 'button', title: 'Özelleştir', 'aria-label': 'Özelleştir', onclick: customiseDialog }, icon('brush', 18)),
+      h('button.edit-pill', { id:'layout-undo', type:'button', onclick:undoLayout }, 'Geri al'),
+      h('button.edit-pill', { type: 'button', title: 'Bitti', 'aria-label': 'Bitti', onclick: () => setEditing(false) }, icon('check', 20))),
+    h('div.edit-add', {},
+      h('button.edit-pill', { type: 'button', onclick: addWidgetDialog }, icon('plus', 16), 'Widget ekle'),
+      h('button.edit-pill', { type: 'button', onclick: stickerSheet }, icon('sticker', 16), 'Sticker ekle')),
+    h('nav.home-dock', { id: 'home-dock', 'aria-label': 'Kısayollar', hidden: true }));
+}
+
+function paletteItems() {
+  const out = [];
+  const add = (group, label, run, extra = {}) => out.push({ group, label, run, ...extra });
+  add('Komutlar', 'Grafik', () => go(), { icon: 'chart' });
+  add('Komutlar', 'Replay başlat', () => go({ new: 'replay' }), { icon: 'replay', keys: 'yeni oturum' });
+  add('Komutlar', 'Strateji testi', () => go({ tab: 'strategy' }), { icon: 'flask', keys: 'backtest' });
+  add('Komutlar', 'Veri paketleri', () => go({ tab: 'data' }), { icon: 'data' });
+  add('Komutlar', 'Görünüm', () => settingsDialog(host, { section: 'look' }), { icon: 'palette', keys: 'tema renk font' });
+  add('Komutlar', 'Sticker ekle', () => stickerSheet(), { icon: 'sticker', keys: 'çıkartma etiket' });
+  add('Komutlar', 'Ayarlar', () => settingsDialog(host), { icon: 'sliders' });
+  for (const d of marketList()) add('Piyasalar', d.symbol, () => go({ ds: d.id }), { sub: NAMES[d.symbol] || d.name, icon: 'chart' });
+  for (const s of state.sessions.filter((x) => x.kind !== 'backtest').slice(0, 12)) add('Replay oturumları', s.name, () => go({ session: s.id }), { sub: relTime(s.updated_at), icon: 'replay' });
+  for (const t of state.sessions.filter((x) => x.kind === 'backtest').slice(0, 12)) add('Strateji testleri', t.summary?.strategy || t.name, () => go({ backtest: t.id }), { sub: `${t.summary?.symbol || ''} ${t.summary?.tf || ''} · ${F.pct(t.summary?.returnPct, 1)}`, icon: 'flask' });
+  for (const p of PRESETS) {
+    add('Tema', p.name, () => {
+      Object.assign(settings.appearance, { preset: p.id, bg: p.bg, accent: p.accent, up: p.up, down: p.down, font: p.font });
+      host.saveSettings();
+      host.applySettings();
+    }, { sub: 'hazır görünüm', icon: 'palette' });
+  }
+  return out;
+}
+
+let menu = null;
+function openProfileMenu(anchor) {
+  if (menu) { menu.remove(); menu = null; return; }
+  const p = state.me.profile;
+  menu = h('div.popover.glass-pop', { role: 'menu' },
+    h('div.who', {}, avatar({ ...p, locked: false }, 'md'), h('div', {}, h('b', {}, p.name), h('span.muted', { style: { fontSize: '12px' } }, 'Oturumlar, testler ve görünüm bu profile ait'))),
+    h('button.item', { onclick: async () => { await flushStorage(); await api.leaveProfile(); window.location.replace('profiles.html'); } }, icon('swap', 16), h('span.t.plain', {}, 'Profil değiştir')),
+    h('button.item', { onclick: () => { closeMenu(); setEditing(true); } }, icon('edit', 16), h('span', {}, h('span.t.plain', {}, 'Ana ekranı düzenle'), h('span.s', {}, 'kartlar, sıra, dock, yazı ve metal'))),
+    h('button.item', { onclick: () => { closeMenu(); stickerSheet(); } }, icon('sticker', 16), h('span', {}, h('span.t.plain', {}, 'Sticker ekle'), h('span.s', {}, 'ana ekrana istediğin yere yapıştır'))),
+    h('button.item', { onclick: () => { closeMenu(); settingsDialog(host, { section: 'look' }); } }, icon('palette', 16), h('span', {}, h('span.t.plain', {}, 'Görünüm'), h('span.s', {}, 'tema, renkler, cam, yazı tipi'))),
+    h('button.item', { onclick: () => { closeMenu(); settingsDialog(host); } }, icon('sliders', 16), h('span', {}, h('span.t.plain', {}, 'Ayarlar'), h('span.s', {}, 'saat dilimi, hesap, API anahtarı'))),
+    state.me.auth ? h('button.item', { onclick: async () => { await flushStorage(); await api.logout(); window.location.replace('profiles.html'); } }, icon('power', 16), h('span.t.plain', {}, 'Siteden çıkış')) : null);
+  document.body.append(menu);
+  const r = anchor.getBoundingClientRect();
+  Object.assign(menu.style, { top: `${r.bottom + 8}px`, right: `${Math.max(8, window.innerWidth - r.right)}px` });
+  setTimeout(() => document.addEventListener('pointerdown', outside, true), 0);
+}
+function outside(e) { if (menu && !menu.contains(e.target) && !e.target.closest('#home-profile')) closeMenu(); }
+function closeMenu() { menu?.remove(); menu = null; document.removeEventListener('pointerdown', outside, true); }
+
+// ── content ────────────────────────────────────────────────────────────────
+function renderAll() {
+  const root = document.getElementById('home');
+  if (!state.me) return;
+  const replays = state.sessions.filter((s) => s.kind !== 'backtest');
+  const tests = state.sessions.filter((s) => s.kind === 'backtest');
+  const L = layout();
+  const build = {
+    hero: () => hero(replays, tests), actions, resume: () => resume(replays), markets,
+    ...Object.fromEntries(EXTRA_WIDGETS.map(([id]) => [id, () => extraWidget(id, settings)])),
+    performance: () => performance(replays, tests), tests: () => testHistory(tests), replays: () => replayList(replays),
+  };
+  const boards = L.order.filter((id) => !L.hidden.includes(id)).map((id) => decorate(build[id](), id, L));
+  root.replaceChildren(...[
+    state.me.ephemeral ? h('div.banner.warn', {}, icon('warn', 16), h('span', {}, h('b', {}, 'Kalıcı disk bağlı değil. '),
+      'Railway’de bu servise bir Volume eklenmezse her güncellemede profiller, oturumlar, testler ve indirilen veri silinir. Servis → Settings → Volumes → mount path ', h('code', {}, '/data'), '.')) : null,
+    ...boards,
+    h('footer.home-foot', {}, 'RV · Replay Terminal · veriler Dukascopy (geçmiş) ve OANDA / Binance (canlı) kaynaklıdır'),
+  ].filter(Boolean));
+  mountStickers(root, device);
+  renderDock(L);
+  const undo = document.getElementById('layout-undo'); if (undo) undo.disabled = !layoutHistory[device()].length;
+}
+
+// ── layout: which boards, in what order, how big; kept per profile and,
+// within it, apart for phones and laptops ───────────────────────────────────
+const WIDGETS = [
+  ['hero', 'Selam ve seanslar'], ['actions', 'Kısayollar'], ['resume', 'Kaldığın yer'], ['markets', 'Piyasalar'],
+  ['performance', 'Performans'], ['tests', 'Strateji testleri'], ['replays', 'Replay oturumları'],
+  ...EXTRA_WIDGETS.map(([id, name]) => [id, name]),
+];
+const WIDGET_NAME = Object.fromEntries(WIDGETS);
+const DOCK = {
+  chart: { label: 'Grafik', icon: 'chart', run: () => go() },
+  replay: { label: 'Replay', icon: 'replay', run: () => go({ new: 'replay' }) },
+  strategy: { label: 'Strateji testi', icon: 'flask', run: () => go({ tab: 'strategy' }) },
+  data: { label: 'Veri', icon: 'data', run: () => go({ tab: 'data' }) },
+  live: { label: 'Canlı', icon: 'live', run: () => go({ mode: 'live' }) },
+  search: { label: 'Ara', icon: 'search', run: () => openPalette(paletteItems) },
+  look: { label: 'Görünüm', icon: 'palette', run: () => settingsDialog(host, { section: 'look' }) },
+};
+const DOCK_MAX = 6;
+const PHONE = window.matchMedia('(max-width: 760px)');
+const device = () => (PHONE.matches ? 'phone' : 'desk');
+let editing = false;
+const layoutHistory = { phone: [], desk: [] };
+function undoLayout() {
+  const previous = layoutHistory[device()].pop(); if (!previous) return;
+  const all = storage('rt:homeLayout', {}) || {}; all[device()] = previous; store('rt:homeLayout', all); renderAll();
+}
+
+
+function layout() {
+  const d = (storage('rt:homeLayout', {}) || {})[device()] || {};
+  const ids = WIDGETS.map(([id]) => id);
+  const saved = Array.isArray(d.order) ? d.order.filter((id) => ids.includes(id)) : [];
+  const dock = { on: device() === 'phone', items: ['chart', 'replay', 'strategy', 'data'], ...(d.dock || {}) };
+  dock.items = (Array.isArray(dock.items) ? dock.items : []).filter((k, i, all) => DOCK[k] && all.indexOf(k) === i).slice(0, DOCK_MAX);
+  // the hero has the ways in and the resume button, so these two start hidden
+  const heroCovers = d.nx ? [] : ['actions', 'resume'];
+  return {
+    nx: 1,
+    order: [...saved, ...ids.filter((id) => !saved.includes(id))],
+    hidden: [...new Set([...(Array.isArray(d.hidden) ? d.hidden.filter(id => ids.includes(id)) : []), ...heroCovers, ...EXTRA_WIDGETS.map(([id]) => id).filter(id => !saved.includes(id))])],
+    size: d.size && typeof d.size === 'object' ? d.size : {},
+    dock,
+  };
+}
+function saveLayout(L) {
+  layoutHistory[device()].push(structuredClone(layout()));
+  if (layoutHistory[device()].length > 30) layoutHistory[device()].shift();
+  const all = { ...(storage('rt:homeLayout', {}) || {}) };
+  all[device()] = L;
+  store('rt:homeLayout', all);
+}
+const compact = (id) => layout().size[id] === 'compact';
+
+/** A board on the home screen: named, sized, and with its edit handles. */
+function decorate(node, id, L = layout()) {
+  if (!node) return null;
+  node.classList.add('widget');
+  node.dataset.widget = id;
+  node.dataset.label = WIDGET_NAME[id];
+  node.classList.toggle('w-compact', L.size[id] === 'compact');
+  if (editing) {
+    node.append(
+      h('button.w-minus', { type: 'button', title: `${WIDGET_NAME[id]}: kaldır`, 'aria-label': `${WIDGET_NAME[id]} kartını kaldır`, onclick: (e) => { e.stopPropagation(); removeWidget(id, node); } }),
+      h('button.w-size', { type: 'button', title: L.size[id] === 'compact' ? 'Büyüt' : 'Küçült', 'aria-label': L.size[id] === 'compact' ? 'Büyüt' : 'Küçült', onclick: (e) => { e.stopPropagation(); toggleSize(id); } },
+        icon(L.size[id] === 'compact' ? 'expand' : 'shrink', 13)),
+      EXTRA_WIDGETS.some(w => w[0] === id) ? h('button.w-config', { type:'button', title:'Widget ayarları', 'aria-label':`${WIDGET_NAME[id]} ayarları`, onclick:e=>{e.stopPropagation();widgetSettings(id,renderAll);} },icon('sliders',13)) : document.createDocumentFragment(),
+      h('span.w-name', {}, WIDGET_NAME[id]));
+  }
+  return node;
+}
+
+function setEditing(on) {
+  if (editing === on) return;
+  editing = on;
+  document.body.classList.toggle('editing', on);
+  closeMenu();
+  renderAll();
+}
+
+function removeWidget(id, node) {
+  const L = layout();
+  if (!L.hidden.includes(id)) L.hidden.push(id);
+  saveLayout(L);
+  node.classList.add('w-leaving');
+  setTimeout(renderAll, 220);
+}
+
+function toggleSize(id) {
+  const L = layout();
+  if (L.size[id] === 'compact') delete L.size[id]; else L.size[id] = 'compact';
+  saveLayout(L);
+  renderAll();
+}
+
+function renderDock(L) {
+  const dock = document.getElementById('home-dock');
+  if (!dock) return;
+  const on = L.dock.on && L.dock.items.length > 0;
+  document.body.classList.toggle('has-dock', on);
+  dock.hidden = !on;
+  if (!on) { dock.replaceChildren(); return; }
+  dock.replaceChildren(...L.dock.items.map((k) => h('div.dock-cell', {},
+    h('button.dock-app', { type: 'button', title: DOCK[k].label, 'aria-label': DOCK[k].label, onclick: () => { if (!editing) DOCK[k].run(); } }, icon(DOCK[k].icon, 22)),
+    editing ? h('button.w-minus', { type: 'button', 'aria-label': `${DOCK[k].label}: dock'tan kaldır`, onclick: () => {
+      const M = layout(); M.dock.items = M.dock.items.filter((x) => x !== k); saveLayout(M); renderAll();
+    } }) : null)));
+}
+
+// press and hold a board to start editing (touch); while editing, hold and
+// drag to move it — the others glide out of the way
+function wireEditGestures(root) {
+  let press = null;
+  let drag = null;
+  const boards = () => [...root.querySelectorAll('section.widget')];
+  const cancelPress = () => { if (press?.timer) clearTimeout(press.timer); press = null; };
+  const flip = (mutate) => {
+    const others = boards().filter((b) => b !== drag.el);
+    const before = new Map(others.map((b) => [b, b.offsetTop]));
+    mutate();
+    for (const b of others) {
+      const dy = before.get(b) - b.offsetTop;
+      if (!dy) continue;
+      b.style.transition = 'none';
+      b.style.transform = `translate3d(0, ${dy}px, 0)`;
+      void b.offsetHeight;
+      b.style.transition = 'transform 0.34s cubic-bezier(.2,.8,.2,1)';
+      b.style.transform = '';
+    }
+  };
+  const place = () => {
+    const el = drag.el;
+    const top = root.getBoundingClientRect().top + el.offsetTop;
+    el.style.transform = `translate3d(0, ${drag.y - drag.grab - top}px, 0) scale(1.015)`;
+  };
+  const move = (y) => {
+    drag.y = y;
+    const el = drag.el;
+    const rootTop = root.getBoundingClientRect().top;
+    const list = boards();
+    const at = list.indexOf(el);
+    for (let i = 0; i < list.length; i++) {
+      const b = list[i];
+      if (b === el) continue;
+      const mid = rootTop + b.offsetTop + b.offsetHeight / 2;
+      if (i > at && y > mid) { flip(() => b.after(el)); break; }
+      if (i < at && y < mid) { flip(() => b.before(el)); break; }
+    }
+    place();
+  };
+  const scrollLoop = () => {
+    if (!drag) return;
+    const edge = 90, y = drag.y;
+    const v = y < edge ? -(edge - y) / 5 : y > window.innerHeight - edge ? (y - window.innerHeight + edge) / 5 : 0;
+    if (v) { window.scrollBy(0, v); move(y); }
+    drag.raf = requestAnimationFrame(scrollLoop);
+  };
+  const start = (el, y) => {
+    const r = el.getBoundingClientRect();
+    drag = { el, y, grab: y - r.top, raf: 0 };
+    document.body.classList.add('drag-active');
+    el.classList.add('dragging');
+    place();
+    drag.raf = requestAnimationFrame(scrollLoop);
+  };
+  const finish = () => {
+    if (!drag) return;
+    const { el } = drag;
+    cancelAnimationFrame(drag.raf);
+    el.style.transition = 'transform 0.3s cubic-bezier(.2,.8,.2,1)';
+    el.style.transform = '';
+    const shown = boards().map((b) => b.dataset.widget);
+    drag = null;
+    setTimeout(() => { el.classList.remove('dragging'); el.style.transition = ''; document.body.classList.remove('drag-active'); }, 300);
+    // the boards not on the page (hidden, or with nothing to show) keep their slots
+    const L = layout();
+    let i = 0;
+    L.order = L.order.map((id) => (shown.includes(id) ? shown[i++] : id));
+    saveLayout(L);
+  };
+  root.addEventListener('pointerdown', (e) => {
+    if (e.button > 0) return;
+    const el = e.target.closest('section.widget');
+    if (!el || e.target.closest('.w-minus, .w-size, .w-config')) return;
+    if (!editing) {
+      if (e.pointerType === 'mouse' || e.target.closest('button, a, input, select, textarea')) return;
+      press = { x: e.clientX, y: e.clientY, timer: setTimeout(() => { press = null; setEditing(true); }, 520) };
+      return;
+    }
+    e.preventDefault();
+    const mouse = e.pointerType === 'mouse';
+    press = { el, x: e.clientX, y: e.clientY, mouse, timer: mouse ? 0 : setTimeout(() => { if (press) { const p = press; press = null; start(p.el, p.y); } }, 180) };
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (drag) { move(e.clientY); return; }
+    if (!press) return;
+    const far = Math.hypot(e.clientX - press.x, e.clientY - press.y);
+    if (press.mouse && press.el && far > 4) { const p = press; press = null; start(p.el, p.y); move(e.clientY); return; }
+    if (far > 9) cancelPress(); // a scroll, not a hold
+  });
+  window.addEventListener('pointerup', () => { cancelPress(); finish(); });
+  window.addEventListener('pointercancel', () => { cancelPress(); finish(); });
+  // once a board is lifted the page must not scroll under the finger
+  root.addEventListener('touchmove', (e) => { if (drag) e.preventDefault(); }, { passive: false });
+  root.addEventListener('contextmenu', (e) => { if (editing || press) e.preventDefault(); });
+}
+
+function addWidgetDialog() {
+  const L = layout();
+  const body = h('div.widget-pick', {}, L.hidden.length
+    ? L.hidden.map((id) => h('button.widget-pick-row', { type: 'button', onclick: () => {
+      const M = layout(); M.hidden = M.hidden.filter((x) => x !== id); saveLayout(M); dlg.close(); renderAll(); document.querySelector(`[data-widget="${id}"]`)?.scrollIntoView({ behavior:'smooth', block:'center' });
+    } }, h('span.wp-ic', {}, icon('plus', 16)), h('span', {}, h('b', {}, WIDGET_NAME[id]), h('small', { style: { display:'block', marginTop:'5px', color:'var(--muted)' } }, EXTRA_WIDGETS.find(w => w[0] === id)?.[2] || 'Ana ekran kartını geri ekle'))))
+    : h('p.muted', {}, 'Tüm widget’lar eklendi. Kaldırdığın kartları buradan yeniden ekleyebilirsin.'));
+  const search = h('input.ctl', { type:'search', placeholder:'Widget ara…', 'aria-label':'Widget ara', oninput:e=>{ for (const row of body.querySelectorAll('.widget-pick-row')) row.hidden = !row.textContent.toLocaleLowerCase('tr').includes(e.target.value.toLocaleLowerCase('tr')); } });
+  const dlg = modal({ title: 'Widget ekle', body:h('div',{},search,body), actions: [{ label: 'Kapat' }] });
+}
+
+/** The brush: theme metal, heading text, boards and dock, saved as you go. */
+function customiseDialog() {
+  let tab = 'theme';
+  const body = h('div.custom-sheet');
+  const a = settings.appearance;
+  const saveLook = (rerender = true) => {
+    host.saveSettings();
+    applyAppearance(settings.appearance, undefined, { page: 'home' });
+    if (rerender) paint();
+  };
+  const seg = (opts, cur, set) => h('div.seg', {}, opts.map(([v, l]) => h(`button${cur === v ? '.on' : ''}`, { type: 'button', onclick: () => set(v) }, l)));
+  const paint = () => {
+    const L = layout();
+    const panes = {
+      theme: () => [
+        ...metalPicker(a, saveLook),
+        h('h4', {}, 'Arka plan'),
+        h('div.swatch-row', {}, Object.entries(BACKGROUNDS).filter(([k]) => k !== 'custom').map(([k, b]) =>
+          h(`button.swatch.wide${a.bg === k ? '.on' : ''}`, { type: 'button', title: b.name, 'aria-label': b.name, style: { background: b.css }, onclick: () => { a.bg = k; a.preset = null; saveLook(); } }))),
+      ],
+      text: () => titleControls(a, saveLook),
+      cards: () => [
+        ...rimControls(a, saveLook),
+        h('h4', {}, 'Kartlar'),
+        h('button.btn.small.outline', { type:'button', onclick:()=>{ const M=layout(); M.hidden=EXTRA_WIDGETS.map(([id])=>id); M.order=WIDGETS.map(([id])=>id); M.size={}; saveLayout(M); renderAll(); paint(); } }, 'Bu cihazın düzenini sıfırla'),
+        h('p.look-lead', {}, 'Ana ekranda sürükleyerek de sıralayabilirsin.'),
+        h('div.widget-list', {}, L.order.map((id, i) => h('div.widget-line', {},
+          h('span.wl-name', {}, WIDGET_NAME[id]),
+          seg([['full', 'Büyük'], ['compact', 'Küçük']], L.size[id] === 'compact' ? 'compact' : 'full', (v) => { const M = layout(); if (v === 'compact') M.size[id] = 'compact'; else delete M.size[id]; saveLayout(M); renderAll(); paint(); }),
+          h('button.btn.icon.small', { type: 'button', title: 'Yukarı', 'aria-label': 'Yukarı taşı', disabled: i === 0, onclick: () => { const M = layout(); [M.order[i - 1], M.order[i]] = [M.order[i], M.order[i - 1]]; saveLayout(M); renderAll(); paint(); } }, icon('up', 15)),
+          h('button.btn.icon.small', { type: 'button', title: 'Aşağı', 'aria-label': 'Aşağı taşı', disabled: i === L.order.length - 1, onclick: () => { const M = layout(); [M.order[i + 1], M.order[i]] = [M.order[i], M.order[i + 1]]; saveLayout(M); renderAll(); paint(); } }, icon('down', 15)),
+          h('label.switch.mini', { title: 'Göster' }, h('input', { type: 'checkbox', checked: !L.hidden.includes(id), onchange: (e) => {
+            const M = layout(); M.hidden = e.target.checked ? M.hidden.filter((x) => x !== id) : [...M.hidden, id]; saveLayout(M); renderAll(); paint();
+          } }), h('span.track', {}, h('span.knob')))))),
+      ],
+      dock: () => [
+        h('label.switch', {}, h('input', { type: 'checkbox', checked: L.dock.on, onchange: (e) => { const M = layout(); M.dock.on = e.target.checked; saveLayout(M); renderAll(); paint(); } }),
+          h('span.track', {}, h('span.knob')), h('span.switch-label', {}, 'Dock’u göster', h('small', {}, 'Ekranın altında sabit kısayollar'))),
+        h('h4', {}, `Kısayollar (en çok ${DOCK_MAX})`),
+        h('div.dock-pick', {}, Object.entries(DOCK).map(([k, d]) => {
+          const on = L.dock.items.includes(k);
+          return h(`button.dock-chip${on ? '.on' : ''}`, { type: 'button', disabled: !on && L.dock.items.length >= DOCK_MAX, onclick: () => {
+            const M = layout(); M.dock.items = on ? M.dock.items.filter((x) => x !== k) : [...M.dock.items, k]; saveLayout(M); renderAll(); paint();
+          } }, icon(d.icon, 18), h('span', {}, d.label));
+        })),
+      ],
+    };
+    body.replaceChildren(
+      seg([['theme', 'Tema'], ['text', 'Yazı'], ['cards', 'Kartlar'], ['dock', 'Dock']], tab, (v) => { tab = v; paint(); }),
+      h('div.custom-pane', {}, ...panes[tab]()));
+  };
+  paint();
+  modal({ title: 'Özelleştir', body, actions: [{ label: 'Bitti', kind: 'primary' }], note: 'Bu profile kaydedilir' });
+}
+
+function hero(replays, tests) {
+  const p = state.me.profile;
+  const date = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz() }).format(new Date());
+  const last = replays[0];
+  const sm = last?.summary || {};
+  return h('section.hero.nx-hero', {},
+    h('div.nx-hero-l', {},
+      h('div.hero-date', {}, date),
+      h('h1', {}, `${greeting()}, ${p.name}`),
+      h('p.nx-hero-sub', {}, 'Herhangi bir piyasayı geçmişte yeniden yaşa: bar bar ilerle, kaçırdığını geri sar, gerçek gibi işlem aç.'),
+      h('div.nx-hero-cta', {},
+        h('button.nx-pill.primary', { type: 'button', onclick: () => go({ new: 'replay' }) }, icon('plus', 16), 'Yeni oturum'),
+        h('button.nx-pill', { type: 'button', onclick: () => go() }, icon('chart', 16), 'Grafiği aç'),
+        h('button.nx-pill', { type: 'button', onclick: () => go({ tab: 'strategy' }) }, icon('flask', 16), 'Strateji testi')),
+      sessionStrip(),
+      h('p.lead', {}, !state.loaded ? 'Yükleniyor…'
+        : state.datasets.length ? `${marketList().length} piyasa hazır · ${replays.length} replay oturumu · ${tests.length} strateji testi`
+          : `Bu cihazda henüz piyasa verisi yok · ${replays.length} replay oturumu · ${tests.length} strateji testi`)),
+    last ? h('button.nx-resume', { type: 'button', onclick: () => go({ session: last.id }), title: 'Kaldığın yerden devam et' },
+      h('span.nx-play', {}, icon('play', 22)),
+      h('span.nx-resume-t', {},
+        h('small', {}, 'Kaldığın yer'),
+        h('b', {}, last.name),
+        h('span', {}, `${sm.symbol || '—'}${sm.tf ? ` · ${sm.tf}` : ''} · ${relTime(last.updated_at)}`)),
+      sm.net != null ? h(`span.nx-resume-net.${F.cls(sm.net)}`, {}, F.signedMoney(sm.net, ccy(sm))) : null) : null);
+}
+
+
+// ── market sessions right now (New York time, DST aware) ───────────────────
+const SESSION_NAMES = { ASIA: 'Asya', LONDON: 'Londra', 'NEW YORK': 'New York' };
+const hm = (min) => { const m = Math.max(0, Math.round(min)); return m >= 60 ? `${Math.floor(m / 60)} sa ${m % 60} dk` : `${m} dk`; };
+
+function sessionsNow(now = Date.now() / 1000) {
+  const local = now + nyOffset(now);
+  const day = new Date(local * 1000).getUTCDay();          // NY weekday
+  const min = Math.floor((((local % 86400) + 86400) % 86400) / 60);
+  // forex closes Friday 17:00 and opens Sunday 17:00 New York time
+  const closed = day === 6 || (day === 5 && min >= 17 * 60) || (day === 0 && min < 17 * 60);
+  if (closed) {
+    const toOpen = ((day === 5 ? 2 : day === 6 ? 1 : 0) * 1440) + 17 * 60 - min;
+    return { closed: true, toOpen };
+  }
+  return {
+    closed: false,
+    zones: SESSION_SETS[0].zones.map((z) => {
+      const open = z.from < z.to ? min >= z.from && min < z.to : min >= z.from || min < z.to;
+      const until = (t) => ((t - min) % 1440 + 1440) % 1440;
+      return { name: SESSION_NAMES[z.name] || z.name, color: z.color, open, left: open ? until(z.to) : until(z.from) };
+    }),
+  };
+}
+
+function sessionStrip() {
+  const s = sessionsNow();
+  if (s.closed) return h('div.sessions-now', {}, h('span.sess.off', {}, h('i'), 'Forex kapalı'), h('span.sess-note', {}, `açılışa ${hm(s.toOpen)}`));
+  return h('div.sessions-now', {}, s.zones.map((z) => h(`span.sess${z.open ? '.on' : ''}`, { style: { '--c': z.color }, title: z.open ? `${z.name} seansı açık, ${hm(z.left)} sonra kapanır` : `${z.name} seansı ${hm(z.left)} sonra açılır` },
+    h('i'), z.name, h('small', {}, z.open ? `${hm(z.left)} kaldı` : `${hm(z.left)} sonra`))));
+}
+
+function actions() {
+  const card = (ic, title, desc, onclick, cls = '') => h(`button.action${cls}`, { type: 'button', onclick },
+    h('span.action-ic', {}, icon(ic, 20)), h('span.action-t', {}, title), h('span.action-d', {}, desc), h('span.action-go', {}, icon('arrow', 16)));
+  return h('section.actions', {},
+    card('chart', 'Grafik', 'Son baktığın piyasa ve zaman dilimi', () => go(), '.primary'),
+    card('replay', 'Replay başlat', 'Geçmişte bir tarihe dön, bar bar işlem yap', () => go({ new: 'replay' })),
+    card('flask', 'Strateji testi', 'Kodunla yıllarca veride otomatik backtest', () => go({ tab: 'strategy' })),
+    card('data', 'Veri', '15 yıllık EURUSD, NASDAQ, altın paketleri', () => go({ tab: 'data' })));
+}
+
+function resume(replays) {
+  const last = replays[0];
+  if (!last) return null;
+  const sm = last.summary || {};
+  const spark = sm.spark?.length > 1 ? sparkline(sm.spark, { color: (sm.net ?? 0) >= 0 ? 'var(--up)' : 'var(--down)', width: 220, height: 56 }) : null;
+  return h('section.resume.glass', {},
+    h('div.resume-l', {},
+      h('span.eyebrow', {}, icon('clock', 14), 'Kaldığın yer'),
+      h('h2', {}, last.name),
+      h('div.resume-meta', {},
+        h('span', {}, h('b', {}, sm.symbol || '—'), sm.tf ? ` · ${sm.tf}` : ''),
+        h('span', {}, `Grafik zamanı ${F.dateTime(sm.cursor, tz())}`),
+        h('span', {}, `Son açılış ${relTime(last.updated_at)}`))),
+    h('div.resume-stats', {},
+      stat('Net', F.signedMoney(sm.net, ccy(sm)), F.cls(sm.net)),
+      stat('İşlem', String(sm.trades ?? 0)),
+      stat('Kazanma', F.pct(sm.winRate, 0)),
+      sm.open ? stat('Açık', String(sm.open)) : null),
+    spark ? h('div.resume-spark', {}, spark) : null,
+    h('button.btn.primary', { onclick: () => go({ session: last.id }) }, icon('play', 14), 'Devam et'));
+}
+
+function stat(label, value, cls = '') {
+  return h('div.stat', {}, h('span.k', {}, label), h(`span.v${cls ? `.${cls}` : ''}`, {}, value));
+}
+
+function relTime(t) {
+  const d = Date.now() / 1000 - t;
+  if (d < 90) return 'az önce';
+  if (d < 3600) return `${Math.round(d / 60)} dk önce`;
+  if (d < 86400) return `${Math.round(d / 3600)} saat önce`;
+  if (d < 7 * 86400) return `${Math.round(d / 86400)} gün önce`;
+  return F.dateOnly(t, tz());
+}
+
+// ── markets ────────────────────────────────────────────────────────────────
+function marketList() {
+  const withData = state.datasets.filter((d) => d.bar_count && d.source !== 'demo');
+  const list = withData.length ? withData : state.datasets.filter((d) => d.bar_count);
+  // packs first, then the rest by size
+  return [...list].sort((a, b) => (!!b.meta?.pack - !!a.meta?.pack) || b.bar_count - a.bar_count).slice(0, 6);
+}
+
+function markets() {
+  const list = marketList();
+  const head = h('div.sec-head', {}, h('h3', {}, 'Piyasalar'), h('button.btn.small.outline', { onclick: () => go({ tab: 'data' }) }, 'Veri yönetimi'));
+  if (!state.loaded) return h('section', { id: 'markets' }, head, h('div.grid-markets', {}, [0, 1, 2].map(() => h('div.market.skeleton'))));
+  if (!list.length) {
+    return h('section', { id: 'markets' }, head, h('div.empty-card', {},
+      h('p', {}, 'Henüz piyasa verisi yok. 15 yıllık EURUSD, NASDAQ 100 ve altın verisini tek tıkla indir.'),
+      h('button.btn.primary', { onclick: () => go({ tab: 'data' }) }, icon('download', 14), 'Veri paketlerini aç')));
+  }
+  return h('section', { id: 'markets' }, head, h('div.grid-markets', {}, list.map(marketCard)));
+}
+
+function marketCard(ds) {
+  const m = state.markets.get(ds.id);
+  const last = m?.closes.at(-1), prev = m?.closes.at(-2);
+  const chg = last != null && prev ? last / prev - 1 : null;
+  const years = ds.first_ts && ds.last_ts ? (ds.last_ts - ds.first_ts) / (365.25 * 86400) : 0;
+  return h('button.market.glass', { type: 'button', onclick: () => go({ ds: ds.id }) },
+    h('div.market-top', {},
+      h('div', {}, h('div.market-sym', {}, ds.symbol), h('div.market-name', {}, NAMES[ds.symbol] || ds.name)),
+      chg != null ? h(`span.chg.${F.cls(chg)}`, {}, `${chg > 0 ? '+' : ''}${F.pct(chg, 2)}`) : null),
+    h('div.market-price', {}, last != null ? F.price(last, ds.decimals) : '—'),
+    h('div.market-spark', {}, m ? sparkline(m.closes, { color: m.closes.at(-1) >= m.closes[0] ? 'var(--up)' : 'var(--down)', width: 260, height: 54 }) : null),
+    h('div.market-foot', {},
+      h('span', {}, years >= 1 ? `${Math.floor(years)} yıl veri` : `${Math.max(1, Math.round(years * 12))} ay veri`),
+      h('span', {}, `son: ${F.dateOnly(ds.last_ts, tz())}`)));
+}
+
+async function loadMarkets() {
+  // all markets at once
+  await Promise.all(marketList().map(async (ds) => {
+    const tf = ds.timeframes?.includes('1D') ? '1D' : ds.timeframes?.at(-1);
+    if (!tf) return;
+    try {
+      const r = await api.bars(ds.id, { tf, limit: 90 });
+      if (r?.c?.length) state.markets.set(ds.id, { closes: Array.from(r.c) });
+    } catch { /* leave the card without a curve */ }
+  }));
+  // only the market cards change: the rest of the page stays as it is
+  const fresh = decorate(markets(), 'markets');
+  if (fresh && !layout().hidden.includes('markets')) document.getElementById('markets')?.replaceWith(fresh);
+}
+
+// ── performance across sessions and tests ──────────────────────────────────
+function performance(replays, tests) {
+  const all = [...replays, ...tests];
+  if (!all.length) return null;
+  const sum = (xs) => xs.reduce((s, x) => s + (Number.isFinite(x) ? x : 0), 0);
+  const avg = (xs) => { const v = xs.filter(Number.isFinite); return v.length ? sum(v) / v.length : null; };
+  const trades = sum(all.map((s) => s.summary?.trades));
+  const rate = avg(all.map((s) => s.summary?.winRate));
+  const pfs = all.map((s) => s.summary?.profitFactor).map((x) => (x === 'inf' ? Infinity : x)).filter((x) => Number.isFinite(x) || x === Infinity);
+  const pfAvg = pfs.length ? (pfs.some((x) => x === Infinity) && pfs.every((x) => x === Infinity) ? Infinity : avg(pfs.filter(Number.isFinite))) : null;
+  const best = tests.filter((t) => Number.isFinite(t.summary?.returnPct)).sort((a, b) => b.summary.returnPct - a.summary.returnPct)[0];
+  const replayNet = sum(replays.map((s) => s.summary?.net));
+  // market time walked through in replay
+  const walked = sum(replays.map((s) => (s.summary?.cursor && s.summary?.startTime ? Math.max(0, s.summary.cursor - s.summary.startTime) : 0)));
+  const days = walked / 86400;
+  const spark = replays.map((s) => s.summary?.net).filter(Number.isFinite).reverse();
+  const run = []; spark.reduce((a, x) => { run.push(a + x); return a + x; }, 0);
+  return h('section.nx-perf', {},
+    h('div.sec-head', {}, h('h3', {}, 'Performans'), h('span.nx-sub', {}, 'tüm oturumlar ve testler')),
+    h('div.nx-tiles', {},
+      h('div.nx-tile.wide', {},
+        h('span.k', {}, 'Replay net K/Z'),
+        h(`span.v.big.${F.cls(replayNet)}`, {}, F.signedMoney(replayNet, ccy(replays[0]?.summary))),
+        h('span.s', {}, `${replays.length} oturum`),
+        run.length > 1 ? h('div.nx-tile-spark', {}, sparkline(run, { color: replayNet >= 0 ? 'var(--up)' : 'var(--down)', width: 260, height: 46 })) : null),
+      ringTile('Kazanma oranı', rate, rate != null ? F.pct(rate, 0) : '—', 'oturum ortalaması'),
+      ringTile('Kâr faktörü', pfAvg == null ? null : pfAvg === Infinity ? 1 : pfAvg / (pfAvg + 1), pfAvg == null ? '—' : pfAvg === Infinity ? '∞' : F.num(pfAvg, 2), 'brüt kâr / brüt zarar'),
+      h('div.nx-tile', {}, h('span.k', {}, 'Replay edilen süre'), h('span.v', {}, days >= 1 ? `${F.num(days, days >= 10 ? 0 : 1)} gün` : `${Math.round(walked / 3600)} saat`), h('span.s', {}, 'piyasa zamanı')),
+      h('div.nx-tile', {}, h('span.k', {}, 'Toplam işlem'), h('span.v', {}, trades.toLocaleString('tr-TR')), h('span.s', {}, best ? `en iyi test ${F.pct(best.summary.returnPct, 1)} · ${best.summary.strategy || ''}` : 'replay + test'))));
+}
+
+/** A tile with a ring filled to `frac` (0..1). */
+function ringTile(label, frac, value, sub) {
+  const r = 26, c = 2 * Math.PI * r, f = frac == null ? 0 : Math.max(0, Math.min(1, frac));
+  const svg = new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><circle cx="32" cy="32" r="${r}" fill="none" stroke-width="7" class="ring-bg"/><circle cx="32" cy="32" r="${r}" fill="none" stroke-width="7" stroke-linecap="round" class="ring-fg${f ? '' : ' none'}" stroke-dasharray="${(c * f).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 32 32)"/></svg>`, 'image/svg+xml').documentElement;
+  return h('div.nx-tile.ring', {},
+    h('div.nx-ring-t', {}, h('span.k', {}, label), h('span.v', {}, value), h('span.s', {}, sub)),
+    h(`div.nx-ring${frac != null && frac < 0.5 ? '.low' : ''}`, {}, document.importNode(svg, true)));
+}
+
+// ── strategy test history ──────────────────────────────────────────────────
+function testHistory(tests) {
+  const symbols = [...new Set(tests.map((t) => t.summary?.symbol).filter(Boolean))];
+  if (state.filter !== 'all' && !symbols.includes(state.filter)) state.filter = 'all';
+  let rows = tests.filter((t) => state.filter === 'all' || t.summary?.symbol === state.filter);
+  const key = { recent: (t) => -t.created_at, net: (t) => -(t.summary?.returnPct ?? -Infinity), win: (t) => -(t.summary?.winRate ?? -1) }[state.sort];
+  rows = [...rows].sort((a, b) => key(a) - key(b));
+  const seg = (opts, cur, set) => h('div.seg.compact', {}, opts.map(([v, l]) => h(`button${cur === v ? '.on' : ''}`, { type: 'button', onclick: () => { set(v); renderAll(); } }, l)));
+  return h('section', { id: 'tests' },
+    h('div.sec-head', {}, h('h3', {}, 'Strateji testleri', h('span.count', {}, String(tests.length))),
+      tests.length ? h('div.sec-tools', {},
+        symbols.length > 1 ? seg([['all', 'Tümü'], ...symbols.map((s) => [s, s])], state.filter, (v) => { state.filter = v; }) : null,
+        seg([['recent', 'En yeni'], ['net', 'Getiri'], ['win', 'Kazanma']], state.sort, (v) => { state.sort = v; })) : null),
+    tests.length ? h('div.list.glass', {}, limited(rows, 'tests').map(testRow), moreButton(rows, 'tests')) : h('div.empty-card', {},
+      h('p', {}, 'Strateji testleri burada birikir: her çalıştırma sonuçlarıyla birlikte otomatik kaydedilir.'),
+      h('button.btn.outline', { onclick: () => go({ tab: 'strategy' }) }, icon('flask', 14), 'İlk testini çalıştır')));
+}
+
+function testRow(t) {
+  const sm = t.summary || {};
+  const up = (sm.net ?? 0) >= 0;
+  return h('div.row', {},
+    h('button.row-main', { type: 'button', onclick: () => go({ backtest: t.id }), title: 'Sonuçları grafikte aç' },
+      h('div.row-title', {}, h('b', {}, sm.strategy || t.name), h('span.tag', {}, `${sm.symbol || '—'} · ${sm.tf || ''}`)),
+      h('div.row-sub', {}, `${F.dateOnly(sm.from, 'UTC')} → ${F.dateOnly(sm.to, 'UTC')} · ${relTime(t.created_at)}`)),
+    h('div.row-spark', {}, sm.spark?.length > 1 ? sparkline(sm.spark, { color: up ? 'var(--up)' : 'var(--down)', width: 110, height: 30, fill: false }) : null),
+    h('div.row-stats', {},
+      stat('Getiri', F.pct(sm.returnPct, 1), F.cls(sm.returnPct)),
+      stat('Net', F.signedMoney(sm.net, ccy(sm)), F.cls(sm.net)),
+      stat('İşlem', String(sm.trades ?? 0)),
+      stat('Kazanma', F.pct(sm.winRate, 0)),
+      stat('K. faktörü', pf(sm.profitFactor)),
+      stat('Maks. düşüş', F.pct(sm.maxDrawdownPct, 1))),
+    h('div.row-actions', {},
+      h('button.btn.small.outline', { onclick: () => go({ backtest: t.id }) }, 'Aç'),
+      h('button.btn.icon.small', { title: 'Sil', 'aria-label': 'Testi sil', onclick: () => remove(t, 'Testi sil') }, icon('trash', 15))));
+}
+
+const shown = (key) => (compact(key) ? 3 : SHOWN[key]);
+const limited = (rows, key) => (state.more[key] ? rows : rows.slice(0, shown(key)));
+
+function moreButton(rows, key) {
+  if (rows.length <= shown(key)) return null;
+  return h('button.list-more', { type: 'button', onclick: () => { state.more[key] = !state.more[key]; renderAll(); } },
+    state.more[key] ? 'Daha az göster' : `Tümünü göster (${rows.length})`);
+}
+
+// ── replay sessions ────────────────────────────────────────────────────────
+const REPLAY_FILTERS = [['all', 'Tümü'], ['open', 'Açık işlemli'], ['up', 'Kârda'], ['down', 'Zararda']];
+const replayPass = { all: () => true, open: (s) => (s.summary?.open || 0) > 0, up: (s) => (s.summary?.net ?? 0) > 0, down: (s) => (s.summary?.net ?? 0) < 0 };
+
+function replayList(replays) {
+  const f = replayPass[state.rfilter] ? state.rfilter : 'all';
+  const rows = replays.filter(replayPass[f]);
+  const chips = replays.length > 2 ? h('div.nx-chips', { role: 'tablist', 'aria-label': 'Oturum süzgeci' }, REPLAY_FILTERS.map(([v, l]) => {
+    const n = replays.filter(replayPass[v]).length;
+    return h(`button.nx-chip${f === v ? '.on' : ''}`, { type: 'button', role: 'tab', 'aria-selected': String(f === v), disabled: v !== 'all' && !n, onclick: () => { state.rfilter = v; state.more.replays = false; renderAll(); } }, l, h('small', {}, String(n)));
+  })) : null;
+  return h('section', {},
+    h('div.sec-head', {}, h('h3', {}, 'Replay oturumları', h('span.count', {}, String(replays.length))),
+      h('button.btn.small.outline', { onclick: () => go({ new: 'replay' }) }, icon('plus', 14), 'Yeni oturum')),
+    chips,
+    replays.length ? h('div.list.glass', {}, rows.length ? limited(rows, 'replays').map(replayRow) : h('div.nx-none', {}, 'Bu süzgece uyan oturum yok.'), moreButton(rows, 'replays')) : h('div.empty-card', {},
+      h('p', {}, 'Bir tarih seç, grafik o ana kadar olanı göstersin; bar bar ilerleyip gerçek gibi işlem aç. Oturumlar kaldığın yerden devam eder.'),
+      h('button.btn.outline', { onclick: () => go({ new: 'replay' }) }, icon('replay', 14), 'İlk replay oturumunu başlat')));
+}
+
+function replayRow(s) {
+  const sm = s.summary || {};
+  const up = (sm.net ?? 0) >= 0;
+  return h('div.row', {},
+    h('button.row-main', { type: 'button', onclick: () => go({ session: s.id }), title: 'Kaldığın yerden devam et' },
+      h('div.row-title', {}, h('b', {}, s.name), h('span.tag', {}, `${sm.symbol || '—'}${sm.tf ? ` · ${sm.tf}` : ''}`)),
+      h('div.row-sub', {}, `${F.dateTime(sm.startTime, tz())} → ${F.dateTime(sm.cursor, tz())} · ${relTime(s.updated_at)}`)),
+    h('div.row-spark', {}, sm.spark?.length > 1 ? sparkline(sm.spark, { color: up ? 'var(--up)' : 'var(--down)', width: 110, height: 30, fill: false }) : null),
+    h('div.row-stats', {},
+      stat('Net', F.signedMoney(sm.net, ccy(sm)), F.cls(sm.net)),
+      stat('Bakiye', F.money(sm.balance, ccy(sm))),
+      stat('İşlem', String(sm.trades ?? 0)),
+      stat('Kazanma', F.pct(sm.winRate, 0)),
+      stat('K. faktörü', pf(sm.profitFactor)),
+      stat('Maks. düşüş', F.pct(sm.maxDrawdownPct, 1))),
+    h('div.row-actions', {},
+      h('button.btn.small.primary', { onclick: () => go({ session: s.id }) }, 'Devam et'),
+      h('button.btn.icon.small', { title: 'Sil', 'aria-label': 'Oturumu sil', onclick: () => remove(s, 'Oturumu sil') }, icon('trash', 15))));
+}
+
+async function remove(s, title) {
+  if (!(await confirmBox(title, `“${s.name}” silinsin mi? Bu geri alınamaz.`, 'Sil', 'danger'))) return;
+  try {
+    await api.deleteSession(s.id);
+    state.sessions = state.sessions.filter((x) => x.id !== s.id);
+    if (storage('rt:settings', {})?.resume === s.id) { settings.resume = null; host.saveSettings(); }
+    renderAll();
+    toast('Silindi', 'ok');
+  } catch (err) { toast(err.message, 'err'); }
+}
+
+boot();

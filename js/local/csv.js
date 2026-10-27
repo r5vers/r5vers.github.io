@@ -1,5 +1,643 @@
-var se=Object.defineProperty;var u=(e,r)=>se(e,"name",{value:r,configurable:!0});import{bucket as ce,parseTf as I,DAY as F,HOUR as A,MINUTE as O,WEEK as ae}from"../core/timeframes.js?v=73a9f08a15";const J=class J extends Error{constructor(r){super(r),this.name="CsvError",this.status=422}};u(J,"CsvError");export let CsvError=J;const W={time:new Set(["time","date","datetime","timestamp","gmt time","local time","open time","opentime","open_time","tarih","zaman","date time","date_time","dt","day"]),clock:new Set(["time","saat","hour"]),open:new Set(["open","o","açılış","acilis","first","open price","opening"]),high:new Set(["high","h","yüksek","yuksek","max","high price"]),low:new Set(["low","l","düşük","dusuk","min","low price"]),close:new Set(["close","c","kapanış","kapanis","şimdi","simdi","last","price","son","close price","closing","kapanis fiyati"]),volume:new Set(["volume","vol","v","tickvol","tick volume","tick_volume","hacim","hac.","hac","real volume","real_volume","volume usd","quote volume","tickvolume"])},D="\\t\\n\\v\\f\\r\\x1c-\\x20\\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000",fe=new RegExp(`^[${D}]+|[${D}]+$`,"g"),ue=new RegExp(`[${D}]+`,"g"),y=u(e=>e.replace(fe,""),"strip"),Y=u((e,r)=>e.replace(new RegExp(`^[${r}]+|[${r}]+$`,"g"),""),"stripChars"),U=u(e=>e.replace(/^"+|"+$/g,""),"stripQuotes"),q=new RegExp(`^(\\d{4})-(\\d{1,2})-(\\d{1,2})(?:[T ](\\d{1,2}):(\\d{2})(?::(\\d{2})(?:[.,]\\d+)?)?)?[${D}]*(Z|[+-]\\d{2}:?\\d{2})?$`),ee=/^(\d{4})[./](\d{1,2})[./](\d{1,2})(?:[ ,T]+(\d{1,2}):(\d{2})(?::(\d{2})(?:[.,]\d+)?)?)?$/,P=/^(\d{4})(\d{2})(\d{2})(?:[ T]?(\d{2})(\d{2})(\d{2})?)?$/,R=/^(\d{1,2})([./-])(\d{1,2})\2(\d{4})(?:[ ,T]+(\d{1,2}):(\d{2})(?::(\d{2})(?:[.,]\d+)?)?)?$/,me=/^\d{1,2}:\d{2}(:\d{2}(\.\d+)?)?$/,he=new RegExp(`^(?:UTC|GMT)?[${D}]*([+-])(\\d{1,2})(?::?(\\d{2}))?$`,"i"),de={K:1e3,M:1e6,B:1e9};function C(e,r){return e.exec(r)||(r.endsWith(`
-`)?e.exec(r.slice(0,-1)):null)}u(C,"match");const z="\\d(?:_?\\d)*",pe=new RegExp(`^[+-]?(?:(?:${z}\\.?|(?:${z})?\\.${z})(?:e[+-]?${z})?|inf|infinity|nan)$`,"i");function te(e){if(e=y(e),!pe.test(e))return null;const r=e.replace(/^[+-]/,"").toLowerCase(),t=e[0]==="-"?-1:1;return r==="nan"?NaN:r.startsWith("inf")?t*(1/0):Number(e.replaceAll("_",""))}u(te,"pyFloat");const ge=/[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Cn}\p{Zl}\p{Zp}\p{Zs}]/u;function ne(e){const r=e.includes("'")&&!e.includes('"')?'"':"'";let t=r;for(const n of e){const l=n.codePointAt(0);n===r||n==="\\"?t+="\\"+n:n===`
-`?t+="\\n":n==="\r"?t+="\\r":n==="	"?t+="\\t":n!==" "&&ge.test(n)?l<256?t+="\\x"+l.toString(16).padStart(2,"0"):l<65536?t+="\\u"+l.toString(16).padStart(4,"0"):t+="\\U"+l.toString(16).padStart(8,"0"):t+=n}return t+r}u(ne,"pyRepr");function we(e){let r=Y(Y(y(e),'"'),"'");return r=y(Y(y(r).toLowerCase(),"<>")),r.replace(ue," ")}u(we,"norm");function ye(e){let r=0,t=0;for(let n of e)if(n=U(y(n)),n.includes(",")&&n.includes("."))n.lastIndexOf(",")>n.lastIndexOf(".")?t++:r++;else if(n.includes(",")){const l=n.split(",");([...l.at(-1)].length!==3||l.length===2&&[...l[0]].length>3)&&t++}else n.includes(".")&&r++;return t>r?"comma":"dot"}u(ye,"numberStyle");function oe(e,r){if(e=U(y(e)).replaceAll(" ","").replaceAll(" ",""),!e||["-","null","None","NaN","nan"].includes(e))return NaN;let t=1;const n=de[e.at(-1).toUpperCase()];n&&e.length>1&&(t=n,e=e.slice(0,-1)),e=r==="comma"?e.replaceAll(".","").replaceAll(",","."):e.replaceAll(",","");const l=te(e);return l===null?null:l*t}u(oe,"parseNumber");function ke(e,r){const t=r==="comma"?",":".";let n=0;for(let l of e)l=U(y(l)),l.includes(t)&&(n=Math.max(n,[...l.slice(l.lastIndexOf(t)+1).replace(/0+$/,"")].length));return Math.min(n,10)}u(ke,"decimalsOf");function le(e,r,t){e-=r<=2?1:0;const n=Math.floor(e/400),l=e-n*400,o=(r+9)%12,s=Math.floor((153*o+2)/5)+t-1,i=l*365+Math.floor(l/4)-Math.floor(l/100)+s;return n*146097+i-719468}u(le,"daysFromCivil");function xe(e){return r=>{const t={};for(const{type:n,value:l}of e.formatToParts(r*1e3))t[n]=l;return le(+t.year,+t.month,+t.day)*F+ +t.hour*A+ +t.minute*O+ +t.second-r}}u(xe,"zoneOffsetAt");function be(e,r){const t=[e(r-18*A),e(r+18*A)],n=t.filter(l=>e(r-l)===l);return n.length?Math.max(...n):e(r-Math.max(...t))}u(be,"wallOffset");function $e(e){if(e=y(e||"UTC"),["UTC","GMT","Z",""].includes(e.toUpperCase()))return()=>0;const r=he.exec(e);if(r){const s=(r[1]==="+"?1:-1)*(Number(r[2])*A+Number(r[3]||0)*O);return()=>s}let t;try{t=new Intl.DateTimeFormat("en-US",{timeZone:e,hourCycle:"h23",year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric"})}catch{throw new CsvError(`bilinmeyen saat dilimi: ${e}`)}const n=t.resolvedOptions().timeZone;if(n!==e&&n.toLowerCase()===e.toLowerCase())throw new CsvError(`bilinmeyen saat dilimi: ${e}`);const l=xe(t),o=new Map;return s=>{const i=Math.floor(s/A);let a=o.get(i);return a===void 0&&o.set(i,a=be(l,i*A)),a}}u($e,"tzOffsetFn");function Me(e,r){const t=u(n=>e.every(l=>C(n,l)),"allMatch");if(e.every(n=>/^\d+(\.\d+)?$/.test(n))){const n=Number(e[0]);if(n>1e14)return"unix_us";if(n>1e11)return"unix_ms";if(n>1e8)return"unix_s";if(t(P))return"compact";throw new CsvError(`zaman sütunu anlaşılamadı: ${ne(e[0])}`)}if(t(q))return"iso";if(t(ee))return"ymd";if(t(P))return"compact";if(t(R)){if(r==="dmy"||r==="mdy")return r;const n=e.map(o=>C(R,o)),l=new Set(n.map(o=>o[2]));return Math.max(...n.map(o=>Number(o[1])))>12?"dmy":Math.max(...n.map(o=>Number(o[3])))>12||l.size===1&&l.has("/")?"mdy":"dmy"}throw new CsvError(`zaman biçimi tanınmadı: ${ne(e[0])}`)}u(Me,"detectDateFormat");export function parseTimes(e,r="UTC",t="auto",n=null){e=e.map(m=>U(y(m)));const l=e.slice(0,500).filter(m=>m).slice(0,200);if(!l.length)throw new CsvError("zaman sütunu boş");n=n||Me(l,t);const o=e.length,s=new Float64Array(o),i=new Float64Array(o),a=new Uint8Array(o).fill(1);if(n.startsWith("unix")){const m={unix_s:1,unix_ms:1e3,unix_us:1e6}[n];return e.forEach((M,b)=>{const p=te(M);if(p===null||Number.isNaN(p))a[b]=0;else if(Number.isFinite(p)){if(s[b]=Math.floor(Math.trunc(p)/m),s[b]>=2**63||s[b]<-(2**63))throw new Error("Python int too large to convert to C long")}else throw new Error("cannot convert float infinity to integer")}),{t:s,valid:a,fmt:n,offsets:i}}const f={iso:q,ymd:ee,compact:P,dmy:R,mdy:R}[n],g=new Uint8Array(o),d=(()=>{let m;return M=>(m||(m=$e(r)))(M)})();for(let m=0;m<o;m++){const M=C(f,e[m]);if(!M){a[m]=0;continue}let b,p,E,w,k,$;if(n==="dmy"||n==="mdy"){const[,h,,N,Q,Z,c,x]=M;[E,p]=n==="dmy"?[h,N]:[N,h],[b,w,k,$]=[Q,Z,c,x]}else if([,b,p,E,w,k,$]=M,n==="iso"&&M[7]){let h=M[7],N=0;h!=="Z"&&(h=h.replace(":",""),N=(h[0]==="+"?1:-1)*(Number(h.slice(1,3))*A+Number(h.slice(3,5))*O)),i[m]=N,g[m]=1}if([b,p,E,w,k,$]=[b,p,E,w,k,$].map(h=>Number(h||0)),p<1||p>12||E<1||E>31||w>23||k>59||$>60){a[m]=0;continue}const v=le(b,p,E)*F+w*A+k*O+$;g[m]||(i[m]=d(v)),s[m]=v-i[m]}return{t:s,valid:a,fmt:n,offsets:i}}u(parseTimes,"parseTimes");const T=0,B=1,H=2,G=3,re=4,L=5;function ie(e,r){const t=[];let n=[],l="",o=T;const s=u(()=>{n.push(l),l=""},"save");for(const i of e){for(let a=0;a<=i.length;a++){const f=a<i.length?i[a]:null,g=f===`
-`||f==="\r";switch(o){case T:if(f===null)break;if(g){o=L;break}o=B;case B:g||f===null?(s(),o=f===null?T:L):f==='"'?o=G:f===r?s():(l+=f,o=H);break;case H:g||f===null?(s(),o=f===null?T:L):f===r?(s(),o=B):l+=f;break;case G:f==='"'?o=re:f!==null&&(l+=f);break;case re:f==='"'?(l+=f,o=G):f===r?(s(),o=B):g||f===null?(s(),o=f===null?T:L):(l+=f,o=H);break;case L:f===null&&(o=T);break}}o===T&&(t.push(n),n=[])}return(l.length||o===G)&&(s(),t.push(n)),t}u(ie,"readCsv");function ve(e){let r=new Array(8).fill(null),t=0;const n=u((l,o,s)=>{const i=l.length-1;let a=o&i,f=o;for(;;){const g=a+9<=i?9:0;for(let d=a;d<=a+g;d++){if(l[d]===null)return l[d]=o,!0;if(s&&l[d]===o)return!1}f=Math.floor(f/32),a=a*5+1+f&i}},"place");for(const l of e){if(!n(r,l,!0)||(t++,t*5<(r.length-1)*3))continue;let o=8;for(;o<=t*4;)o*=2;const s=r;r=new Array(o).fill(null);for(const i of s)i!==null&&n(r,i,!1)}return r.filter(l=>l!==null)}u(ve,"pySetOrder");function Ae(e){let r=",",t=-1;for(const n of["	",";",",","|"]){const l=ie(e,n).filter(a=>a.length).map(a=>a.length);if(!l.length)continue;const o=new Map;for(const a of l)o.set(a,(o.get(a)||0)+1);let s=null;for(const a of ve(l))(s===null||o.get(a)>o.get(s))&&(s=a);if(s<5)continue;const i=o.get(s)/l.length+s/100;i>t&&(r=n,t=i)}if(t<0)throw new CsvError("ayraç bulunamadı: en az 5 sütun (zaman, açılış, yüksek, düşük, kapanış) gerekli");return r}u(Ae,"sniffDelimiter");function Ee(e){return e.filter(t=>/[A-Za-zÇĞİÖŞÜçğıöşü<>]/.test(t)&&!C(q,y(t))&&!C(R,y(t))).length>=2}u(Ee,"looksLikeHeader");function Ne(e){const r=e.map(we),t={},n=[];r.forEach((i,a)=>{if(!(i==="adj close"||i==="adj_close"||i==="adjclose")){for(const f of["open","high","low","close"])W[f].has(i)&&!(f in t)&&(t[f]=a);W.volume.has(i)&&n.push(a)}});const l=[],o=[];r.forEach((i,a)=>{W.time.has(i)&&i!=="time"&&l.push(a),W.clock.has(i)&&o.push(a)}),l.length&&o.length&&o[0]!==l[0]?(t.time=l[0],t.clock=o[0]):l.length?t.time=l[0]:o.length&&(t.time=o[0]);const s=["time","open","high","low","close"].filter(i=>!(i in t));if(s.length)throw new CsvError(`başlıkta eksik sütun(lar): ${s.join(", ")} (bulunan: ${e.join(", ")})`);return t.volumes=n,t}u(Ne,"mapHeader");function Se(e){const r=U(y(e[0])),t=e.length>1?U(y(e[1])):"";let n,l;return C(me,t)||/^\d{6}$/.test(t)&&C(P,r)?(n={time:0,clock:1,open:2,high:3,low:4,close:5},l=6):(n={time:0,open:1,high:2,low:3,close:4},l=5),n.volumes=e.length>l?[l]:[],n}u(Se,"inferPositional");export function parseCsv(e,{tz:r="UTC",dateOrder:t="auto"}={}){e=e.replace(/^\ufeff+/,"");const n=e.split(/\r\n|[\n\r\v\f\x1c-\x1e\x85\u2028\u2029]/).filter(c=>y(c));if(n.length<2)throw new CsvError("dosyada yeterli satır yok");const l=Ae(n.slice(0,50));let o=ie(n.map((c,x)=>x<n.length-1?c+`
-`:c),l),s=null,i;Ee(o[0])?(s=o[0],o=o.slice(1),i=Ne(s)):i=Se(o[0]);const a=Math.max(...["time","open","high","low","close"].map(c=>i[c]))+1;if(o=o.filter(c=>c.length>=a),!o.length)throw new CsvError("veri satırı bulunamadı");let f;if("clock"in i){if(o.some(c=>i.clock>=c.length))throw new Error("list index out of range");f=o.map(c=>`${y(c[i.time])} ${y(c[i.clock])}`.replace(/^(\d{8}) (\d{2})(\d{2})(\d{2})$/,"$1 $2:$3:$4").replace(/^(\d{4})(\d{2})(\d{2}) /,"$1-$2-$3 "))}else f=o.map(c=>c[i.time]);const{t:g,valid:d,fmt:m,offsets:M}=parseTimes(f,r,t),b=o.slice(0,300).flatMap(c=>["open","high","low","close"].map(x=>c[i[x]])),p=ye(b),E=Math.max(2,ke(b,p)),w=o.length,k={o:new Float64Array(w),h:new Float64Array(w),l:new Float64Array(w),c:new Float64Array(w),v:new Float64Array(w)};o.forEach((c,x)=>{for(const[j,_]of[["o","open"],["h","high"],["l","low"],["c","close"]]){const V=oe(c[i[_]],p);if(V===null){d[x]=0;return}k[j][x]=V}let S=null;for(const j of i.volumes){const _=j<c.length?oe(c[j],p):null;_!==null&&_===_&&(S===null||_>S)&&(S=_)}k.v[x]=S!==null&&Number.isFinite(S)?S:0});let $=0;for(let c=0;c<w;c++)d[c]&&!["o","h","l","c"].every(x=>Number.isFinite(k[x][c]))&&(d[c]=0),$+=d[c];if(!$)throw new CsvError("hiçbir satır okunamadı");const v=[];for(let c=0;c<w;c++)d[c]&&v.push(c);let h={t:Float64Array.from(v,c=>g[c]),o:Float64Array.from(v,c=>k.o[c]),h:Float64Array.from(v,c=>k.h[c]),l:Float64Array.from(v,c=>k.l[c]),c:Float64Array.from(v,c=>k.c[c]),v:Float64Array.from(v,c=>k.v[c])},N=0;for(let c=0;c<$;c++){const x=h.h[c]<Math.max(h.o[c],h.c[c])-1e-12,S=h.l[c]>Math.min(h.o[c],h.c[c])+1e-12;(x||S)&&N++}if(N>Math.max(5,.02*$))throw new CsvError(`${N} satırda yüksek/düşük, açılış/kapanışı kapsamıyor - sütun sırası yanlış olabilir (beklenen: zaman, açılış, yüksek, düşük, kapanış)`);const Q=repairOhlc(h),Z=detectSpacing(normalize(h).t);return Z>=F&&v.forEach((c,x)=>{h.t[x]=Math.floor((g[c]+M[c])/F)*F}),h=normalize(h),{candles:h,rows:w,skipped:w-$,repaired:Q,spacing:Z,decimals:E,detected:{delimiter:l,header:s!==null,time_format:m,number_style:p,columns:s||null}}}u(parseCsv,"parseCsv");const K=["t","o","h","l","c","v"];export function emptyCandles(e=0){return Object.fromEntries(K.map(r=>[r,new Float64Array(e)]))}u(emptyCandles,"emptyCandles");export function normalize(e){const r=e.t.length,t=Array.from({length:r},(o,s)=>s).sort((o,s)=>e.t[o]-e.t[s]),n=t.filter((o,s)=>s===r-1||e.t[t[s+1]]!==e.t[o]),l=emptyCandles(n.length);for(const o of K)n.forEach((s,i)=>{l[o][i]=e[o][s]});return l}u(normalize,"normalize");export function merge(e,r){const t=emptyCandles(e.t.length+r.t.length);for(const n of K)t[n].set(e[n]),t[n].set(r[n],e.t.length);return normalize(t)}u(merge,"merge");export function repairOhlc(e){let r=0;for(let t=0;t<e.t.length;t++){const n=Math.max(e.h[t],e.o[t],e.c[t]),l=Math.min(e.l[t],e.o[t],e.c[t]);(n!==e.h[t]||l!==e.l[t])&&r++,e.h[t]=n,e.l[t]=l}return r}u(repairOhlc,"repairOhlc");export function detectSpacing(e){const r=Math.min(e.length,2e5),t=new Map;for(let o=1;o<r;o++){const s=e[o]-e[o-1];s>0&&t.set(s,(t.get(s)||0)+1)}let n=0,l=0;for(const[o,s]of t)(s>l||s===l&&o<n)&&(n=o,l=s);return n}u(detectSpacing,"detectSpacing");function X(e,r,t){if(t<8){let l=0;for(let o=0;o<t;o++)l+=e[r+o];return l}if(t<=128){const l=Array.from({length:8},(i,a)=>e[r+a]);let o=8;for(;o<t-t%8;o+=8)for(let i=0;i<8;i++)l[i]+=e[r+o+i];let s=l[0]+l[1]+(l[2]+l[3])+(l[4]+l[5]+(l[6]+l[7]));for(;o<t;o++)s+=e[r+o];return s}let n=Math.floor(t/2);return n-=n%8,X(e,r,n)+X(e,r+n,t-n)}u(X,"pairwiseSum");export function aggregate(e,r,t){const n=e.t.length,l=Float64Array.from(e.t,i=>ce(i,r,t)),o=[];for(let i=0;i<n;i++)(i===0||l[i]!==l[i-1])&&o.push(i);const s=emptyCandles(o.length);return o.forEach((i,a)=>{const f=a+1<o.length?o[a+1]:n;s.t[a]=l[i],s.o[a]=e.o[i],s.c[a]=e.c[f-1];let g=e.h[i],d=e.l[i];for(let m=i+1;m<f;m++)g=Math.max(g,e.h[m]),d=Math.min(d,e.l[m]);s.h[a]=g,s.l[a]=d,s.v[a]=f-i>1?e.v[i]+X(e.v,i+1,f-i-1):e.v[i]}),s}u(aggregate,"aggregate");export function tfFromSeconds(e){if(e<F){if(e%A===0)return I(`${e/A}h`);if(e%O===0)return I(`${e/O}m`);throw new Error(`bar spacing of ${e}s is not a whole minute`)}return e<ae?I("1D"):e<28*F?I("1W"):I("1M")}u(tfFromSeconds,"tfFromSeconds");
+// Tolerant OHLC CSV import in the browser: server/csv_import.py (parse_csv)
+// and the candle helpers of server/bars.py, rule for rule, so a file gives the
+// same candles here as it did on the server. tests/fixtures/csv.json
+// (make_csv_fixture.py) pins both to the same results.
+//
+// Candles are columns {t, o, h, l, c, v} of Float64Arrays: t is the bar open
+// time in UTC seconds; after normalize() rows are sorted by t, times unique.
+//
+// Where Python and JS disagree on the basics (what counts as whitespace, what
+// float() accepts, the Python `$` that also matches before a final newline)
+// the Python meaning is spelled out below.
+import { bucket, parseTf, DAY, HOUR, MINUTE, WEEK } from '../core/timeframes.js?v=446247be79';
+
+export class CsvError extends Error {
+  constructor(message) { super(message); this.name = 'CsvError'; this.status = 422; }
+}
+
+const ROLE_NAMES = {
+  time: new Set(['time', 'date', 'datetime', 'timestamp', 'gmt time', 'local time', 'open time',
+    'opentime', 'open_time', 'tarih', 'zaman', 'date time', 'date_time', 'dt', 'day']),
+  clock: new Set(['time', 'saat', 'hour']),
+  open: new Set(['open', 'o', 'açılış', 'acilis', 'first', 'open price', 'opening']),
+  high: new Set(['high', 'h', 'yüksek', 'yuksek', 'max', 'high price']),
+  low: new Set(['low', 'l', 'düşük', 'dusuk', 'min', 'low price']),
+  close: new Set(['close', 'c', 'kapanış', 'kapanis', 'şimdi', 'simdi', 'last', 'price', 'son',
+    'close price', 'closing', 'kapanis fiyati']),
+  volume: new Set(['volume', 'vol', 'v', 'tickvol', 'tick volume', 'tick_volume', 'hacim', 'hac.',
+    'hac', 'real volume', 'real_volume', 'volume usd', 'quote volume', 'tickvolume']),
+};
+
+// Python's whitespace (str.strip, str.isspace, \s in re).
+const WS = '\\t\\n\\v\\f\\r\\x1c-\\x20\\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000';
+const WS_EDGES = new RegExp(`^[${WS}]+|[${WS}]+$`, 'g');
+const WS_RUNS = new RegExp(`[${WS}]+`, 'g');
+const strip = (s) => s.replace(WS_EDGES, '');
+const stripChars = (s, chars) => s.replace(new RegExp(`^[${chars}]+|[${chars}]+$`, 'g'), '');
+const stripQuotes = (s) => s.replace(/^"+|"+$/g, '');
+
+const ISO = new RegExp('^(\\d{4})-(\\d{1,2})-(\\d{1,2})(?:[T ](\\d{1,2}):(\\d{2})(?::(\\d{2})(?:[.,]\\d+)?)?)?'
+  + `[${WS}]*(Z|[+-]\\d{2}:?\\d{2})?$`);
+const YMD = /^(\d{4})[./](\d{1,2})[./](\d{1,2})(?:[ ,T]+(\d{1,2}):(\d{2})(?::(\d{2})(?:[.,]\d+)?)?)?$/;
+const COMPACT = /^(\d{4})(\d{2})(\d{2})(?:[ T]?(\d{2})(\d{2})(\d{2})?)?$/;
+const DMY = /^(\d{1,2})([./-])(\d{1,2})\2(\d{4})(?:[ ,T]+(\d{1,2}):(\d{2})(?::(\d{2})(?:[.,]\d+)?)?)?$/;
+const CLOCK = /^\d{1,2}:\d{2}(:\d{2}(\.\d+)?)?$/;
+const FIXED_TZ = new RegExp(`^(?:UTC|GMT)?[${WS}]*([+-])(\\d{1,2})(?::?(\\d{2}))?$`, 'i');
+const NUM_SUFFIX = { K: 1e3, M: 1e6, B: 1e9 };
+
+/** re.match: anchored at the start, and `$` also matches before a final "\n". */
+function match(rx, s) {
+  return rx.exec(s) || (s.endsWith('\n') ? rx.exec(s.slice(0, -1)) : null);
+}
+
+const DIGITS = '\\d(?:_?\\d)*';
+const PY_FLOAT = new RegExp(`^[+-]?(?:(?:${DIGITS}\\.?|(?:${DIGITS})?\\.${DIGITS})(?:e[+-]?${DIGITS})?|inf|infinity|nan)$`, 'i');
+
+/** Python float(s), or null where it raises ValueError. */
+function pyFloat(s) {
+  s = strip(s);
+  if (!PY_FLOAT.test(s)) return null;
+  const body = s.replace(/^[+-]/, '').toLowerCase();
+  const sign = s[0] === '-' ? -1 : 1;
+  if (body === 'nan') return NaN;
+  if (body.startsWith('inf')) return sign * Infinity;
+  return Number(s.replaceAll('_', ''));
+}
+
+const NON_PRINTABLE = /[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Cn}\p{Zl}\p{Zp}\p{Zs}]/u;
+
+/** Python repr() of a string, for error messages. */
+function pyRepr(s) {
+  const q = s.includes("'") && !s.includes('"') ? '"' : "'";
+  let out = q;
+  for (const ch of s) {
+    const code = ch.codePointAt(0);
+    if (ch === q || ch === '\\') out += '\\' + ch;
+    else if (ch === '\n') out += '\\n';
+    else if (ch === '\r') out += '\\r';
+    else if (ch === '\t') out += '\\t';
+    else if (ch !== ' ' && NON_PRINTABLE.test(ch)) {
+      if (code < 0x100) out += '\\x' + code.toString(16).padStart(2, '0');
+      else if (code < 0x10000) out += '\\u' + code.toString(16).padStart(4, '0');
+      else out += '\\U' + code.toString(16).padStart(8, '0');
+    } else out += ch;
+  }
+  return out + q;
+}
+
+function norm(name) {
+  let n = stripChars(stripChars(strip(name), '"'), "'");
+  n = strip(stripChars(strip(n).toLowerCase(), '<>'));
+  return n.replace(WS_RUNS, ' ');
+}
+
+// ── numbers ─────────────────────────────────────────────────────────────────
+/** 'dot' (1,234.56), 'comma' (1.234,56) - decided from the sample values. */
+function numberStyle(samples) {
+  let dot = 0, comma = 0;
+  for (let s of samples) {
+    s = stripQuotes(strip(s));
+    if (s.includes(',') && s.includes('.')) {
+      if (s.lastIndexOf(',') > s.lastIndexOf('.')) comma++;
+      else dot++;
+    } else if (s.includes(',')) {
+      const parts = s.split(',');
+      if ([...parts.at(-1)].length !== 3 || (parts.length === 2 && [...parts[0]].length > 3)) comma++;
+    } else if (s.includes('.')) dot++;
+  }
+  return comma > dot ? 'comma' : 'dot';
+}
+
+/** A price or volume; NaN for blanks, null where Python raises ValueError. */
+function parseNumber(s, style) {
+  s = stripQuotes(strip(s)).replaceAll('\u00a0', '').replaceAll(' ', '');
+  if (!s || ['-', 'null', 'None', 'NaN', 'nan'].includes(s)) return NaN;
+  let mult = 1;
+  const suffix = NUM_SUFFIX[s.at(-1).toUpperCase()];
+  if (suffix && s.length > 1) {
+    mult = suffix;
+    s = s.slice(0, -1);
+  }
+  s = style === 'comma' ? s.replaceAll('.', '').replaceAll(',', '.') : s.replaceAll(',', '');
+  const x = pyFloat(s);
+  return x === null ? null : x * mult;
+}
+
+function decimalsOf(samples, style) {
+  const sep = style === 'comma' ? ',' : '.';
+  let best = 0;
+  for (let s of samples) {
+    s = stripQuotes(strip(s));
+    if (s.includes(sep)) best = Math.max(best, [...s.slice(s.lastIndexOf(sep) + 1).replace(/0+$/, '')].length);
+  }
+  return Math.min(best, 10);
+}
+
+// ── timestamps ──────────────────────────────────────────────────────────────
+/** Days since 1970-01-01 (proleptic Gregorian). */
+function daysFromCivil(y, m, d) {
+  y -= m <= 2 ? 1 : 0;
+  const era = Math.floor(y / 400);
+  const yoe = y - era * 400;
+  const mp = (m + 9) % 12;
+  const doy = Math.floor((153 * mp + 2) / 5) + d - 1;
+  const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+  return era * 146097 + doe - 719468;
+}
+
+/** f(UTC seconds) -> offset seconds of an IANA zone, from Intl. */
+function zoneOffsetAt(fmt) {
+  return (u) => {
+    const p = {};
+    for (const { type, value } of fmt.formatToParts(u * 1000)) p[type] = value;
+    return daysFromCivil(+p.year, +p.month, +p.day) * DAY + +p.hour * HOUR + +p.minute * MINUTE + +p.second - u;
+  };
+}
+
+/** Offset of local wall-clock time `local` the way zoneinfo reads it (fold=0):
+ *  an ambiguous time takes the earlier instant, a time in a gap the offset
+ *  in force before the gap. */
+function wallOffset(at, local) {
+  // every offset is within 18h, so these two are the offsets either side of
+  // any transition `local` could be near
+  const cands = [at(local - 18 * HOUR), at(local + 18 * HOUR)];
+  const fits = cands.filter((o) => at(local - o) === o);
+  if (fits.length) return Math.max(...fits);
+  return at(local - Math.max(...cands));
+}
+
+/** Returns f(local naive epoch seconds) -> offset seconds. */
+function tzOffsetFn(tz) {
+  tz = strip(tz || 'UTC');
+  if (['UTC', 'GMT', 'Z', ''].includes(tz.toUpperCase())) return () => 0;
+  const m = FIXED_TZ.exec(tz);
+  if (m) {
+    const off = (m[1] === '+' ? 1 : -1) * (Number(m[2]) * HOUR + Number(m[3] || 0) * MINUTE);
+    return () => off;
+  }
+  let fmt;
+  try {
+    fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric',
+    });
+  } catch {
+    throw new CsvError(`bilinmeyen saat dilimi: ${tz}`);
+  }
+  // zoneinfo names are case-sensitive file names; Intl's are not
+  const resolved = fmt.resolvedOptions().timeZone;
+  if (resolved !== tz && resolved.toLowerCase() === tz.toLowerCase()) throw new CsvError(`bilinmeyen saat dilimi: ${tz}`);
+  const at = zoneOffsetAt(fmt);
+  // one offset per local hour, taken at the start of that hour
+  const table = new Map();
+  return (local) => {
+    const h = Math.floor(local / HOUR);
+    let off = table.get(h);
+    if (off === undefined) table.set(h, off = wallOffset(at, h * HOUR));
+    return off;
+  };
+}
+
+function detectDateFormat(samples, dateOrder) {
+  const allMatch = (rx) => samples.every((s) => match(rx, s));
+  if (samples.every((s) => /^\d+(\.\d+)?$/.test(s))) {
+    const v = Number(samples[0]);
+    if (v > 1e14) return 'unix_us';
+    if (v > 1e11) return 'unix_ms';
+    if (v > 1e8) return 'unix_s';
+    if (allMatch(COMPACT)) return 'compact';
+    throw new CsvError(`zaman sütunu anlaşılamadı: ${pyRepr(samples[0])}`);
+  }
+  if (allMatch(ISO)) return 'iso';
+  if (allMatch(YMD)) return 'ymd';
+  if (allMatch(COMPACT)) return 'compact';
+  if (allMatch(DMY)) {
+    if (dateOrder === 'dmy' || dateOrder === 'mdy') return dateOrder;
+    const groups = samples.map((s) => match(DMY, s));
+    const seps = new Set(groups.map((g) => g[2]));
+    if (Math.max(...groups.map((g) => Number(g[1]))) > 12) return 'dmy';
+    if (Math.max(...groups.map((g) => Number(g[3]))) > 12) return 'mdy';
+    return seps.size === 1 && seps.has('/') ? 'mdy' : 'dmy';
+  }
+  throw new CsvError(`zaman biçimi tanınmadı: ${pyRepr(samples[0])}`);
+}
+
+/**
+ * Parse timestamp strings. Returns { t, valid, fmt, offsets }: UTC epoch
+ * seconds, a valid mask, the detected format and the UTC offsets; the
+ * wall-clock time a row was written in is `t + offset`.
+ */
+export function parseTimes(values, tz = 'UTC', dateOrder = 'auto', fmt = null) {
+  values = values.map((v) => stripQuotes(strip(v)));
+  const sample = values.slice(0, 500).filter((v) => v).slice(0, 200);
+  if (!sample.length) throw new CsvError('zaman sütunu boş');
+  fmt = fmt || detectDateFormat(sample, dateOrder);
+  const n = values.length;
+  const t = new Float64Array(n), offsets = new Float64Array(n);
+  const valid = new Uint8Array(n).fill(1);
+
+  if (fmt.startsWith('unix')) {
+    const scale = { unix_s: 1, unix_ms: 1000, unix_us: 1_000_000 }[fmt];
+    values.forEach((v, i) => {
+      const x = pyFloat(v);
+      if (x === null || Number.isNaN(x)) valid[i] = 0;
+      // the server fails (an OverflowError, not a CsvError) on infinite or past-int64 times
+      else if (!Number.isFinite(x)) throw new Error('cannot convert float infinity to integer');
+      else {
+        t[i] = Math.floor(Math.trunc(x) / scale);
+        if (t[i] >= 2 ** 63 || t[i] < -(2 ** 63)) throw new Error('Python int too large to convert to C long');
+      }
+    });
+    return { t, valid, fmt, offsets };
+  }
+
+  const rx = { iso: ISO, ymd: YMD, compact: COMPACT, dmy: DMY, mdy: DMY }[fmt];
+  const explicit = new Uint8Array(n);
+  const offsetFor = (() => { let f; return (local) => (f ||= tzOffsetFn(tz))(local); })();
+  for (let i = 0; i < n; i++) {
+    const m = match(rx, values[i]);
+    if (!m) { valid[i] = 0; continue; }
+    let y, mon, day, hh, mm, ss;
+    if (fmt === 'dmy' || fmt === 'mdy') {
+      const [, a, , b, yy, h, mi, s] = m;
+      [day, mon] = fmt === 'dmy' ? [a, b] : [b, a];
+      [y, hh, mm, ss] = [yy, h, mi, s];
+    } else {
+      [, y, mon, day, hh, mm, ss] = m;
+      if (fmt === 'iso' && m[7]) {
+        let z = m[7];
+        let off = 0;
+        if (z !== 'Z') {
+          z = z.replace(':', '');
+          off = (z[0] === '+' ? 1 : -1) * (Number(z.slice(1, 3)) * HOUR + Number(z.slice(3, 5)) * MINUTE);
+        }
+        offsets[i] = off;
+        explicit[i] = 1;
+      }
+    }
+    [y, mon, day, hh, mm, ss] = [y, mon, day, hh, mm, ss].map((x) => Number(x || 0));
+    if (mon < 1 || mon > 12 || day < 1 || day > 31 || hh > 23 || mm > 59 || ss > 60) {
+      valid[i] = 0;
+      continue;
+    }
+    const local = daysFromCivil(y, mon, day) * DAY + hh * HOUR + mm * MINUTE + ss;
+    // the zone is looked up only when some row has no explicit offset
+    if (!explicit[i]) offsets[i] = offsetFor(local);
+    t[i] = local - offsets[i];
+  }
+  return { t, valid, fmt, offsets };
+}
+
+// ── table layout ────────────────────────────────────────────────────────────
+const START_RECORD = 0, START_FIELD = 1, IN_FIELD = 2, IN_QUOTED = 3, QUOTE_IN_QUOTED = 4, EAT_CRNL = 5;
+
+/** Python's csv.reader (excel dialect, `delim`) over an iterable of lines. */
+function readCsv(lines, delim) {
+  const rows = [];
+  let fields = [], field = '', state = START_RECORD;
+  const save = () => { fields.push(field); field = ''; };
+  for (const line of lines) {
+    for (let k = 0; k <= line.length; k++) {
+      const c = k < line.length ? line[k] : null;   // null: end of the line
+      const crnl = c === '\n' || c === '\r';
+      switch (state) {
+        case START_RECORD:
+          if (c === null) break;                     // empty line: []
+          if (crnl) { state = EAT_CRNL; break; }
+          state = START_FIELD;
+          // falls through
+        case START_FIELD:
+          if (crnl || c === null) { save(); state = c === null ? START_RECORD : EAT_CRNL; }
+          else if (c === '"') state = IN_QUOTED;
+          else if (c === delim) save();
+          else { field += c; state = IN_FIELD; }
+          break;
+        case IN_FIELD:
+          if (crnl || c === null) { save(); state = c === null ? START_RECORD : EAT_CRNL; }
+          else if (c === delim) { save(); state = START_FIELD; }
+          else field += c;
+          break;
+        case IN_QUOTED:
+          if (c === '"') state = QUOTE_IN_QUOTED;
+          else if (c !== null) field += c;
+          break;
+        case QUOTE_IN_QUOTED:
+          if (c === '"') { field += c; state = IN_QUOTED; }
+          else if (c === delim) { save(); state = START_FIELD; }
+          else if (crnl || c === null) { save(); state = c === null ? START_RECORD : EAT_CRNL; }
+          else { field += c; state = IN_FIELD; }
+          break;
+        case EAT_CRNL:
+          if (c === null) state = START_RECORD;
+          break;
+      }
+    }
+    if (state === START_RECORD) { rows.push(fields); fields = []; }
+  }
+  if (field.length || state === IN_QUOTED) { save(); rows.push(fields); }
+  return rows;
+}
+
+/** Iteration order of a CPython set of small non-negative ints built from
+ *  `values` - max() over a set breaks ties by it. */
+function pySetOrder(values) {
+  let table = new Array(8).fill(null), fill = 0;
+  const place = (tbl, x, dedupe) => {
+    const mask = tbl.length - 1;
+    let i = x & mask, perturb = x;
+    for (;;) {
+      const probes = i + 9 <= mask ? 9 : 0;
+      for (let j = i; j <= i + probes; j++) {
+        if (tbl[j] === null) { tbl[j] = x; return true; }
+        if (dedupe && tbl[j] === x) return false;
+      }
+      perturb = Math.floor(perturb / 32);
+      i = (i * 5 + 1 + perturb) & mask;
+    }
+  };
+  for (const x of values) {
+    if (!place(table, x, true)) continue;
+    fill++;
+    if (fill * 5 < (table.length - 1) * 3) continue;
+    let size = 8;
+    while (size <= fill * 4) size *= 2;
+    const old = table;
+    table = new Array(size).fill(null);
+    for (const y of old) if (y !== null) place(table, y, false);
+  }
+  return table.filter((x) => x !== null);
+}
+
+function sniffDelimiter(sampleLines) {
+  let best = ',', bestScore = -1;
+  for (const delim of ['\t', ';', ',', '|']) {
+    const counts = readCsv(sampleLines, delim).filter((r) => r.length).map((r) => r.length);
+    if (!counts.length) continue;
+    const freq = new Map();
+    for (const c of counts) freq.set(c, (freq.get(c) || 0) + 1);
+    let common = null;
+    for (const c of pySetOrder(counts)) if (common === null || freq.get(c) > freq.get(common)) common = c;
+    if (common < 5) continue;
+    const score = freq.get(common) / counts.length + common / 100;
+    if (score > bestScore) { best = delim; bestScore = score; }
+  }
+  if (bestScore < 0) {
+    throw new CsvError('ayraç bulunamadı: en az 5 sütun (zaman, açılış, yüksek, düşük, kapanış) gerekli');
+  }
+  return best;
+}
+
+function looksLikeHeader(row) {
+  const letters = row.filter((f) => /[A-Za-zÇĞİÖŞÜçğıöşü<>]/.test(f)
+    && !match(ISO, strip(f)) && !match(DMY, strip(f))).length;
+  return letters >= 2;
+}
+
+function mapHeader(header) {
+  const names = header.map(norm);
+  const roles = {};
+  const volumes = [];
+  names.forEach((n, i) => {
+    if (n === 'adj close' || n === 'adj_close' || n === 'adjclose') return;
+    for (const role of ['open', 'high', 'low', 'close']) {
+      if (ROLE_NAMES[role].has(n) && !(role in roles)) roles[role] = i;
+    }
+    if (ROLE_NAMES.volume.has(n)) volumes.push(i);
+  });
+  const dateCols = [], timeCols = [];
+  names.forEach((n, i) => {
+    if (ROLE_NAMES.time.has(n) && n !== 'time') dateCols.push(i);
+    if (ROLE_NAMES.clock.has(n)) timeCols.push(i);
+  });
+  if (dateCols.length && timeCols.length && timeCols[0] !== dateCols[0]) {
+    roles.time = dateCols[0];
+    roles.clock = timeCols[0];
+  } else if (dateCols.length) roles.time = dateCols[0];
+  else if (timeCols.length) roles.time = timeCols[0];
+  const missing = ['time', 'open', 'high', 'low', 'close'].filter((r) => !(r in roles));
+  if (missing.length) {
+    throw new CsvError(`başlıkta eksik sütun(lar): ${missing.join(', ')} (bulunan: ${header.join(', ')})`);
+  }
+  roles.volumes = volumes;
+  return roles;
+}
+
+/** Column roles for a header-less file from its first data row. */
+function inferPositional(row) {
+  const first = stripQuotes(strip(row[0]));
+  const second = row.length > 1 ? stripQuotes(strip(row[1])) : '';
+  let roles, start;
+  if (match(CLOCK, second) || (/^\d{6}$/.test(second) && match(COMPACT, first))) {
+    roles = { time: 0, clock: 1, open: 2, high: 3, low: 4, close: 5 };
+    start = 6;
+  } else {
+    roles = { time: 0, open: 1, high: 2, low: 3, close: 4 };
+    start = 5;
+  }
+  roles.volumes = row.length > start ? [start] : [];
+  return roles;
+}
+
+/**
+ * Parse an OHLC CSV export. Returns { candles, rows, skipped, repaired,
+ * spacing, decimals, detected } like server/csv_import.ParsedCsv; throws a
+ * CsvError (status 422) with the server's message where it would.
+ */
+export function parseCsv(text, { tz = 'UTC', dateOrder = 'auto' } = {}) {
+  text = text.replace(/^\ufeff+/, '');
+  const lines = text.split(/\r\n|[\n\r\v\f\x1c-\x1e\x85\u2028\u2029]/).filter((ln) => strip(ln));
+  if (lines.length < 2) throw new CsvError('dosyada yeterli satır yok');
+  const delim = sniffDelimiter(lines.slice(0, 50));
+  let rows = readCsv(lines.map((ln, i) => (i < lines.length - 1 ? ln + '\n' : ln)), delim);
+  let header = null, roles;
+  if (looksLikeHeader(rows[0])) {
+    header = rows[0];
+    rows = rows.slice(1);
+    roles = mapHeader(header);
+  } else {
+    roles = inferPositional(rows[0]);
+  }
+  const width = Math.max(...['time', 'open', 'high', 'low', 'close'].map((r) => roles[r])) + 1;
+  rows = rows.filter((r) => r.length >= width);
+  if (!rows.length) throw new CsvError('veri satırı bulunamadı');
+
+  let tvals;
+  if ('clock' in roles) {
+    // the clock column is not counted in `width`: a short row fails the server
+    if (rows.some((r) => roles.clock >= r.length)) throw new Error('list index out of range');
+    tvals = rows.map((r) => `${strip(r[roles.time])} ${strip(r[roles.clock])}`
+      // HistData-style "20240102 000000"
+      .replace(/^(\d{8}) (\d{2})(\d{2})(\d{2})$/, '$1 $2:$3:$4')
+      .replace(/^(\d{4})(\d{2})(\d{2}) /, '$1-$2-$3 '));
+  } else {
+    tvals = rows.map((r) => r[roles.time]);
+  }
+  const { t, valid, fmt, offsets } = parseTimes(tvals, tz, dateOrder);
+
+  const priceSamples = rows.slice(0, 300).flatMap((r) => ['open', 'high', 'low', 'close'].map((k) => r[roles[k]]));
+  const style = numberStyle(priceSamples);
+  const decimals = Math.max(2, decimalsOf(priceSamples, style));
+  const n = rows.length;
+  const cols = { o: new Float64Array(n), h: new Float64Array(n), l: new Float64Array(n), c: new Float64Array(n), v: new Float64Array(n) };
+  rows.forEach((r, i) => {
+    for (const [k, role] of [['o', 'open'], ['h', 'high'], ['l', 'low'], ['c', 'close']]) {
+      const x = parseNumber(r[roles[role]], style);
+      if (x === null) { valid[i] = 0; return; }
+      cols[k][i] = x;
+    }
+    let best = null;
+    for (const vi of roles.volumes) {
+      const x = vi < r.length ? parseNumber(r[vi], style) : null;
+      if (x !== null && x === x && (best === null || x > best)) best = x;
+    }
+    cols.v[i] = best !== null && Number.isFinite(best) ? best : 0;
+  });
+  let m = 0;
+  for (let i = 0; i < n; i++) {
+    if (valid[i] && !['o', 'h', 'l', 'c'].every((k) => Number.isFinite(cols[k][i]))) valid[i] = 0;
+    m += valid[i];
+  }
+  if (!m) throw new CsvError('hiçbir satır okunamadı');
+
+  const keep = [];
+  for (let i = 0; i < n; i++) if (valid[i]) keep.push(i);
+  let arr = {
+    t: Float64Array.from(keep, (i) => t[i]),
+    o: Float64Array.from(keep, (i) => cols.o[i]),
+    h: Float64Array.from(keep, (i) => cols.h[i]),
+    l: Float64Array.from(keep, (i) => cols.l[i]),
+    c: Float64Array.from(keep, (i) => cols.c[i]),
+    v: Float64Array.from(keep, (i) => cols.v[i]),
+  };
+  // A file whose high/low columns are swapped or misnamed must not import
+  // silently: more than a few inconsistent rows means the layout is wrong.
+  let inconsistent = 0;
+  for (let i = 0; i < m; i++) {
+    const hiBad = arr.h[i] < Math.max(arr.o[i], arr.c[i]) - 1e-12;
+    const loBad = arr.l[i] > Math.min(arr.o[i], arr.c[i]) + 1e-12;
+    if (hiBad || loBad) inconsistent++;
+  }
+  if (inconsistent > Math.max(5, 0.02 * m)) {
+    throw new CsvError(`${inconsistent} satırda yüksek/düşük, açılış/kapanışı kapsamıyor - `
+      + 'sütun sırası yanlış olabilir (beklenen: zaman, açılış, yüksek, düşük, kapanış)');
+  }
+  const repaired = repairOhlc(arr);
+  const spacing = detectSpacing(normalize(arr).t);
+  if (spacing >= DAY) {
+    // Daily and slower bars are dates, not instants: keep the date the row
+    // was written with, at 00:00 UTC, whatever timezone the file used.
+    keep.forEach((i, k) => { arr.t[k] = Math.floor((t[i] + offsets[i]) / DAY) * DAY; });
+  }
+  arr = normalize(arr);
+  return {
+    candles: arr, rows: n, skipped: n - m, repaired, spacing, decimals,
+    detected: {
+      delimiter: delim, header: header !== null, time_format: fmt, number_style: style,
+      columns: header || null,
+    },
+  };
+}
+
+// ── candles (server/bars.py) ────────────────────────────────────────────────
+const FIELDS = ['t', 'o', 'h', 'l', 'c', 'v'];
+
+export function emptyCandles(n = 0) {
+  return Object.fromEntries(FIELDS.map((k) => [k, new Float64Array(n)]));
+}
+
+/** Sort by time and drop duplicate times, keeping the LAST occurrence.
+ *  Returns new columns. */
+export function normalize(arr) {
+  const n = arr.t.length;
+  const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => arr.t[a] - arr.t[b]);   // stable
+  const kept = order.filter((i, k) => k === n - 1 || arr.t[order[k + 1]] !== arr.t[i]);
+  const out = emptyCandles(kept.length);
+  for (const k of FIELDS) kept.forEach((i, j) => { out[k][j] = arr[k][i]; });
+  return out;
+}
+
+export function merge(old, nu) {
+  const out = emptyCandles(old.t.length + nu.t.length);
+  for (const k of FIELDS) { out[k].set(old[k]); out[k].set(nu[k], old.t.length); }
+  return normalize(out);
+}
+
+/** Widen high/low so they contain open and close (in place). Returns rows touched. */
+export function repairOhlc(arr) {
+  let bad = 0;
+  for (let i = 0; i < arr.t.length; i++) {
+    const hi = Math.max(arr.h[i], arr.o[i], arr.c[i]);
+    const lo = Math.min(arr.l[i], arr.o[i], arr.c[i]);
+    if (hi !== arr.h[i] || lo !== arr.l[i]) bad++;
+    arr.h[i] = hi;
+    arr.l[i] = lo;
+  }
+  return bad;
+}
+
+/** Most common positive gap between bars, in seconds (the smallest on a tie). */
+export function detectSpacing(t) {
+  const n = Math.min(t.length, 200_000);
+  const counts = new Map();
+  for (let i = 1; i < n; i++) {
+    const d = t[i] - t[i - 1];
+    if (d > 0) counts.set(d, (counts.get(d) || 0) + 1);
+  }
+  let best = 0, bestCount = 0;
+  for (const [d, k] of counts) if (k > bestCount || (k === bestCount && d < best)) { best = d; bestCount = k; }
+  return best;
+}
+
+/** numpy's pairwise sum of a[i, i + n), as np.add.reduceat adds a bucket. */
+function pairwiseSum(a, i, n) {
+  if (n < 8) {
+    let res = 0;
+    for (let k = 0; k < n; k++) res += a[i + k];
+    return res;
+  }
+  if (n <= 128) {
+    const r = Array.from({ length: 8 }, (_, j) => a[i + j]);
+    let k = 8;
+    for (; k < n - (n % 8); k += 8) for (let j = 0; j < 8; j++) r[j] += a[i + k + j];
+    let res = ((r[0] + r[1]) + (r[2] + r[3])) + ((r[4] + r[5]) + (r[6] + r[7]));
+    for (; k < n; k++) res += a[i + k];
+    return res;
+  }
+  let n2 = Math.floor(n / 2);
+  n2 -= n2 % 8;
+  return pairwiseSum(a, i, n2) + pairwiseSum(a, i + n2, n - n2);
+}
+
+/** Roll base bars up into `tf` bars labelled by bucket. */
+export function aggregate(arr, tf, align) {
+  const n = arr.t.length;
+  const labels = Float64Array.from(arr.t, (t) => bucket(t, tf, align));
+  const starts = [];
+  for (let i = 0; i < n; i++) if (i === 0 || labels[i] !== labels[i - 1]) starts.push(i);
+  const out = emptyCandles(starts.length);
+  starts.forEach((s, g) => {
+    const e = g + 1 < starts.length ? starts[g + 1] : n;
+    out.t[g] = labels[s];
+    out.o[g] = arr.o[s];
+    out.c[g] = arr.c[e - 1];
+    let h = arr.h[s], l = arr.l[s];
+    for (let i = s + 1; i < e; i++) { h = Math.max(h, arr.h[i]); l = Math.min(l, arr.l[i]); }
+    out.h[g] = h;
+    out.l[g] = l;
+    // reduceat starts from the first value and adds the rest pairwise
+    out.v[g] = e - s > 1 ? arr.v[s] + pairwiseSum(arr.v, s + 1, e - s - 1) : arr.v[s];
+  });
+  return out;
+}
+
+/** Best timeframe for a detected bar spacing (timeframes.tf_from_seconds). */
+export function tfFromSeconds(seconds) {
+  if (seconds < DAY) {
+    if (seconds % HOUR === 0) return parseTf(`${seconds / HOUR}h`);
+    if (seconds % MINUTE === 0) return parseTf(`${seconds / MINUTE}m`);
+    throw new Error(`bar spacing of ${seconds}s is not a whole minute`);
+  }
+  if (seconds < WEEK) return parseTf('1D');
+  if (seconds < 28 * DAY) return parseTf('1W');
+  return parseTf('1M');
+}

@@ -1,1 +1,113 @@
-var q=Object.defineProperty;var h=(t,l)=>q(t,"name",{value:l,configurable:!0});const m=h(t=>t.reduce((l,o)=>l+o,0),"sum"),f=1e-9;function E(t){let l=0,o=0,e=0,c=0;for(const s of t)s.pnl>f?(l++,o=0):s.pnl<-f?(o++,l=0):(l=0,o=0),e=Math.max(e,l),c=Math.max(c,o);return{maxWin:e,maxLoss:c}}h(E,"streaks");function S(t){const l=t.filter(o=>o.pnl>f).length;return{count:t.length,winRate:t.length?l/t.length:null,net:m(t.map(o=>o.pnl))}}h(S,"side");export function drawdown(t,l){let o=l,e=l,c=0,s=0;const a=[];for(const u of t){o+=u.pnl,a.push({t:u.exitTime,balance:o}),o>e&&(e=o);const i=e-o;i>c&&(c=i),e>0&&i/e>s&&(s=i/e)}return{curve:a,maxDd:c,maxDdPct:s,final:o}}h(drawdown,"drawdown");export function computeStats(t,{initial:l=1e4,tz:o="UTC"}={}){const e=t.length,c=t.map(n=>n.pnl),s=t.filter(n=>n.pnl>f),a=t.filter(n=>n.pnl<-f),u=m(s.map(n=>n.pnl)),i=-m(a.map(n=>n.pnl)),g=m(c),p=t.map(n=>n.r).filter(n=>n!=null&&Number.isFinite(n)),r=drawdown(t,l),y=s.length?u/s.length:null,d=a.length?-i/a.length:null,D=e?g/e:null,T=e>1?Math.sqrt(m(c.map(n=>(n-D)**2))/(e-1)):null,k=t.map(n=>n.exitTime-n.entryTime),F=E(t),C=new Intl.DateTimeFormat("en-GB",{timeZone:o,hour:"2-digit",hourCycle:"h23"}),B=new Intl.DateTimeFormat("en-GB",{timeZone:o,weekday:"short"}),W=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],L=Array.from({length:24},()=>({count:0,net:0,wins:0})),P=W.map(()=>({count:0,net:0,wins:0})),b=new Map;for(const n of t){const x=new Date(n.entryTime*1e3),I=Number(C.format(x))%24,R=W.indexOf(B.format(x));for(const w of[L[I],P[R]])w&&(w.count++,w.net+=n.pnl,n.pnl>f&&w.wins++);const M=new Date(n.exitTime*1e3).toISOString().slice(0,7),v=b.get(M)||{month:M,count:0,net:0};v.count++,v.net+=n.pnl,b.set(M,v)}return{trades:e,wins:s.length,losses:a.length,breakeven:e-s.length-a.length,winRate:e?s.length/e:null,net:g,returnPct:l?g/l:null,grossProfit:u,grossLoss:i,profitFactor:i>0?u/i:u>0?1/0:null,avgWin:y,avgLoss:d,payoff:y!=null&&d?y/-d:null,expectancy:D,avgR:p.length?m(p)/p.length:null,totalR:p.length?m(p):null,largestWin:s.length?Math.max(...s.map(n=>n.pnl)):null,largestLoss:a.length?Math.min(...a.map(n=>n.pnl)):null,maxConsecWins:F.maxWin,maxConsecLosses:F.maxLoss,maxDrawdown:r.maxDd,maxDrawdownPct:r.maxDdPct,recoveryFactor:r.maxDd>0?g/r.maxDd:null,sqn:T>1e-9?D/T*Math.sqrt(Math.min(e,100)):null,avgDuration:e?m(k)/e:null,commission:m(t.map(n=>n.commission||0)),long:S(t.filter(n=>n.side==="buy")),short:S(t.filter(n=>n.side==="sell")),byHour:L,byWeekday:P,byMonth:[...b.values()].sort((n,x)=>n.month.localeCompare(x.month)),curve:r.curve,finalBalance:r.final}}h(computeStats,"computeStats");
+// Performance statistics over closed trades.
+
+const sum = (xs) => xs.reduce((a, b) => a + b, 0);
+const BE_EPS = 1e-9;
+
+function streaks(trades) {
+  let win = 0, loss = 0, maxWin = 0, maxLoss = 0;
+  for (const t of trades) {
+    if (t.pnl > BE_EPS) { win++; loss = 0; } else if (t.pnl < -BE_EPS) { loss++; win = 0; } else { win = 0; loss = 0; }
+    maxWin = Math.max(maxWin, win);
+    maxLoss = Math.max(maxLoss, loss);
+  }
+  return { maxWin, maxLoss };
+}
+
+function side(trades) {
+  const wins = trades.filter((t) => t.pnl > BE_EPS).length;
+  return { count: trades.length, winRate: trades.length ? wins / trades.length : null, net: sum(trades.map((t) => t.pnl)) };
+}
+
+/** Closed-trade balance curve and its worst peak-to-trough fall. */
+export function drawdown(trades, initial) {
+  let bal = initial, peak = initial, maxDd = 0, maxDdPct = 0;
+  const curve = [];
+  for (const t of trades) {
+    bal += t.pnl;
+    curve.push({ t: t.exitTime, balance: bal });
+    if (bal > peak) peak = bal;
+    const dd = peak - bal;
+    if (dd > maxDd) maxDd = dd;
+    if (peak > 0 && dd / peak > maxDdPct) maxDdPct = dd / peak;
+  }
+  return { curve, maxDd, maxDdPct, final: bal };
+}
+
+/**
+ * trades: broker trade records (sorted by exit time).
+ * opts.initial: starting balance; opts.tz: IANA zone for hour / weekday buckets.
+ */
+export function computeStats(trades, { initial = 10000, tz = 'UTC' } = {}) {
+  const n = trades.length;
+  const pnls = trades.map((t) => t.pnl);
+  const wins = trades.filter((t) => t.pnl > BE_EPS);
+  const losses = trades.filter((t) => t.pnl < -BE_EPS);
+  const grossProfit = sum(wins.map((t) => t.pnl));
+  const grossLoss = -sum(losses.map((t) => t.pnl));
+  const net = sum(pnls);
+  const rs = trades.map((t) => t.r).filter((r) => r != null && Number.isFinite(r));
+  const dd = drawdown(trades, initial);
+  const avgWin = wins.length ? grossProfit / wins.length : null;
+  const avgLoss = losses.length ? -grossLoss / losses.length : null;
+  const mean = n ? net / n : null;
+  const sd = n > 1 ? Math.sqrt(sum(pnls.map((p) => (p - mean) ** 2)) / (n - 1)) : null;
+  const durations = trades.map((t) => t.exitTime - t.entryTime);
+  const st = streaks(trades);
+
+  const hourFmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hourCycle: 'h23' });
+  const dayFmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, weekday: 'short' });
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const byHour = Array.from({ length: 24 }, () => ({ count: 0, net: 0, wins: 0 }));
+  const byWeekday = days.map(() => ({ count: 0, net: 0, wins: 0 }));
+  const byMonth = new Map();
+  for (const t of trades) {
+    const d = new Date(t.entryTime * 1000);
+    const h = Number(hourFmt.format(d)) % 24;
+    const w = days.indexOf(dayFmt.format(d));
+    for (const b of [byHour[h], byWeekday[w]]) {
+      if (!b) continue;
+      b.count++; b.net += t.pnl; if (t.pnl > BE_EPS) b.wins++;
+    }
+    const m = new Date(t.exitTime * 1000).toISOString().slice(0, 7);
+    const mb = byMonth.get(m) || { month: m, count: 0, net: 0 };
+    mb.count++; mb.net += t.pnl;
+    byMonth.set(m, mb);
+  }
+
+  return {
+    trades: n,
+    wins: wins.length,
+    losses: losses.length,
+    breakeven: n - wins.length - losses.length,
+    winRate: n ? wins.length / n : null,
+    net,
+    returnPct: initial ? net / initial : null,
+    grossProfit,
+    grossLoss,
+    profitFactor: grossLoss > 0 ? grossProfit / grossLoss : (grossProfit > 0 ? Infinity : null),
+    avgWin,
+    avgLoss,
+    payoff: avgWin != null && avgLoss ? avgWin / -avgLoss : null,
+    expectancy: mean,
+    avgR: rs.length ? sum(rs) / rs.length : null,
+    totalR: rs.length ? sum(rs) : null,
+    largestWin: wins.length ? Math.max(...wins.map((t) => t.pnl)) : null,
+    largestLoss: losses.length ? Math.min(...losses.map((t) => t.pnl)) : null,
+    maxConsecWins: st.maxWin,
+    maxConsecLosses: st.maxLoss,
+    maxDrawdown: dd.maxDd,
+    maxDrawdownPct: dd.maxDdPct,
+    recoveryFactor: dd.maxDd > 0 ? net / dd.maxDd : null,
+    // undefined when every trade made the same amount
+    sqn: sd > 1e-9 ? (mean / sd) * Math.sqrt(Math.min(n, 100)) : null,
+    avgDuration: n ? sum(durations) / n : null,
+    commission: sum(trades.map((t) => t.commission || 0)),
+    long: side(trades.filter((t) => t.side === 'buy')),
+    short: side(trades.filter((t) => t.side === 'sell')),
+    byHour,
+    byWeekday,
+    byMonth: [...byMonth.values()].sort((a, b) => a.month.localeCompare(b.month)),
+    curve: dd.curve,
+    finalBalance: dd.final,
+  };
+}

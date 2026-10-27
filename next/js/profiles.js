@@ -1,11 +1,12 @@
 // Profile screen: pick who is trading, add / edit / lock profiles.
-import { api } from './api.js?v=5cd63cafc3';
-import { LOCAL } from './local/boot.js?v=5cd63cafc3';
-import { pushExport } from './local/sync.js?v=5cd63cafc3';
+import { api } from './api.js?v=446247be79';
+import { LOCAL } from './local/boot.js?v=446247be79';
+import { LOCAL_NAMES, TEST_COPY } from './local/site.js?v=446247be79';
+import { pushExport } from './local/sync.js?v=446247be79';
 
 const NEW_SITE = 'https://r5vers.github.io';
-import { AVATAR_PATTERNS, avatar as avatarEl, brandMark, confirmBox, field, h, icon, modal, toast } from './ui/dom.js?v=5cd63cafc3';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance } from './ui/look.js?v=5cd63cafc3';
+import { AVATAR_PATTERNS, avatar as avatarEl, brandMark, confirmBox, field, h, icon, modal, toast } from './ui/dom.js?v=446247be79';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance } from './ui/look.js?v=446247be79';
 
 const COLORS = [
   '#8b7cf6', '#5e5ce6', '#4f8fd9', '#0a84ff', '#40c8e0', '#3fb39b', '#30d158', '#8fae5a', '#c6ff3d', '#d9a441',
@@ -31,7 +32,7 @@ let managing = false;
 
 // The background of this screen (and the password page) is chosen per
 // device, Bulutsu unless changed; the accent and glows follow its theme.
-const GATE_KEY = 'nx-gate-bg';
+const GATE_KEY = LOCAL_NAMES.gateBg;
 function gateBg() {
   try { const id = localStorage.getItem(GATE_KEY); if (BACKGROUNDS[id] && id !== 'custom') return id; } catch { /* private mode */ }
   return 'nebula';
@@ -44,7 +45,7 @@ function setGateBg(bg) {
   try {
     localStorage.setItem(GATE_KEY, bg);
     // the password page has no scripts of its own to work this out
-    localStorage.setItem('nx-gate-look', JSON.stringify({ css: BACKGROUNDS[bg].css, light: !!BACKGROUNDS[bg].light, ...gateLook(bg) }));
+    localStorage.setItem(LOCAL_NAMES.gateLook, JSON.stringify({ css: BACKGROUNDS[bg].css, light: !!BACKGROUNDS[bg].light, ...gateLook(bg) }));
   } catch { /* private mode */ }
   paint();
 }
@@ -53,7 +54,7 @@ function setGateBg(bg) {
 // background picked for this device
 function paint() {
   let look = null;
-  try { look = JSON.parse(localStorage.getItem('nx-last-look') || 'null'); } catch { look = null; }
+  try { look = JSON.parse(localStorage.getItem(LOCAL_NAMES.lastLook) || 'null'); } catch { look = null; }
   const bg = gateBg();
   applyAppearance({ ...(look || DEFAULT_APPEARANCE), design: 'studio', bg, ...gateLook(bg) });
   document.getElementById('brand-tile').replaceChildren(brandMark(96));
@@ -121,14 +122,33 @@ function renderCloud() {
     zone.classList.add('slim');
     return;
   }
-  // the test copy: its own data, copied once from the main site, no cloud
   zone.classList.remove('slim');
+  if (TEST_COPY) {
+    // the test copy: its own data, copied once from the main site, no cloud
+    zone.replaceChildren(
+      h('div.cloud-head', {}, h('span.cloud-title', {}, icon('flask', 16), 'Test sürümü · RV Next')),
+      h('p.muted.cloud-lead', {}, 'Ana sitedeki profiller, oturumlar ve görünüm buraya bir kez kopyalandı. Burada yaptığın değişiklikler ana siteye gitmez; test sürümü buluta bağlanmaz.'),
+      h('div.cloud-links', {},
+        h('a.link-btn', { href: '../profiles.html' }, 'Ana siteye dön'),
+        h('a.link-btn', { href: 'sifirla.html' }, 'Sıfırla ve ana siteden yeniden kopyala')));
+    return;
+  }
+  const pass = h('input.ctl', { type: 'password', placeholder: 'Grup şifresi', autocomplete: 'current-password' });
+  const join = async (create) => {
+    if (create && !(await confirmBox('Grubu kur', 'Bu şifreyle yeni bir bulut grubu kurulur; bu cihazdaki profiller oraya yüklenir. Grup zaten varsa kurma, sadece “Bağlan”.', 'Kur'))) return;
+    try {
+      await api.cloudConnect(pass.value, create);
+      toast('Bulut bağlı: profiller ve ayarlar bu cihazda', 'ok', 5000);
+      await load();
+    } catch (err) { toast(err.message, 'err', 6000); pass.select(); }
+  };
+  pass.addEventListener('keydown', (e) => { if (e.key === 'Enter') join(false); });
   zone.replaceChildren(
-    h('div.cloud-head', {}, h('span.cloud-title', {}, icon('flask', 16), 'Test sürümü · RV Next')),
-    h('p.muted.cloud-lead', {}, 'Ana sitedeki profiller, oturumlar ve görünüm buraya bir kez kopyalandı. Burada yaptığın değişiklikler ana siteye gitmez; test sürümü buluta bağlanmaz.'),
+    h('div.cloud-head', {}, h('span.cloud-title', {}, icon('cloud', 16), 'Buluta bağlan')),
+    h('p.muted.cloud-lead', {}, 'Bu cihazda bir kez grup şifresini gir: bütün profiller, temalar, grafik düzenleri, replay oturumları ve stratejiler gelir ve her cihazda aynı kalır. Mum verisi her cihaza ayrıca iner.'),
+    h('div.cloud-link', {}, pass, h('button.btn.small.primary', { type: 'button', onclick: () => join(false) }, 'Bağlan')),
     h('div.cloud-links', {},
-      h('a.link-btn', { href: '../profiles.html' }, 'Ana siteye dön'),
-      h('a.link-btn', { href: 'sifirla.html' }, 'Sıfırla ve ana siteden yeniden kopyala')));
+      h('button.link-btn', { type: 'button', onclick: () => join(true) }, 'İlk kez mi? Bu şifreyle grubu kur')));
 }
 
 /** Server site: everything goes to the group's cloud, for the new site. */

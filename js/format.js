@@ -1,1 +1,112 @@
-var f=Object.defineProperty;var e=(t,n)=>f(t,"name",{value:n,configurable:!0});const o="tr-TR",l=new Map;function a(t,n){const i=t+JSON.stringify(n);let r=l.get(i);return r||(r=new Intl.DateTimeFormat(o,{timeZone:t,hourCycle:"h23",...n}),l.set(i,r)),r}e(a,"dtf");export function price(t,n=5){return t==null||!Number.isFinite(t)?"—":t.toFixed(n)}e(price,"price");export function money(t,n="USD",i=2){if(t==null||!Number.isFinite(t))return"—";const r=Math.abs(t).toLocaleString(o,{minimumFractionDigits:i,maximumFractionDigits:i}),u={USD:"$",EUR:"€",GBP:"£",TRY:"₺",JPY:"¥"}[n];return`${t<0?"−":""}${u?u+r:`${r} ${n}`}`}e(money,"money");export function signedMoney(t,n){return t==null||!Number.isFinite(t)?"—":(t>0?"+":"")+money(t,n)}e(signedMoney,"signedMoney");export function num(t,n=2){return t==null||!Number.isFinite(t)?t===1/0?"∞":"—":t.toLocaleString(o,{minimumFractionDigits:n,maximumFractionDigits:n})}e(num,"num");export function pct(t,n=1){if(t==null||!Number.isFinite(t))return"—";const i=Math.abs(t*100).toLocaleString(o,{minimumFractionDigits:n,maximumFractionDigits:n});return`${t<0&&Number(i.replace(",","."))!==0?"−":""}%${i}`}e(pct,"pct");export function signed(t,n=1){return t==null||!Number.isFinite(t)?"—":(t>0?"+":"")+t.toFixed(n)}e(signed,"signed");export function cls(t){return t>0?"up":t<0?"down":""}e(cls,"cls");export function dateTime(t,n="UTC",i=!1){return t==null?"—":a(n,{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",...i?{second:"2-digit"}:{}}).format(new Date(t*1e3))}e(dateTime,"dateTime");export function dateOnly(t,n="UTC"){return t==null?"—":a(n,{year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(t*1e3))}e(dateOnly,"dateOnly");export function clock(t,n="UTC"){return t==null?"—":a(n,{weekday:"short",year:"2-digit",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(t*1e3))}e(clock,"clock");export function duration(t){if(t==null||!Number.isFinite(t))return"—";const n=Math.max(0,Math.round(t/60)),i=Math.floor(n/1440),r=Math.floor(n%1440/60),u=n%60;return i?`${i} gün ${r} sa`:r?`${r} sa ${u} dk`:`${u} dk`}e(duration,"duration");export function tzOffset(t,n){if(n==="UTC")return 0;const i=a(n,{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"}).formatToParts(new Date(t*1e3)),r=e(m=>Number(i.find(c=>c.type===m).value),"g");return Date.UTC(r("year"),r("month")-1,r("day"),r("hour")%24,r("minute"),r("second"))/1e3-t}e(tzOffset,"tzOffset");export function parseLocal(t,n="UTC"){if(!t)return null;const i=/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/.exec(t);if(!i)return null;const r=Date.UTC(+i[1],+i[2]-1,+i[3],+(i[4]||0),+(i[5]||0))/1e3;let u=r-tzOffset(r,n);return u=r-tzOffset(u,n),u}e(parseLocal,"parseLocal");export function toLocalInput(t,n="UTC"){return t==null?"":new Date((t+tzOffset(t,n))*1e3).toISOString().slice(0,16)}e(toLocalInput,"toLocalInput");export function parseNumber(t){if(t==null)return null;const n=String(t).trim().replace(",",".");if(n==="")return null;const i=Number(n);return Number.isFinite(i)?i:NaN}e(parseNumber,"parseNumber");export function escapeHtml(t){return String(t??"").replace(/[&<>"']/g,n=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[n])}e(escapeHtml,"escapeHtml");
+// Number / money / time formatting (Turkish locale by default).
+
+const LOCALE = 'tr-TR';
+const fmtCache = new Map();
+
+function dtf(tz, opts) {
+  const key = tz + JSON.stringify(opts);
+  let f = fmtCache.get(key);
+  if (!f) {
+    f = new Intl.DateTimeFormat(LOCALE, { timeZone: tz, hourCycle: 'h23', ...opts });
+    fmtCache.set(key, f);
+  }
+  return f;
+}
+
+export function price(x, decimals = 5) {
+  if (x == null || !Number.isFinite(x)) return '—';
+  return x.toFixed(decimals);
+}
+
+export function money(x, currency = 'USD', digits = 2) {
+  if (x == null || !Number.isFinite(x)) return '—';
+  const s = Math.abs(x).toLocaleString(LOCALE, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  const sym = { USD: '$', EUR: '€', GBP: '£', TRY: '₺', JPY: '¥' }[currency];
+  return `${x < 0 ? '−' : ''}${sym ? sym + s : `${s} ${currency}`}`;
+}
+
+export function signedMoney(x, currency, digits = 2) {
+  if (x == null || !Number.isFinite(x)) return '—';
+  return (x > 0 ? '+' : '') + money(x, currency, digits);
+}
+
+export function num(x, digits = 2) {
+  if (x == null || !Number.isFinite(x)) return x === Infinity ? '∞' : '—';
+  return x.toLocaleString(LOCALE, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+export function pct(x, digits = 1) {
+  if (x == null || !Number.isFinite(x)) return '—';
+  const v = Math.abs(x * 100).toLocaleString(LOCALE, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return `${x < 0 && Number(v.replace(',', '.')) !== 0 ? '−' : ''}%${v}`;
+}
+
+export function signed(x, digits = 1) {
+  if (x == null || !Number.isFinite(x)) return '—';
+  return (x > 0 ? '+' : '') + x.toFixed(digits);
+}
+
+export function cls(x) { return x > 0 ? 'up' : x < 0 ? 'down' : ''; }
+
+export function dateTime(t, tz = 'UTC', withSeconds = false) {
+  if (t == null) return '—';
+  return dtf(tz, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', ...(withSeconds ? { second: '2-digit' } : {}) }).format(new Date(t * 1000));
+}
+
+export function dateOnly(t, tz = 'UTC') {
+  if (t == null) return '—';
+  return dtf(tz, { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(t * 1000));
+}
+
+export function clock(t, tz = 'UTC') {
+  if (t == null) return '—';
+  return dtf(tz, { weekday: 'short', year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(t * 1000));
+}
+
+export function duration(sec) {
+  if (sec == null || !Number.isFinite(sec)) return '—';
+  const total = Math.max(0, Math.round(sec / 60));
+  const d = Math.floor(total / 1440), h = Math.floor((total % 1440) / 60), m = total % 60;
+  if (d) return `${d} gün ${h} sa`;
+  if (h) return `${h} sa ${m} dk`;
+  return `${m} dk`;
+}
+
+/** Offset (seconds) of `tz` at UTC instant t: local wall time = t + offset. */
+export function tzOffset(t, tz) {
+  if (tz === 'UTC') return 0;
+  const parts = dtf(tz, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(new Date(t * 1000));
+  const g = (type) => Number(parts.find((p) => p.type === type).value);
+  const wall = Date.UTC(g('year'), g('month') - 1, g('day'), g('hour') % 24, g('minute'), g('second')) / 1000;
+  return wall - t;
+}
+
+/** "YYYY-MM-DDTHH:MM" wall time in `tz` -> UTC seconds. */
+export function parseLocal(value, tz = 'UTC') {
+  if (!value) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/.exec(value);
+  if (!m) return null;
+  const wall = Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)) / 1000;
+  let t = wall - tzOffset(wall, tz);
+  t = wall - tzOffset(t, tz); // second pass settles DST edges
+  return t;
+}
+
+/** UTC seconds -> "YYYY-MM-DDTHH:MM" wall time in `tz` (for datetime-local inputs). */
+export function toLocalInput(t, tz = 'UTC') {
+  if (t == null) return '';
+  const d = new Date((t + tzOffset(t, tz)) * 1000);
+  return d.toISOString().slice(0, 16);
+}
+
+export function parseNumber(s) {
+  if (s == null) return null;
+  const v = String(s).trim().replace(',', '.');
+  if (v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+export function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}

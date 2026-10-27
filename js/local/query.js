@@ -1,1 +1,225 @@
-var L=Object.defineProperty;var m=(t,l)=>L(t,"name",{value:l,configurable:!0});import{bucket as v,canAggregate as P,parseTf as $,HOUR as _}from"../core/timeframes.js?v=73a9f08a15";import{concatCols as T,emptyCols as j,sliceCols as F}from"./rtc.js?v=73a9f08a15";export function lowerBound(t,l,e=0,u=t.length){for(;e<u;){const a=e+u>>>1;t[a]<l?e=a+1:u=a}return e}m(lowerBound,"lowerBound");export function upperBound(t,l,e=0,u=t.length){for(;e<u;){const a=e+u>>>1;t[a]<=l?e=a+1:u=a}return e}m(upperBound,"upperBound");const B=class B{constructor(l,e){this.cols=l,this.scale=e,this.n=l.t.length}async search(l,e="left"){return e==="left"?lowerBound(this.cols.t,l):upperBound(this.cols.t,l)}async tAt(l){return this.cols.t[l]}async slice(l,e){return F(this.cols,Math.max(0,l),Math.min(this.n,e))}};m(B,"MemRows");export let MemRows=B;export function cachedTf(t,l){return l.id!==t.id&&(l.kind!=="intraday"||l.seconds>=_)}m(cachedTf,"cachedTf");export function aggregateCols(t,l,e,u=0){const a=t.t.length;if(!a)return{cols:j(0),starts:new Float64Array(0)};const f=new Float64Array(a);let o=1;f[0]=v(t.t[0],l,e);for(let n=1;n<a;n++)f[n]=v(t.t[n],l,e),f[n]!==f[n-1]&&o++;const c=j(o),y=new Float64Array(o);let r=-1;for(let n=0;n<a;n++)n===0||f[n]!==f[n-1]?(r++,c.t[r]=f[n],c.o[r]=t.o[n],c.h[r]=t.h[n],c.l[r]=t.l[n],c.v[r]=t.v[n],y[r]=u+n):(t.h[n]>c.h[r]&&(c.h[r]=t.h[n]),t.l[n]<c.l[r]&&(c.l[r]=t.l[n]),c.v[r]=Math.fround(c.v[r]+t.v[n])),c.c[r]=t.c[n];return{cols:c,starts:y}}m(aggregateCols,"aggregateCols");export function rollUp(t,l,e,u){const{cols:a,starts:f}=aggregateCols(t,e,u),o=new Float64Array(f.length);for(let c=0;c<f.length;c++)o[c]=l[f[c]];return{cols:a,starts:o}}m(rollUp,"rollUp");async function H(t,l,e,u,a,f){const{to:o,before:c,after:y,start:r,end:n,lim:s}=f;if(o!=null){const h=v(o,u,a),w=await t.search(h,"left"),A=await e.search(o,"right");let b;w<t.n&&await t.tAt(w)===h?b=l==null?w:l[w]:b=A;let k=0;s!=null&&(k=Math.max(0,w-(A>b?s-1:s)));const C=await t.slice(k,w);if(A>b){const x=aggregateCols(await e.slice(b,A),u,a).cols;return T([C,x])}return C}if(c!=null){const h=await t.search(c,"left");return t.slice(s?Math.max(0,h-s):0,h)}if(y!=null){const h=await t.search(y,"right");return t.slice(h,s?h+s:t.n)}if(r!=null||n!=null){const h=r!=null?await t.search(r,"left"):0,w=n!=null?await t.search(n,"right"):t.n;return t.slice(h,s?Math.min(w,h+s):w)}return t.slice(s?Math.max(0,t.n-s):0,t.n)}m(H,"select");async function z(t,l,e,u,a){const{to:f,before:o,after:c,start:y,end:r,lim:n}=a,s=t.n,h=Math.max(1,Math.floor(l.seconds/e.seconds)),w=m(async(i,d)=>aggregateCols(await t.slice(i,d),l,u).cols,"agg"),A=m(async i=>i<=0||i>=s?Math.min(Math.max(i,0),s):t.search(v(await t.tAt(i),l,u),"left"),"snap"),b=m(async(i,d)=>{const p=await t.search(i,d),M=(await t.slice(p,p+h+1)).t;let g=0;for(let N=0;N<M.length;N++){const U=v(M[N],l,u);(d==="left"?U<i:U<=i)&&g++}return p+g},"firstLabel"),k=m((i,d)=>F(i,Math.max(0,i.t.length-d),i.t.length),"tail"),C=m((i,d)=>F(i,0,Math.min(i.t.length,d)),"head"),x=m(async i=>{if(n==null)return w(0,i);let d=(n+1)*h;for(;;){const p=await A(Math.max(0,i-d)),M=await w(p,i);if(M.t.length>=n||p===0)return k(M,n);d*=2}},"back"),O=m(async(i,d)=>{if(n==null)return w(i,d);let p=(n+1)*h;for(;;){let M=Math.min(d,i+p);M<d&&(M=await A(M));const g=await w(i,M);if(g.t.length>=n||M>=d)return C(g,n);p*=2}},"forward");if(f!=null)return x(await t.search(f,"right"));if(o!=null)return x(await b(o,"left"));if(c!=null)return O(await b(c,"right"),s);if(y!=null||r!=null){const i=y!=null?await b(y,"left"):0,d=r!=null?await b(r,"right"):s;return O(i,d)}return x(s)}m(z,"windowed");export async function barRows(t,l,e,u){const a=$(l),f=$(t.base_tf);if(!P(f,a))throw Object.assign(new Error(`${t.base_tf} data cannot be shown as ${a.id}`),{status:400});const o=m(s=>s==null||s===""?null:Number(s),"num"),c=e.limit&&Number(e.limit)>0?Number(e.limit):null,y={to:o(e.to),before:o(e.before),after:o(e.after),start:o(e.start),end:o(e.end),lim:c},r=await u.base(t);let n;if(a.id===f.id)n=await H(r,null,r,a,t.align,y);else if(cachedTf(f,a)){const{rows:s,starts:h}=await u.aggregated(t,a);n=await H(s,h,r,a,t.align,y)}else n=await z(r,a,f,t.align,y);return{cols:n,scale:r.scale,tf:a}}m(barRows,"barRows");export async function aggregateAll(t,l,e,u=1<<18){const a=[],f=[];let o=null;for(let n=0;n<t.n;n+=u){const{cols:s,starts:h}=aggregateCols(await t.slice(n,Math.min(t.n,n+u)),l,e,n);if(!s.t.length)continue;o&&(o.cols.t[0]===s.t[0]?(s.o[0]=o.cols.o[0],o.cols.h[0]>s.h[0]&&(s.h[0]=o.cols.h[0]),o.cols.l[0]<s.l[0]&&(s.l[0]=o.cols.l[0]),s.v[0]=Math.fround(o.cols.v[0]+s.v[0]),h[0]=o.start):(a.push(o.cols),f.push(Float64Array.of(o.start))));const w=s.t.length-1;w>0&&(a.push(F(s,0,w)),f.push(h.subarray(0,w))),o={cols:T([F(s,w,w+1)]),start:h[w]}}o&&(a.push(o.cols),f.push(Float64Array.of(o.start)));const c=T(a),y=new Float64Array(c.t.length);let r=0;for(const n of f)y.set(n,r),r+=n.length;return{cols:c,starts:y}}m(aggregateAll,"aggregateAll");
+// Bar queries over a base series, as server/store.py answers them
+// (bar_rows, _select, _window) - the same bars, label for label.
+//
+// A series is reached through a "rows" object, so the same code runs over
+// columns in memory and over chunks kept in IndexedDB:
+//   rows.n, rows.scale
+//   await rows.search(x, side)   first index with t >= x ("left") / t > x ("right")
+//   await rows.tAt(i)
+//   await rows.slice(i, j)       columns of rows [i, j)
+import { bucket, canAggregate, parseTf, HOUR } from '../core/timeframes.js?v=446247be79';
+import { concatCols, emptyCols, sliceCols } from './rtc.js?v=446247be79';
+
+export function lowerBound(arr, x, lo = 0, hi = arr.length) {
+  while (lo < hi) { const mid = (lo + hi) >>> 1; if (arr[mid] < x) lo = mid + 1; else hi = mid; }
+  return lo;
+}
+export function upperBound(arr, x, lo = 0, hi = arr.length) {
+  while (lo < hi) { const mid = (lo + hi) >>> 1; if (arr[mid] <= x) lo = mid + 1; else hi = mid; }
+  return lo;
+}
+
+/** Columns held in memory. */
+export class MemRows {
+  constructor(cols, scale) { this.cols = cols; this.scale = scale; this.n = cols.t.length; }
+  async search(x, side = 'left') { return side === 'left' ? lowerBound(this.cols.t, x) : upperBound(this.cols.t, x); }
+  async tAt(i) { return this.cols.t[i]; }
+  async slice(i, j) { return sliceCols(this.cols, Math.max(0, i), Math.min(this.n, j)); }
+}
+
+/** Hour and longer get a cached aggregation; shorter ones are built per request. */
+export function cachedTf(baseTf, tf) {
+  return tf.id !== baseTf.id && (tf.kind !== 'intraday' || tf.seconds >= HOUR);
+}
+
+/** Aggregate base columns into `tf` bars (candlestore.aggregate_range).
+ *  Returns { cols, starts } - starts[k]: index in `part` where bar k begins
+ *  (plus `offset`). */
+export function aggregateCols(part, tf, align, offset = 0) {
+  const n = part.t.length;
+  if (!n) return { cols: emptyCols(0), starts: new Float64Array(0) };
+  const labels = new Float64Array(n);
+  let groups = 1;
+  labels[0] = bucket(part.t[0], tf, align);
+  for (let i = 1; i < n; i++) {
+    labels[i] = bucket(part.t[i], tf, align);
+    if (labels[i] !== labels[i - 1]) groups++;
+  }
+  const out = emptyCols(groups);
+  const starts = new Float64Array(groups);
+  let g = -1;
+  for (let i = 0; i < n; i++) {
+    if (i === 0 || labels[i] !== labels[i - 1]) {
+      g++;
+      out.t[g] = labels[i];
+      out.o[g] = part.o[i];
+      out.h[g] = part.h[i];
+      out.l[g] = part.l[i];
+      out.v[g] = part.v[i];
+      starts[g] = offset + i;
+    } else {
+      if (part.h[i] > out.h[g]) out.h[g] = part.h[i];
+      if (part.l[i] < out.l[g]) out.l[g] = part.l[i];
+      out.v[g] = Math.fround(out.v[g] + part.v[i]);   // float32 sums, like numpy
+    }
+    out.c[g] = part.c[i];
+  }
+  return { cols: out, starts };
+}
+
+/** Roll an aggregated series (cols + starts into the base) up into a
+ *  coarser `tf` whose buckets are unions of its buckets (1h -> 4h / 1D / 1W / 1M). */
+export function rollUp(src, srcStarts, tf, align) {
+  const { cols, starts } = aggregateCols(src, tf, align);
+  const abs = new Float64Array(starts.length);
+  for (let k = 0; k < starts.length; k++) abs[k] = srcStarts[starts[k]];
+  return { cols, starts: abs };
+}
+
+async function select(agg, starts, base, tf, align, q) {
+  const { to, before, after, start, end, lim } = q;
+  if (to != null) {
+    const label = bucket(to, tf, align);
+    const i = await agg.search(label, 'left');
+    const j = await base.search(to, 'right');
+    let k;
+    if (i < agg.n && (await agg.tAt(i)) === label) k = starts == null ? i : starts[i];
+    else k = j;
+    let from = 0;
+    if (lim != null) from = Math.max(0, i - (j > k ? lim - 1 : lim));
+    const closed = await agg.slice(from, i);
+    if (j > k) {
+      const forming = aggregateCols(await base.slice(k, j), tf, align).cols;
+      return concatCols([closed, forming]);
+    }
+    return closed;
+  }
+  if (before != null) {
+    const i = await agg.search(before, 'left');
+    return agg.slice(lim ? Math.max(0, i - lim) : 0, i);
+  }
+  if (after != null) {
+    const i = await agg.search(after, 'right');
+    return agg.slice(i, lim ? i + lim : agg.n);
+  }
+  if (start != null || end != null) {
+    const i = start != null ? await agg.search(start, 'left') : 0;
+    const j = end != null ? await agg.search(end, 'right') : agg.n;
+    return agg.slice(i, lim ? Math.min(j, i + lim) : j);
+  }
+  return agg.slice(lim ? Math.max(0, agg.n - lim) : 0, agg.n);
+}
+
+async function windowed(base, tf, baseTf, align, q) {
+  const { to, before, after, start, end, lim } = q;
+  const n = base.n;
+  const ratio = Math.max(1, Math.floor(tf.seconds / baseTf.seconds));
+  const agg = async (i, j) => aggregateCols(await base.slice(i, j), tf, align).cols;
+
+  const snap = async (i) => {
+    if (i <= 0 || i >= n) return Math.min(Math.max(i, 0), n);
+    return base.search(bucket(await base.tAt(i), tf, align), 'left');
+  };
+  const firstLabel = async (x, side) => {
+    const j0 = await base.search(x, side);
+    const look = (await base.slice(j0, j0 + ratio + 1)).t;
+    let count = 0;
+    for (let i = 0; i < look.length; i++) {
+      const lab = bucket(look[i], tf, align);
+      if (side === 'left' ? lab < x : lab <= x) count++;
+    }
+    return j0 + count;
+  };
+  const tail = (cols, m) => sliceCols(cols, Math.max(0, cols.t.length - m), cols.t.length);
+  const head = (cols, m) => sliceCols(cols, 0, Math.min(cols.t.length, m));
+
+  const back = async (j) => {
+    if (lim == null) return agg(0, j);
+    let span = (lim + 1) * ratio;
+    for (;;) {
+      const i = await snap(Math.max(0, j - span));
+      const rows = await agg(i, j);
+      if (rows.t.length >= lim || i === 0) return tail(rows, lim);
+      span *= 2;
+    }
+  };
+  const forward = async (i, jEnd) => {
+    if (lim == null) return agg(i, jEnd);
+    let span = (lim + 1) * ratio;
+    for (;;) {
+      let j = Math.min(jEnd, i + span);
+      if (j < jEnd) j = await snap(j);
+      const rows = await agg(i, j);
+      if (rows.t.length >= lim || j >= jEnd) return head(rows, lim);
+      span *= 2;
+    }
+  };
+
+  if (to != null) return back(await base.search(to, 'right'));
+  if (before != null) return back(await firstLabel(before, 'left'));
+  if (after != null) return forward(await firstLabel(after, 'right'), n);
+  if (start != null || end != null) {
+    const i = start != null ? await firstLabel(start, 'left') : 0;
+    const j = end != null ? await firstLabel(end, 'right') : n;
+    return forward(i, j);
+  }
+  return back(n);
+}
+
+/**
+ * Columns of `tfId` bars for dataset `ds`, selected by one of to / before /
+ * after / start+end (see store.bar_rows). `source` provides:
+ *   base(ds)            -> rows of the base series
+ *   aggregated(ds, tf)  -> { rows, starts } of a cached timeframe
+ */
+export async function barRows(ds, tfId, query, source) {
+  const tf = parseTf(tfId);
+  const baseTf = parseTf(ds.base_tf);
+  if (!canAggregate(baseTf, tf)) throw Object.assign(new Error(`${ds.base_tf} data cannot be shown as ${tf.id}`), { status: 400 });
+  const num = (x) => (x === undefined || x === null || x === '' ? null : Number(x));
+  const lim = query.limit && Number(query.limit) > 0 ? Number(query.limit) : null;
+  const q = { to: num(query.to), before: num(query.before), after: num(query.after), start: num(query.start), end: num(query.end), lim };
+  const base = await source.base(ds);
+  let cols;
+  if (tf.id === baseTf.id) cols = await select(base, null, base, tf, ds.align, q);
+  else if (cachedTf(baseTf, tf)) {
+    const { rows, starts } = await source.aggregated(ds, tf);
+    cols = await select(rows, starts, base, tf, ds.align, q);
+  } else cols = await windowed(base, tf, baseTf, ds.align, q);
+  return { cols, scale: base.scale, tf };
+}
+
+/** The whole aggregation of a cached timeframe, from the base rows in
+ *  chunks (candlestore.aggregate_chunks: a bar across chunks is carried). */
+export async function aggregateAll(base, tf, align, chunk = 1 << 18) {
+  const parts = [], startParts = [];
+  let carry = null;
+  for (let s = 0; s < base.n; s += chunk) {
+    const { cols, starts } = aggregateCols(await base.slice(s, Math.min(base.n, s + chunk)), tf, align, s);
+    if (!cols.t.length) continue;
+    if (carry) {
+      if (carry.cols.t[0] === cols.t[0]) {
+        cols.o[0] = carry.cols.o[0];
+        if (carry.cols.h[0] > cols.h[0]) cols.h[0] = carry.cols.h[0];
+        if (carry.cols.l[0] < cols.l[0]) cols.l[0] = carry.cols.l[0];
+        cols.v[0] = Math.fround(carry.cols.v[0] + cols.v[0]);
+        starts[0] = carry.start;
+      } else {
+        parts.push(carry.cols);
+        startParts.push(Float64Array.of(carry.start));
+      }
+    }
+    const last = cols.t.length - 1;
+    if (last > 0) {
+      parts.push(sliceCols(cols, 0, last));
+      startParts.push(starts.subarray(0, last));
+    }
+    carry = { cols: concatCols([sliceCols(cols, last, last + 1)]), start: starts[last] };
+  }
+  if (carry) { parts.push(carry.cols); startParts.push(Float64Array.of(carry.start)); }
+  const cols = concatCols(parts);
+  const starts = new Float64Array(cols.t.length);
+  let at = 0;
+  for (const s of startParts) { starts.set(s, at); at += s.length; }
+  return { cols, starts };
+}

@@ -1,1 +1,197 @@
-var ft=Object.defineProperty;var r=(y,c)=>ft(y,"name",{value:c,configurable:!0});import{h as et}from"./dom.js?v=73a9f08a15";const _=17,pt=54,Mt=40,bt=260;function gt(y){const c=document.createElement("i");c.style.color=y,document.body.append(c);const R=getComputedStyle(c).color.match(/[\d.]+/g)||[255,255,255];return c.remove(),R.slice(0,3).map(Number)}r(gt,"rgb");export function scrubWheel({onSteps:y,onStart:c,getLook:R=r(()=>({}),"getLook")}){const f=et("canvas.scrub-dial",{"aria-hidden":"true"}),a=et("div.scrub",{role:"slider","aria-label":"Replay tekerleği: sağa çevirdikçe mum ilerler",title:"Sağa çevir: her çizgi bir mum ileri"},f);let W=0,E=0,M=0,l=null,$=0,x=0,T=0,X=-1e9,h=null,o=0,b=0,p=0,s=0,z=0;const P=r(()=>{const t=getComputedStyle(document.documentElement);h={accent:gt(t.getPropertyValue("--accent").trim()||"#9fa8ff"),light:document.documentElement.dataset.theme==="light"}},"readColors"),nt=r((t=performance.now())=>{T=0;const n=a.clientWidth,m=pt;if(!n)return;const F=Math.min(50,t-(z||t));z=t;const C=Math.min(3,window.devicePixelRatio||1),u=n*1.4,O=n/2,Y=6+u;f.width!==Math.round(n*C)&&(f.width=Math.round(n*C),f.height=Math.round(m*C)),h||P(),h.light=document.documentElement.dataset.theme==="light";const S=R();if(S.chartBg==="solid"&&/^#[0-9a-f]{6}$/i.test(S.chartColor||"")){const[v,w,L]=[1,3,5].map(i=>parseInt(S.chartColor.slice(i,i+2),16));h.light=.299*v+.587*w+.114*L>140}const ot=1-Math.exp(-F/70);o+=(b-o)*ot,Math.abs(b-o)<.002&&(o=b),(l===null||t-$>60)&&(p*=Math.exp(-F/120)),p<.005&&(p=0),(l===null||s>-.05)&&(s*=Math.exp(-F/90)),Math.abs(s)<.05&&(s=0);const e=f.getContext("2d");e.setTransform(1,0,0,1,0,0),e.clearRect(0,0,f.width,f.height),e.globalAlpha=1,e.setTransform(C,0,0,C,0,0);const q=Math.asin(Math.min(.98,(n/2-8)/u)),A=_/u,B=(W+s)/u,st=Math.ceil((-q-B)/A),rt=Math.floor((q-B)/A),[N,U,V]=h.accent,it=h.light?"20, 22, 30":"235, 238, 248",j=Math.min(1,(t-X)/bt),g=j<1?(1-j)**2:0,J=Math.min(1,p/1.2),ct=A*(2.4+.5*o+1.4*J);e.lineCap="round";for(let v=st;v<=rt;v++){const w=v*A+B,L=Math.abs(w)/q,i=Math.max(0,1-Math.abs(w)/ct),I=(v%3+3)%3===0,k=(2.5*g+1.2*o)*i,K=(I?20:11)*(1-.3*L)*(1+(.12*g+.08*o)*i),Q=Math.sin(w),Z=Math.cos(w),lt=O+(u-3+k)*Q,ht=Y-(u-3+k)*Z,dt=O+(u-3+k-K)*Q,mt=Y-(u-3+k-K)*Z,ut=(1-L)**1.4;if(e.lineWidth=I?2.2:1.6,i>.02){e.shadowColor=`rgba(${N}, ${U}, ${V}, ${Math.min(1,(.6+.3*o)*i+.3*g*i)})`,e.shadowBlur=10*i*(1+.8*g+.3*J);const tt=i**.8;e.strokeStyle=`rgba(${N}, ${U}, ${V}, ${Math.min(1,.35+(.5+.15*o)*tt+.25*g*tt)})`}else e.shadowColor=h.light?"rgba(255, 255, 255, 0.8)":"rgba(0, 0, 0, 0.75)",e.shadowBlur=3,e.strokeStyle=`rgba(${it}, ${(I?.62:.42)*ut*(.85+.15*o)})`;e.beginPath(),e.moveTo(lt,ht),e.lineTo(dt,mt),e.stroke()}e.shadowBlur=0,(g>0||o!==b||p>0||s!==0)&&d()},"paint"),d=r(()=>{T||(T=requestAnimationFrame(nt))},"repaint"),D=r(()=>{if(x=0,M<=0)return;const t=Math.min(M,Mt);M-=t,y(t)<t&&(M=0,E=0),M>0&&(x=requestAnimationFrame(D))},"flush"),at=r(t=>{M+=t;const n=performance.now();n-X>110&&(X=n,d()),x||(x=requestAnimationFrame(D))},"queue"),G=r((t,n=16)=>{if(t<=0){s=Math.max(-9,s+t*.25),d();return}s<0&&(s=Math.min(0,s+t)),p+=(t/Math.max(8,n)-p)*.35,W+=t,E+=t,d();const m=Math.floor(E/_);m>0&&(E-=m*_,at(m))},"travel"),H=r(t=>{if(l!==null){l=null,E=0,b=0,a.classList.remove("active"),d();try{a.releasePointerCapture(t.pointerId)}catch{}}},"end");return a.addEventListener("pointerdown",t=>{if(!(t.button>0)){t.preventDefault(),l=t.clientX,$=performance.now(),h||P(),b=1,a.classList.add("active"),d();try{a.setPointerCapture(t.pointerId)}catch{}c?.()}}),a.addEventListener("pointermove",t=>{if(l===null)return;const n=t.clientX-l,m=performance.now();l=t.clientX,G(n,m-$),$=m}),a.addEventListener("pointerup",H),a.addEventListener("pointercancel",H),a.addEventListener("wheel",t=>{t.preventDefault(),c?.(),G(.3*(Math.abs(t.deltaX)>Math.abs(t.deltaY)?t.deltaX:t.deltaY))},{passive:!1}),new ResizeObserver(()=>{P(),d()}).observe(a),new MutationObserver(()=>{P(),d()}).observe(document.documentElement,{attributes:!0,attributeFilter:["style","data-theme"]}),a}r(scrubWheel,"scrubWheel");
+// A thumb wheel for replay: the top of a dial, seen from the front, above the
+// replay controls. Its marks (two short, one long) sit on a gentle arc and
+// turn with the finger; the mark at the top glows, the two either side a
+// little less. Each mark that passes the top moves the replay one candle, and
+// the lit marks give a small lift and flare as it does. Roll fast to run,
+// slow down near what matters, lift the finger to stop at once (no coasting).
+import { h } from './dom.js?v=446247be79';
+
+const GAP = 17;           // px along the arc between marks = one candle
+const HEIGHT = 54;
+const MAX_PER_FRAME = 40; // a very fast flick still draws every frame
+
+const PULSE_MS = 260;     // the little lift of the lit marks on each candle
+
+function rgb(color) {
+  const probe = document.createElement('i');
+  probe.style.color = color;
+  document.body.append(probe);
+  const m = getComputedStyle(probe).color.match(/[\d.]+/g) || [255, 255, 255];
+  probe.remove();
+  return m.slice(0, 3).map(Number);
+}
+
+/** `onSteps(n)` moves the replay up to n candles and returns how many it did. */
+export function scrubWheel({ onSteps, onStart, getLook = () => ({}) }) {
+  const canvas = h('canvas.scrub-dial', { 'aria-hidden': 'true' });
+  const el = h('div.scrub', { role: 'slider', 'aria-label': 'Replay tekerleği: sağa çevirdikçe mum ilerler', title: 'Sağa çevir: her çizgi bir mum ileri' }, canvas);
+  let travelled = 0;     // px the dial has turned in all
+  let carry = 0;         // travel not yet turned into a candle
+  let pending = 0;       // candles waiting for the next frame
+  let lastX = null;
+  let lastT = 0;
+  let frame = 0;
+  let paintFrame = 0;
+  let pulseAt = -1e9;
+  let colors = null;
+  // motion that eases rather than jumps: the press (0..1), the speed of the
+  // roll, and a little give when it is pushed the wrong way
+  let press = 0, pressTo = 0, speed = 0, give = 0, lastPaint = 0;
+
+  const readColors = () => {
+    const css = getComputedStyle(document.documentElement);
+    colors = { accent: rgb(css.getPropertyValue('--accent').trim() || '#9fa8ff'), light: document.documentElement.dataset.theme === 'light' };
+  };
+
+  const paint = (now = performance.now()) => {
+    paintFrame = 0;
+    const w = el.clientWidth, hgt = HEIGHT;
+    if (!w) return;
+    const dt = Math.min(50, now - (lastPaint || now));
+    lastPaint = now;
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    // the top of a wheel: a wide arc whose centre is far below the strip
+    const R = w * 1.4;
+    const cx = w / 2, cy = 6 + R;
+    if (canvas.width !== Math.round(w * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(hgt * dpr); }
+    if (!colors) readColors();
+    colors.light = document.documentElement.dataset.theme === 'light';
+    const look = getLook();
+    if (look.chartBg === 'solid' && /^#[0-9a-f]{6}$/i.test(look.chartColor || '')) {
+      const [r, g, b] = [1, 3, 5].map(i => parseInt(look.chartColor.slice(i, i + 2), 16));
+      colors.light = .299 * r + .587 * g + .114 * b > 140;
+    }
+
+    // ease the press in and out, let the speed and the give settle
+    const k = 1 - Math.exp(-dt / 70);
+    press += (pressTo - press) * k;
+    if (Math.abs(pressTo - press) < 0.002) press = pressTo;
+    if (lastX === null || now - lastT > 60) speed *= Math.exp(-dt / 120);
+    if (speed < 0.005) speed = 0;
+    if (lastX === null || give > -0.05) give *= Math.exp(-dt / 90);
+    if (Math.abs(give) < 0.05) give = 0;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const span = Math.asin(Math.min(0.98, (w / 2 - 8) / R));
+    const step = GAP / R;
+    const phase = (travelled + give) / R;
+    const first = Math.ceil((-span - phase) / step), last = Math.floor((span - phase) / step);
+    const [ar, ag, ab] = colors.accent;
+    const base = colors.light ? '20, 22, 30' : '235, 238, 248';
+    // each candle: the lit marks rise a touch and flare, then settle (ease out)
+    const t = Math.min(1, (now - pulseAt) / PULSE_MS);
+    const pulse = t < 1 ? (1 - t) ** 2 : 0;
+    // a fast roll widens the light a little, as if the wheel were warming up
+    const fast = Math.min(1, speed / 1.2);
+    const window_ = step * (2.4 + 0.5 * press + 1.4 * fast);
+    ctx.lineCap = 'round';
+    for (let i = first; i <= last; i++) {
+      const a = i * step + phase;
+      const edge = Math.abs(a) / span;                 // 0 at the top, 1 at the ends
+      const near = Math.max(0, 1 - Math.abs(a) / window_); // the glow around the top
+      const long = ((i % 3) + 3) % 3 === 0;
+      const lift = (2.5 * pulse + 1.2 * press) * near;
+      const len = (long ? 20 : 11) * (1 - 0.3 * edge) * (1 + (0.12 * pulse + 0.08 * press) * near);
+      const sin = Math.sin(a), cos = Math.cos(a);
+      const x0 = cx + (R - 3 + lift) * sin, y0 = cy - (R - 3 + lift) * cos;
+      const x1 = cx + (R - 3 + lift - len) * sin, y1 = cy - (R - 3 + lift - len) * cos;
+      const fade = (1 - edge) ** 1.4;
+      ctx.lineWidth = long ? 2.2 : 1.6;
+      if (near > 0.02) {
+        ctx.shadowColor = `rgba(${ar}, ${ag}, ${ab}, ${Math.min(1, (0.6 + 0.3 * press) * near + 0.3 * pulse * near)})`;
+        ctx.shadowBlur = 10 * near * (1 + 0.8 * pulse + 0.3 * fast);
+        const mix = near ** 0.8;
+        ctx.strokeStyle = `rgba(${ar}, ${ag}, ${ab}, ${Math.min(1, 0.35 + (0.5 + 0.15 * press) * mix + 0.25 * pulse * mix)})`;
+      } else {
+        ctx.shadowColor = colors.light ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.75)';
+        ctx.shadowBlur = 3;
+        ctx.strokeStyle = `rgba(${base}, ${(long ? 0.62 : 0.42) * fade * (0.85 + 0.15 * press)})`;
+      }
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    if (pulse > 0 || press !== pressTo || speed > 0 || give !== 0) repaint();
+  };
+  const repaint = () => { if (!paintFrame) paintFrame = requestAnimationFrame(paint); };
+
+  const flush = () => {
+    frame = 0;
+    if (pending <= 0) return;
+    const want = Math.min(pending, MAX_PER_FRAME);
+    pending -= want;
+    const done = onSteps(want);
+    // the replay stopped (a fill, the end of the data): so does the wheel
+    if (done < want) { pending = 0; carry = 0; }
+    if (pending > 0) frame = requestAnimationFrame(flush);
+  };
+  const queue = (n) => {
+    pending += n;
+    const now = performance.now();
+    // a fast roll keeps a steady beat rather than one long flare
+    if (now - pulseAt > 110) { pulseAt = now; repaint(); }
+    if (!frame) frame = requestAnimationFrame(flush);
+  };
+  const travel = (dx, dtMs = 16) => {
+    if (dx <= 0) {
+      // it only turns forward: pushed back it gives a little, then springs home
+      give = Math.max(-9, give + dx * 0.25);
+      repaint();
+      return;
+    }
+    if (give < 0) give = Math.min(0, give + dx);
+    speed += ((dx / Math.max(8, dtMs)) - speed) * 0.35;
+    travelled += dx;
+    carry += dx;
+    repaint();
+    const n = Math.floor(carry / GAP);
+    if (n > 0) { carry -= n * GAP; queue(n); }
+  };
+  const end = (e) => {
+    if (lastX === null) return;
+    lastX = null;
+    carry = 0;
+    pressTo = 0;
+    el.classList.remove('active');
+    repaint();
+    try { el.releasePointerCapture(e.pointerId); } catch { /* already released */ }
+  };
+
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button > 0) return;
+    e.preventDefault();
+    lastX = e.clientX;
+    lastT = performance.now();
+    if (!colors) readColors();
+    pressTo = 1;
+    el.classList.add('active');
+    repaint();
+    try { el.setPointerCapture(e.pointerId); } catch { /* old browser */ }
+    onStart?.();
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (lastX === null) return;
+    const dx = e.clientX - lastX;
+    const now = performance.now();
+    lastX = e.clientX;
+    travel(dx, now - lastT);
+    lastT = now;
+  });
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+  // a mouse wheel or trackpad works too (down / right = forward)
+  el.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    onStart?.();
+    travel(0.3 * (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY));
+  }, { passive: false });
+  // drawn when it appears, resizes, or the theme changes colour
+  new ResizeObserver(() => { readColors(); repaint(); }).observe(el);
+  new MutationObserver(() => { readColors(); repaint(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'data-theme'] });
+  return el;
+}

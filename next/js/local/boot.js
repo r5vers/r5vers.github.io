@@ -3,22 +3,24 @@
 // files (Vercel, the installed app) the site has no server: requests to
 // /api/... are answered here, on the device, from IndexedDB - so the rest of
 // the app works the same in both.
-import { importFromMain, importLocalStorage } from './clone.js?v=5cd63cafc3';
-import { IdbDb, LightDb, persistStorage, snapshotCodec } from './db.js?v=5cd63cafc3';
-import { handle } from './server.js?v=5cd63cafc3';
+import { carryFromTestCopy, importFromMain, importLocalStorage } from './clone.js?v=446247be79';
+import { IdbDb, LightDb, persistStorage, snapshotCodec } from './db.js?v=446247be79';
+import { handle } from './server.js?v=446247be79';
+import { LOCAL_NAMES, TEST_COPY } from './site.js?v=446247be79';
+import { flush, sync } from './sync.js?v=446247be79';
 
 export const LOCAL = typeof window !== 'undefined' && !window.RV_SERVER;
 // the test copy: the main site's looks and caches, once, before anything reads them
-if (typeof window !== 'undefined') importLocalStorage();
+if (TEST_COPY && typeof window !== 'undefined') importLocalStorage();
 // the page's scripts loaded and linked: the safety net in the page stands down
 if (typeof window !== 'undefined') window.__rvBooted = true;
 
 /** The last errors on this device, for the check-up page (tani.html). */
 export function logError(where, err) {
   try {
-    const list = JSON.parse(localStorage.getItem('nx-errors') || '[]');
+    const list = JSON.parse(localStorage.getItem(LOCAL_NAMES.errors) || '[]');
     list.push({ at: new Date().toISOString(), page: location.pathname, where, msg: String(err?.message || err).slice(0, 400), stack: String(err?.stack || '').slice(0, 600) });
-    localStorage.setItem('nx-errors', JSON.stringify(list.slice(-20)));
+    localStorage.setItem(LOCAL_NAMES.errors, JSON.stringify(list.slice(-20)));
   } catch { /* storage blocked */ }
 }
 if (typeof window !== 'undefined') {
@@ -31,8 +33,8 @@ if (typeof window !== 'undefined') {
 function wantLight() {
   try {
     const asked = new URLSearchParams(location.search).get('mode');
-    if (asked === 'light' || asked === 'full') localStorage.setItem('nx-mode', asked);
-    const kept = localStorage.getItem('nx-mode');
+    if (asked === 'light' || asked === 'full') localStorage.setItem(LOCAL_NAMES.mode, asked);
+    const kept = localStorage.getItem(LOCAL_NAMES.mode);
     if (kept) return kept === 'light';
   } catch { /* storage blocked */ }
   const ua = navigator.userAgent || '';
@@ -42,7 +44,7 @@ function wantLight() {
 async function lightDb() {
   // the snapshot is kept compressed (fflate); without it, plain
   let codec = null;
-  try { codec = snapshotCodec(await import('../../vendor/fflate.js?v=5cd63cafc3')); } catch { /* plain JSON */ }
+  try { codec = snapshotCodec(await import('../../vendor/fflate.js?v=446247be79')); } catch { /* plain JSON */ }
   const db = new LightDb(globalThis.localStorage, codec);
   // what changed goes into localStorage before the page goes away
   addEventListener('pagehide', () => db.save());
@@ -60,14 +62,39 @@ export function localDb() {
         logError('database', e);
         return lightDb();
       });
-    // the test copy starts as a copy of the main site's profiles and sessions;
-    // it never joins the group's cloud (nothing here reaches the main site)
     dbPromise = opened.then(async (db) => {
-      try { await importFromMain(db); } catch (e) { logError('import', e); }
+      if (TEST_COPY) {
+        // the test copy starts as a copy of the main site's profiles and sessions;
+        // it never joins the group's cloud (nothing here reaches the main site)
+        try { await importFromMain(db); } catch (e) { logError('import', e); }
+        return db;
+      }
+      // the main site: what was made in the test copy joins it, once; then
+      // the group's cloud keeps every device the same
+      try { await carryFromTestCopy(db); } catch (e) { logError('carry', e); }
+      keepInSync(db);
       return db;
     });
   }
   return dbPromise;
+}
+
+const SYNC_EVERY = 30_000;
+
+/** In the group's cloud: bring what changed on other devices every half
+ *  minute while the page is in view and when it comes back; send before
+ *  leaving. (Pages that need the latest at once ask /api/cloud/sync.) */
+function keepInSync(db) {
+  const tick = async () => {
+    if (document.visibilityState === 'visible' && (await db.get('meta', 'group'))) sync(db).catch(() => {});
+  };
+  setTimeout(tick, 4000);
+  setInterval(tick, SYNC_EVERY);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      tick();
+    } else flush(db, { force: true }).catch(() => {});
+  });
 }
 
 async function bodyBuffer(body) {
@@ -107,7 +134,11 @@ async function answer(url, init) {
 }
 
 if (LOCAL) {
-  // (no service worker of its own: the main site's keeps working as it is)
+  // the main site works offline once installed (see /sw.js); the test copy
+  // has none of its own (the main site's keeps working as it is)
+  if (!TEST_COPY && 'serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
   const nativeFetch = window.fetch.bind(window);
   window.fetch = (input, init = {}) => {
     const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url, location.href);

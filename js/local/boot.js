@@ -1,1 +1,149 @@
-var f=Object.defineProperty;var i=(e,t)=>f(e,"name",{value:t,configurable:!0});import{IdbDb as l,LightDb as d,persistStorage as u,snapshotCodec as h}from"./db.js?v=73a9f08a15";import{handle as m}from"./server.js?v=73a9f08a15";import{flush as g,sync as w}from"./sync.js?v=73a9f08a15";export const LOCAL=typeof window<"u"&&!window.RV_SERVER;typeof window<"u"&&(window.__rvBooted=!0);export function logError(e,t){try{const r=JSON.parse(localStorage.getItem("rv-errors")||"[]");r.push({at:new Date().toISOString(),page:location.pathname,where:e,msg:String(t?.message||t).slice(0,400),stack:String(t?.stack||"").slice(0,600)}),localStorage.setItem("rv-errors",JSON.stringify(r.slice(-20)))}catch{}}i(logError,"logError"),typeof window<"u"&&(window.addEventListener("error",e=>logError("error",e.error||e.message)),window.addEventListener("unhandledrejection",e=>logError("promise",e.reason)));function p(){try{const t=new URLSearchParams(location.search).get("mode");(t==="light"||t==="full")&&localStorage.setItem("rv-mode",t);const r=localStorage.getItem("rv-mode");if(r)return r==="light"}catch{}const e=navigator.userAgent||"";return/iPhone|iPad|iPod/.test(e)||/Macintosh/.test(e)&&navigator.maxTouchPoints>1}i(p,"wantLight");async function s(){let e=null;try{e=h(await import("../../vendor/fflate.js?v=73a9f08a15"))}catch{}const t=new d(globalThis.localStorage,e);return addEventListener("pagehide",()=>t.save()),document.addEventListener("visibilitychange",()=>{document.visibilityState==="hidden"&&t.save()}),t}i(s,"lightDb");let o=null;export function localDb(){return o||(o=(LOCAL&&p()?s():l.open().then(t=>(u(),t),t=>(logError("database",t),s()))).then(t=>(y(t),t))),o}i(localDb,"localDb");const v=3e4;function y(e){const t=i(async()=>{document.visibilityState==="visible"&&await e.get("meta","group")&&w(e).catch(()=>{})},"tick");setTimeout(t,4e3),setInterval(t,v),document.addEventListener("visibilitychange",()=>{document.visibilityState==="visible"?t():g(e,{force:!0}).catch(()=>{})})}i(y,"keepInSync");async function S(e){if(e!=null){if(typeof e=="string"||e instanceof ArrayBuffer)return e;if(ArrayBuffer.isView(e))return e.buffer.slice(e.byteOffset,e.byteOffset+e.byteLength);if(e instanceof Blob)return e.arrayBuffer();if(e instanceof URLSearchParams)return new TextEncoder().encode(e.toString()).buffer;throw new Error("desteklenmeyen istek gövdesi")}}i(S,"bodyBuffer");async function b(e,t){const r={method:(t.method||"GET").toUpperCase(),path:e.pathname.slice(4),query:Object.fromEntries(e.searchParams),body:await S(t.body)};let n;try{n=await Promise.race([(async()=>m(await localDb(),r))(),new Promise((a,c)=>setTimeout(()=>c(new Error("cihaz depolaması yanıt vermiyor")),r.method==="GET"?2e4:18e4))])}catch(a){n={status:503,json:{detail:`${a.message||a}: “Cihazı sıfırla” ile temiz başla (bulut verisi silinmez)`}},globalThis.__rvShowFail?.(n.json.detail)}return n.status>=409&&logError(`${r.method} /api${r.path} ${n.status}`,n.json?.detail),n.bytes?new Response(n.bytes,{status:n.status,headers:n.headers}):new Response(JSON.stringify(n.json),{status:n.status,headers:{"Content-Type":"application/json"}})}if(i(b,"answer"),LOCAL){"serviceWorker"in navigator&&location.protocol==="https:"&&navigator.serviceWorker.register("/sw.js").catch(()=>{});const e=window.fetch.bind(window);window.fetch=(t,r={})=>{const n=new URL(typeof t=="string"||t instanceof URL?t:t.url,location.href);return n.origin!==location.origin||!n.pathname.startsWith("/api/")?e(t,r):(t instanceof Request&&(r={method:t.method,body:t.body,...r}),b(n,r))}}
+// Runs before anything else on every page. Served by the Python server (it
+// marks its pages with window.RV_SERVER) nothing changes. Served as plain
+// files (Vercel, the installed app) the site has no server: requests to
+// /api/... are answered here, on the device, from IndexedDB - so the rest of
+// the app works the same in both.
+import { carryFromTestCopy, importFromMain, importLocalStorage } from './clone.js?v=446247be79';
+import { IdbDb, LightDb, persistStorage, snapshotCodec } from './db.js?v=446247be79';
+import { handle } from './server.js?v=446247be79';
+import { LOCAL_NAMES, TEST_COPY } from './site.js?v=446247be79';
+import { flush, sync } from './sync.js?v=446247be79';
+
+export const LOCAL = typeof window !== 'undefined' && !window.RV_SERVER;
+// the test copy: the main site's looks and caches, once, before anything reads them
+if (TEST_COPY && typeof window !== 'undefined') importLocalStorage();
+// the page's scripts loaded and linked: the safety net in the page stands down
+if (typeof window !== 'undefined') window.__rvBooted = true;
+
+/** The last errors on this device, for the check-up page (tani.html). */
+export function logError(where, err) {
+  try {
+    const list = JSON.parse(localStorage.getItem(LOCAL_NAMES.errors) || '[]');
+    list.push({ at: new Date().toISOString(), page: location.pathname, where, msg: String(err?.message || err).slice(0, 400), stack: String(err?.stack || '').slice(0, 600) });
+    localStorage.setItem(LOCAL_NAMES.errors, JSON.stringify(list.slice(-20)));
+  } catch { /* storage blocked */ }
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (e) => logError('error', e.error || e.message));
+  window.addEventListener('unhandledrejection', (e) => logError('promise', e.reason));
+}
+
+/** Light mode (db.js LightDb): iPhones and iPads, a device whose database
+ *  does not open, or by choice (?mode=light / ?mode=full, remembered). */
+function wantLight() {
+  try {
+    const asked = new URLSearchParams(location.search).get('mode');
+    if (asked === 'light' || asked === 'full') localStorage.setItem(LOCAL_NAMES.mode, asked);
+    const kept = localStorage.getItem(LOCAL_NAMES.mode);
+    if (kept) return kept === 'light';
+  } catch { /* storage blocked */ }
+  const ua = navigator.userAgent || '';
+  return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+async function lightDb() {
+  // the snapshot is kept compressed (fflate); without it, plain
+  let codec = null;
+  try { codec = snapshotCodec(await import('../../vendor/fflate.js?v=446247be79')); } catch { /* plain JSON */ }
+  const db = new LightDb(globalThis.localStorage, codec);
+  // what changed goes into localStorage before the page goes away
+  addEventListener('pagehide', () => db.save());
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') db.save(); });
+  return db;
+}
+
+let dbPromise = null;
+export function localDb() {
+  if (!dbPromise) {
+    const opened = LOCAL && wantLight()
+      ? lightDb()
+      : IdbDb.open().then((db) => { persistStorage(); return db; }, (e) => {
+        // the database will not open here: light mode instead of a dead site
+        logError('database', e);
+        return lightDb();
+      });
+    dbPromise = opened.then(async (db) => {
+      if (TEST_COPY) {
+        // the test copy starts as a copy of the main site's profiles and sessions;
+        // it never joins the group's cloud (nothing here reaches the main site)
+        try { await importFromMain(db); } catch (e) { logError('import', e); }
+        return db;
+      }
+      // the main site: what was made in the test copy joins it, once; then
+      // the group's cloud keeps every device the same
+      try { await carryFromTestCopy(db); } catch (e) { logError('carry', e); }
+      keepInSync(db);
+      return db;
+    });
+  }
+  return dbPromise;
+}
+
+const SYNC_EVERY = 30_000;
+
+/** In the group's cloud: bring what changed on other devices every half
+ *  minute while the page is in view and when it comes back; send before
+ *  leaving. (Pages that need the latest at once ask /api/cloud/sync.) */
+function keepInSync(db) {
+  const tick = async () => {
+    if (document.visibilityState === 'visible' && (await db.get('meta', 'group'))) sync(db).catch(() => {});
+  };
+  setTimeout(tick, 4000);
+  setInterval(tick, SYNC_EVERY);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      tick();
+    } else flush(db, { force: true }).catch(() => {});
+  });
+}
+
+async function bodyBuffer(body) {
+  if (body === undefined || body === null) return undefined;
+  if (typeof body === 'string') return body;            // JSON: read as it is (server.js)
+  if (body instanceof ArrayBuffer) return body;
+  if (ArrayBuffer.isView(body)) return body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength);
+  if (body instanceof Blob) return body.arrayBuffer();
+  if (body instanceof URLSearchParams) return new TextEncoder().encode(body.toString()).buffer;
+  throw new Error('desteklenmeyen istek gövdesi');
+}
+
+async function answer(url, init) {
+  const req = {
+    method: (init.method || 'GET').toUpperCase(),
+    path: url.pathname.slice(4),
+    query: Object.fromEntries(url.searchParams),
+    body: await bodyBuffer(init.body),
+  };
+  let res;
+  try {
+    // an answer that never comes (this device's storage stuck) ends in an
+    // error and an offer to start the device clean, never a page that waits
+    res = await Promise.race([
+      (async () => handle(await localDb(), req))(),
+      // (reads are quick; joining the group or a CSV import may take a while)
+      new Promise((_, no) => setTimeout(() => no(new Error('cihaz depolaması yanıt vermiyor')), req.method === 'GET' ? 20000 : 180000)),
+    ]);
+  } catch (e) {
+    // no IndexedDB (a private window on an old browser), storage stuck, and the like
+    res = { status: 503, json: { detail: `${e.message || e}: “Cihazı sıfırla” ile temiz başla (bulut verisi silinmez)` } };
+    globalThis.__rvShowFail?.(res.json.detail);
+  }
+  if (res.status >= 409) logError(`${req.method} /api${req.path} ${res.status}`, res.json?.detail);
+  if (res.bytes) return new Response(res.bytes, { status: res.status, headers: res.headers });
+  return new Response(JSON.stringify(res.json), { status: res.status, headers: { 'Content-Type': 'application/json' } });
+}
+
+if (LOCAL) {
+  // the main site works offline once installed (see /sw.js); the test copy
+  // has none of its own (the main site's keeps working as it is)
+  if (!TEST_COPY && 'serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = (input, init = {}) => {
+    const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url, location.href);
+    if (url.origin !== location.origin || !url.pathname.startsWith('/api/')) return nativeFetch(input, init);
+    if (input instanceof Request) init = { method: input.method, body: input.body, ...init };
+    return answer(url, init);
+  };
+}

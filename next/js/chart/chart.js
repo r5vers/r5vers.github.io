@@ -1,7 +1,7 @@
 // TradingView Lightweight Charts wrapper: candles, volume, indicators, markers
 // and the time <-> logical-index mapping drawings need.
-import { INDICATORS, computeIndicator } from './indicators.js?v=5cd63cafc3';
-import { SessionsPrimitive } from './sessions.js?v=5cd63cafc3';
+import { INDICATORS, computeIndicator } from './indicators.js?v=446247be79';
+import { SessionsPrimitive } from './sessions.js?v=446247be79';
 
 const LW = window.LightweightCharts;
 
@@ -77,7 +77,8 @@ export class TradingChart {
 
   // ── price scale: the library's own TradingView behaviour (drag the axis to
   // stretch, drag the pane to pan once auto scale is off, double click the
-  // axis to reset). The "A" button in the corner shows and toggles auto scale.
+  // axis to reset). The "A" button in the corner shows and toggles auto scale;
+  // the one beside it puts the whole view back to normal.
   _wirePriceAxis() {
     const auto = document.createElement('button');
     auto.className = 'autoscale-btn on';
@@ -87,6 +88,15 @@ export class TradingChart {
     auto.addEventListener('click', () => (this._autoOn() ? null : this.autoScale()));
     this.host?.append(auto);
     this.autoBtn = auto;
+    const reset = document.createElement('button');
+    reset.className = 'autoscale-btn chart-reset';
+    reset.type = 'button';
+    reset.title = 'Grafiği sıfırla: son barlar, normal yakınlık, fiyatlar sığdırılır (Alt+R)';
+    reset.setAttribute('aria-label', 'Grafiği sıfırla');
+    reset.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4"/></svg>';
+    reset.addEventListener('click', () => this.resetView());
+    this.host?.append(reset);
+    this.resetBtn = reset;
 
     const place = () => {
       if (this._removed) return;
@@ -96,7 +106,9 @@ export class TradingChart {
       const left = o.left + this.el.clientWidth - w;
       // the corner under the price axis, as on TradingView
       const timeH = this.chart.timeScale().height?.() || 28;
-      Object.assign(auto.style, { left: `${left + (w - 22) / 2}px`, top: `${o.top + this.el.clientHeight - timeH + (timeH - 20) / 2}px` });
+      const top = `${o.top + this.el.clientHeight - timeH + (timeH - 20) / 2}px`;
+      Object.assign(auto.style, { left: `${left + (w - 22) / 2}px`, top });
+      Object.assign(reset.style, { left: `${left + (w - 22) / 2 - 26}px`, top });
     };
     this.placeAxisZone = place;
     this._ro = new ResizeObserver(place);
@@ -125,6 +137,7 @@ export class TradingChart {
     this._ro?.disconnect();
     NARROW.removeEventListener?.('change', this._onNarrow);
     this.autoBtn?.remove();
+    this.resetBtn?.remove();
     this.chart.remove();
   }
 
@@ -144,6 +157,15 @@ export class TradingChart {
   autoScale() {
     this.chart.priceScale('right').setAutoScale(true);
     this._setAutoUi(true);
+  }
+
+  /** Back to a normal view, however it was scrolled, zoomed or stretched:
+   *  the latest bars at the usual density, the prices fitted to them. */
+  resetView() {
+    if (!this.bars.length) return;
+    this.chart.timeScale().applyOptions({ rightOffset: 12, barSpacing: 7 });
+    this.scrollToEnd();
+    this.autoScale();
   }
 
   _setAutoUi(on) {
@@ -484,7 +506,16 @@ export class TradingChart {
     return b[i].time;
   }
 
-  xOf(t) { const l = this.timeToLogical(t); return l == null ? null : this.chart.timeScale().logicalToCoordinate(l); }
+  xOf(t) {
+    const l = this.timeToLogical(t);
+    if (l == null) return null;
+    // the chart places whole bars only (a fraction comes back as 0): a time
+    // inside a bar - a daily drawing on 4h, a pen stroke - sits that far into it
+    const ts = this.chart.timeScale(), i = Math.floor(l), x = ts.logicalToCoordinate(i);
+    if (x == null || l === i) return x;
+    const next = ts.logicalToCoordinate(i + 1);
+    return next == null ? x : x + (l - i) * (next - x);
+  }
   yOf(p) { return this.candles.priceToCoordinate(p); }
   priceAt(y) { return this.candles.coordinateToPrice(y); }
   logicalAt(x) { return this.chart.timeScale().coordinateToLogical(x); }

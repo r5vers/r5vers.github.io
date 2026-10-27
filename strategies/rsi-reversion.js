@@ -1,1 +1,34 @@
-const strategy={name:"RSI dönüş (trend filtreli)",params:{rsiLen:14,low:30,high:70,trendLen:200,atrLen:14,slAtr:2,riskPct:1},setup(e,i,r){return{rsi:i.rsi(e.close,r.rsiLen),trend:i.ema(e.close,r.trendLen),atr:i.atr(e.high,e.low,e.close,r.atrLen)}},plots:{trend:"#ff9800"},onBar(e){const{ind:i,p:r,i:t,close:n}=e,s=i.rsi[t],o=i.rsi[t-1],d=i.trend[t],c=i.atr[t];if(![s,o,d,c].every(Number.isFinite))return;const l=e.position;if(l){(l.side==="buy"&&s>50||l.side==="sell"&&s<50)&&e.closePosition(l.id);return}n>d&&o<r.low&&s>=r.low?e.buy({sl:n-c*r.slAtr,rr:3,riskPct:r.riskPct,comment:"RSI dip"}):n<d&&o>r.high&&s<=r.high&&e.sell({sl:n+c*r.slAtr,rr:3,riskPct:r.riskPct,comment:"RSI tepe"})}};
+// RSI ortalamaya dönüş: ana trend yönünde (EMA 200), RSI aşırı bölgeden
+// dönünce işleme gir; RSI 50'yi geçince ya da stop/hedefte çık.
+const strategy = {
+  name: 'RSI dönüş (trend filtreli)',
+  params: { rsiLen: 14, low: 30, high: 70, trendLen: 200, atrLen: 14, slAtr: 2, riskPct: 1 },
+
+  setup(s, ta, p) {
+    return {
+      rsi: ta.rsi(s.close, p.rsiLen),
+      trend: ta.ema(s.close, p.trendLen),
+      atr: ta.atr(s.high, s.low, s.close, p.atrLen),
+    };
+  },
+
+  plots: { trend: '#ff9800' },
+
+  onBar(ctx) {
+    const { ind, p, i, close } = ctx;
+    const rsi = ind.rsi[i], prev = ind.rsi[i - 1], trend = ind.trend[i], atr = ind.atr[i];
+    if (![rsi, prev, trend, atr].every(Number.isFinite)) return;
+    const pos = ctx.position;
+
+    if (pos) {
+      // çıkış: RSI orta çizgiyi geçti
+      if ((pos.side === 'buy' && rsi > 50) || (pos.side === 'sell' && rsi < 50)) ctx.closePosition(pos.id);
+      return;
+    }
+    if (close > trend && prev < p.low && rsi >= p.low) {
+      ctx.buy({ sl: close - atr * p.slAtr, rr: 3, riskPct: p.riskPct, comment: 'RSI dip' });
+    } else if (close < trend && prev > p.high && rsi <= p.high) {
+      ctx.sell({ sl: close + atr * p.slAtr, rr: 3, riskPct: p.riskPct, comment: 'RSI tepe' });
+    }
+  },
+};

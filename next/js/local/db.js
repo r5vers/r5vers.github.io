@@ -9,9 +9,11 @@
 //   await db.nextId(name)               1, 2, 3, ... (per name)
 //   await db.tx(fn)                     run fn(db) - one transaction where possible
 
+import { LOCAL_NAMES } from './site.js?v=446247be79';
+
 // outbox: changes not yet sent to the cloud; stamps: when each synced thing last changed
 export const STORES = ['meta', 'datasets', 'chunks', 'aggs', 'profiles', 'photos', 'sessions', 'kv', 'strategies', 'settings', 'downloads', 'outbox', 'stamps'];
-const DB_NAME = 'rv-next';
+const DB_NAME = LOCAL_NAMES.db;
 const DB_VERSION = 2;
 
 const range = (prefix) => [prefix, `${prefix}\uffff`];
@@ -44,7 +46,7 @@ export class MemoryDb {
 // sessions, the group link) in localStorage - plain, synchronous, and kept
 // in step with the cloud - and candles only in memory (and the browser's
 // file cache, net.js). Nothing here can hang.
-const LIGHT_KEY = 'nx-light-db';
+const LIGHT_KEY = LOCAL_NAMES.light;
 const PERSIST = ['meta', 'datasets', 'profiles', 'photos', 'sessions', 'kv', 'strategies', 'settings', 'downloads', 'outbox', 'stamps'];
 
 /** Text <-> a compact string for localStorage (zlib + base64), given

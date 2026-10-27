@@ -1,1 +1,138 @@
-var f=Object.defineProperty;var s=(t,u)=>f(t,"name",{value:u,configurable:!0});export const MAGIC="RTC1",HEADER_SIZE=16,ROW=24,FORMAT_VERSION=1;const I=2147483647,R=8;export function emptyCols(t=0){return{t:new Uint32Array(t),o:new Int32Array(t),h:new Int32Array(t),l:new Int32Array(t),c:new Int32Array(t),v:new Float32Array(t)}}s(emptyCols,"emptyCols");export function sliceCols(t,u,e){return{t:t.t.subarray(u,e),o:t.o.subarray(u,e),h:t.h.subarray(u,e),l:t.l.subarray(u,e),c:t.c.subarray(u,e),v:t.v.subarray(u,e)}}s(sliceCols,"sliceCols");export function concatCols(t){const u=t.reduce((o,r)=>o+r.t.length,0),e=emptyCols(u);let n=0;for(const o of t){for(const r of["t","o","h","l","c","v"])e[r].set(o[r],n);n+=o.t.length}return e}s(concatCols,"concatCols");export function readHeader(t){const u=new Uint8Array(t,0,Math.min(16,t.byteLength));if(u.length<16)throw new Error("mum dosyası çok kısa");const e=String.fromCharCode(u[0],u[1],u[2],u[3]),n=new DataView(t),o=n.getUint16(4,!0);if(e!==MAGIC||o!==1)throw new Error("tanınmayan mum dosyası");return{scale:n.getUint16(6,!0)}}s(readHeader,"readHeader");export function recordsToCols(t,u=0,e=t.byteLength-u){const n=Math.floor(e/24),o=new DataView(t,u,n*24),r=emptyCols(n);for(let c=0,i=0;c<n;c++,i+=24)r.t[c]=o.getUint32(i,!0),r.o[c]=o.getInt32(i+4,!0),r.h[c]=o.getInt32(i+8,!0),r.l[c]=o.getInt32(i+12,!0),r.c[c]=o.getInt32(i+16,!0),r.v[c]=o.getFloat32(i+20,!0);return r}s(recordsToCols,"recordsToCols");export function colsToRecords(t){const u=t.t.length,e=new ArrayBuffer(u*24),n=new DataView(e);for(let o=0,r=0;o<u;o++,r+=24)n.setUint32(r,t.t[o],!0),n.setInt32(r+4,t.o[o],!0),n.setInt32(r+8,t.h[o],!0),n.setInt32(r+12,t.l[o],!0),n.setInt32(r+16,t.c[o],!0),n.setFloat32(r+20,t.v[o],!0);return e}s(colsToRecords,"colsToRecords");export function parseFile(t){const{scale:u}=readHeader(t);return{scale:u,cols:recordsToCols(t,16)}}s(parseFile,"parseFile");export function fileBytes(t,u){const e=new Uint8Array(colsToRecords(t)),n=new Uint8Array(16+e.length);n.set([82,84,67,49],0);const o=new DataView(n.buffer);return o.setUint16(4,1,!0),o.setUint16(6,u,!0),n.set(e,16),n.buffer}s(fileBytes,"fileBytes");export function chooseScale(t,u){t=Math.max(Math.abs(Number(t)),1e-12);for(let e=Math.min(Math.max(u|0,0),9);e>=0;e--)if(t*10**e*8<=2147483647)return e;if(t<=2147483647)return 0;throw new Error("fiyatlar bu depolama biçimi için çok büyük")}s(chooseScale,"chooseScale");export function encode(t,u){const e=t.t.length,n=emptyCols(e),o=10**u;for(let r=0;r<e;r++)n.t[r]=t.t[r],n.o[r]=Math.round(t.o[r]*o),n.h[r]=Math.round(t.h[r]*o),n.l[r]=Math.round(t.l[r]*o),n.c[r]=Math.round(t.c[r]*o),n.v[r]=t.v[r];return n}s(encode,"encode");const h=s((t,u)=>{const e=10**u;return Math.round(t*e)/e},"round");export function toJsonColumns(t,u,e){const n=t.t.length,o=10**u,r=new Array(n),c=new Array(n),i=new Array(n),y=new Array(n),A=new Array(n),w=new Array(n);for(let a=0;a<n;a++)r[a]=t.t[a],c[a]=h(t.o[a]/o,e),i[a]=h(t.h[a]/o,e),y[a]=h(t.l[a]/o,e),A[a]=h(t.c[a]/o,e),w[a]=h(t.v[a],4);return{t:r,o:c,h:i,l:y,c:A,v:w}}s(toJsonColumns,"toJsonColumns");
+// The compact candle format of server/candlestore.py, in the browser.
+//
+// A file is a 16-byte header ("RTC1", u16 version, u16 scale, 8 bytes pad)
+// followed by 24-byte records: u32 time, four i32 prices in units of
+// 10^-scale, f32 volume. Here records are held as columns (typed arrays).
+
+export const MAGIC = 'RTC1';
+export const HEADER_SIZE = 16;
+export const ROW = 24;
+export const FORMAT_VERSION = 1;
+const UNIT_MAX = 2 ** 31 - 1;
+const HEADROOM = 8;
+
+/** Empty columns of `n` rows. */
+export function emptyCols(n = 0) {
+  return { t: new Uint32Array(n), o: new Int32Array(n), h: new Int32Array(n), l: new Int32Array(n), c: new Int32Array(n), v: new Float32Array(n) };
+}
+
+/** Rows [i, j) of `cols`, sharing memory. */
+export function sliceCols(cols, i, j) {
+  return { t: cols.t.subarray(i, j), o: cols.o.subarray(i, j), h: cols.h.subarray(i, j), l: cols.l.subarray(i, j), c: cols.c.subarray(i, j), v: cols.v.subarray(i, j) };
+}
+
+export function concatCols(parts) {
+  const n = parts.reduce((s, p) => s + p.t.length, 0);
+  const out = emptyCols(n);
+  let at = 0;
+  for (const p of parts) {
+    for (const k of ['t', 'o', 'h', 'l', 'c', 'v']) out[k].set(p[k], at);
+    at += p.t.length;
+  }
+  return out;
+}
+
+/** Header of an RTC1 file: { scale } (throws on another format). */
+export function readHeader(buf) {
+  const u8 = new Uint8Array(buf, 0, Math.min(HEADER_SIZE, buf.byteLength));
+  if (u8.length < HEADER_SIZE) throw new Error('mum dosyası çok kısa');
+  const magic = String.fromCharCode(u8[0], u8[1], u8[2], u8[3]);
+  const dv = new DataView(buf);
+  const version = dv.getUint16(4, true);
+  if (magic !== MAGIC || version !== FORMAT_VERSION) throw new Error('tanınmayan mum dosyası');
+  return { scale: dv.getUint16(6, true) };
+}
+
+/** Records (no header) -> columns. */
+export function recordsToCols(buf, offset = 0, length = buf.byteLength - offset) {
+  const n = Math.floor(length / ROW);
+  const dv = new DataView(buf, offset, n * ROW);
+  const out = emptyCols(n);
+  for (let i = 0, p = 0; i < n; i++, p += ROW) {
+    out.t[i] = dv.getUint32(p, true);
+    out.o[i] = dv.getInt32(p + 4, true);
+    out.h[i] = dv.getInt32(p + 8, true);
+    out.l[i] = dv.getInt32(p + 12, true);
+    out.c[i] = dv.getInt32(p + 16, true);
+    out.v[i] = dv.getFloat32(p + 20, true);
+  }
+  return out;
+}
+
+/** Columns -> records (no header), the server's fmt=bin body. */
+export function colsToRecords(cols) {
+  const n = cols.t.length;
+  const buf = new ArrayBuffer(n * ROW);
+  const dv = new DataView(buf);
+  for (let i = 0, p = 0; i < n; i++, p += ROW) {
+    dv.setUint32(p, cols.t[i], true);
+    dv.setInt32(p + 4, cols.o[i], true);
+    dv.setInt32(p + 8, cols.h[i], true);
+    dv.setInt32(p + 12, cols.l[i], true);
+    dv.setInt32(p + 16, cols.c[i], true);
+    dv.setFloat32(p + 20, cols.v[i], true);
+  }
+  return buf;
+}
+
+/** A whole RTC1 file -> { scale, cols }. */
+export function parseFile(buf) {
+  const { scale } = readHeader(buf);
+  return { scale, cols: recordsToCols(buf, HEADER_SIZE) };
+}
+
+export function fileBytes(cols, scale) {
+  const body = new Uint8Array(colsToRecords(cols));
+  const out = new Uint8Array(HEADER_SIZE + body.length);
+  out.set([82, 84, 67, 49], 0); // "RTC1"
+  const dv = new DataView(out.buffer);
+  dv.setUint16(4, FORMAT_VERSION, true);
+  dv.setUint16(6, scale, true);
+  out.set(body, HEADER_SIZE);
+  return out.buffer;
+}
+
+/** Largest scale <= decimals that leaves HEADROOM above `peak` (candlestore.choose_scale). */
+export function chooseScale(peak, decimals) {
+  peak = Math.max(Math.abs(Number(peak)), 1e-12);
+  for (let s = Math.min(Math.max(decimals | 0, 0), 9); s >= 0; s--) {
+    if (peak * 10 ** s * HEADROOM <= UNIT_MAX) return s;
+  }
+  if (peak <= UNIT_MAX) return 0;
+  throw new Error('fiyatlar bu depolama biçimi için çok büyük');
+}
+
+/** Float candles {t,o,h,l,c,v: arrays} -> integer columns at `scale`. */
+export function encode(candles, scale) {
+  const n = candles.t.length;
+  const out = emptyCols(n);
+  const k = 10 ** scale;
+  for (let i = 0; i < n; i++) {
+    out.t[i] = candles.t[i];
+    out.o[i] = Math.round(candles.o[i] * k);
+    out.h[i] = Math.round(candles.h[i] * k);
+    out.l[i] = Math.round(candles.l[i] * k);
+    out.c[i] = Math.round(candles.c[i] * k);
+    out.v[i] = candles.v[i];
+  }
+  return out;
+}
+
+const round = (x, d) => { const k = 10 ** d; return Math.round(x * k) / k; };
+
+/** Integer columns -> the API's JSON columns (bars.to_columns), prices
+ *  rounded to the instrument precision `decimals`. */
+export function toJsonColumns(cols, scale, decimals) {
+  const n = cols.t.length;
+  const k = 10 ** scale;
+  const t = new Array(n), o = new Array(n), h = new Array(n), l = new Array(n), c = new Array(n), v = new Array(n);
+  for (let i = 0; i < n; i++) {
+    t[i] = cols.t[i];
+    o[i] = round(cols.o[i] / k, decimals);
+    h[i] = round(cols.h[i] / k, decimals);
+    l[i] = round(cols.l[i] / k, decimals);
+    c[i] = round(cols.c[i] / k, decimals);
+    v[i] = round(cols.v[i], 4);
+  }
+  return { t, o, h, l, c, v };
+}

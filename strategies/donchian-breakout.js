@@ -1,1 +1,40 @@
-const strategy={name:"Donchian kırılımı + iz süren stop",params:{len:20,atrLen:20,slAtr:2,trailAtr:2.5,riskPct:1},setup(l,e,r){return{upper:e.highest(l.high,r.len),lower:e.lowest(l.low,r.len),atr:e.atr(l.high,l.low,l.close,r.atrLen)}},plots:[{key:"upper",color:"#26c6da",title:"Üst kanal"},{key:"lower",color:"#26c6da",title:"Alt kanal"}],onBar(l){const{ind:e,p:r,i:o,close:s}=l,a=e.upper[o-1],c=e.lower[o-1],i=e.atr[o];if(![a,c,i].every(Number.isFinite))return;const t=l.position;if(t){if(t.side==="buy"){const n=s-i*r.trailAtr;(t.sl==null||n>t.sl)&&l.setStops(t.id,{sl:n})}else{const n=s+i*r.trailAtr;(t.sl==null||n<t.sl)&&l.setStops(t.id,{sl:n})}return}s>a?l.buy({sl:s-i*r.slAtr,riskPct:r.riskPct,comment:"Kırılım yukarı"}):s<c&&l.sell({sl:s+i*r.slAtr,riskPct:r.riskPct,comment:"Kırılım aşağı"})}};
+// Donchian kırılımı (Turtle tarzı): son N barın zirvesi kırılırsa al,
+// dibi kırılırsa sat. Stop, ATR ile iz süren (trailing) stop olarak taşınır.
+const strategy = {
+  name: 'Donchian kırılımı + iz süren stop',
+  params: { len: 20, atrLen: 20, slAtr: 2, trailAtr: 2.5, riskPct: 1 },
+
+  setup(s, ta, p) {
+    return {
+      upper: ta.highest(s.high, p.len),
+      lower: ta.lowest(s.low, p.len),
+      atr: ta.atr(s.high, s.low, s.close, p.atrLen),
+    };
+  },
+
+  plots: [
+    { key: 'upper', color: '#26c6da', title: 'Üst kanal' },
+    { key: 'lower', color: '#26c6da', title: 'Alt kanal' },
+  ],
+
+  onBar(ctx) {
+    const { ind, p, i, close } = ctx;
+    const up = ind.upper[i - 1], dn = ind.lower[i - 1], atr = ind.atr[i];
+    if (![up, dn, atr].every(Number.isFinite)) return;
+    const pos = ctx.position;
+
+    if (pos) {
+      // iz süren stop: yalnızca kâr yönünde taşı
+      if (pos.side === 'buy') {
+        const sl = close - atr * p.trailAtr;
+        if (pos.sl == null || sl > pos.sl) ctx.setStops(pos.id, { sl });
+      } else {
+        const sl = close + atr * p.trailAtr;
+        if (pos.sl == null || sl < pos.sl) ctx.setStops(pos.id, { sl });
+      }
+      return;
+    }
+    if (close > up) ctx.buy({ sl: close - atr * p.slAtr, riskPct: p.riskPct, comment: 'Kırılım yukarı' });
+    else if (close < dn) ctx.sell({ sl: close + atr * p.slAtr, riskPct: p.riskPct, comment: 'Kırılım aşağı' });
+  },
+};

@@ -1,1 +1,67 @@
-var i=Object.defineProperty;var g=(e,u)=>i(e,"name",{value:u,configurable:!0});import{runStrategy as A}from"../core/strategy.js?v=73a9f08a15";import{parseTf as M}from"../core/timeframes.js?v=73a9f08a15";function k(e,u){if(!e||e.length<=u)return e||[];const o=Math.ceil(e.length/(u/2)),l=[];for(let s=0;s<e.length;s+=o){let a=s,t=s;for(let r=s+1;r<Math.min(e.length,s+o);r++)e[r].value<e[a].value&&(a=r),e[r].value>e[t].value&&(t=r);a!==t?l.push(e[Math.min(a,t)],e[Math.max(a,t)]):l.push(e[a])}return l[l.length-1]!==e[e.length-1]&&l.push(e[e.length-1]),l}g(k,"thinCurve");function d({buf:e,scale:u,n:o}){const l=new DataView(e),s=10**u,a={t:new Float64Array(o),o:new Float64Array(o),h:new Float64Array(o),l:new Float64Array(o),c:new Float64Array(o),v:new Float64Array(o)};for(let t=0,r=0;t<o;t++,r+=24)a.t[t]=l.getUint32(r,!0),a.o[t]=l.getInt32(r+4,!0)/s,a.h[t]=l.getInt32(r+8,!0)/s,a.l[t]=l.getInt32(r+12,!0)/s,a.c[t]=l.getInt32(r+16,!0)/s,a.v[t]=l.getFloat32(r+20,!0);return a}g(d,"columns"),self.onmessage=e=>{const{code:u,tf:o,align:l,broker:s,from:a}=e.data;try{const t=e.data.base.buf?d(e.data.base):e.data.base;let r=0;const n=A({code:u,base:t,tf:M(o),align:l,broker:s,from:a,onProgress:g(c=>{const f=Date.now();f-r>100&&(r=f,self.postMessage({type:"progress",value:c}))},"onProgress")});n.equity=k(n.equity,4e3),delete n.markers;const w=[];n.plots=n.plots.map(({key:c,title:f,color:F,data:h})=>{const m=new Float64Array(h.length),y=new Float64Array(h.length);return h.forEach((v,b)=>{m[b]=v.time,y[b]=v.value}),w.push(m.buffer,y.buffer),{key:c,title:f,color:F,t:m,v:y}}),self.postMessage({type:"done",result:n},w)}catch(t){self.postMessage({type:"error",message:t&&t.message?t.message:String(t),stack:t&&t.stack?String(t.stack):""})}};
+// Runs a strategy test off the UI thread. The page can terminate() it to stop
+// runaway user code.
+import { runStrategy } from '../core/strategy.js?v=446247be79';
+import { parseTf } from '../core/timeframes.js?v=446247be79';
+
+/** At most `max` points, the highest and lowest of each stretch kept: the
+ *  curve looks the same at any width, without one point per bar. */
+function thinCurve(points, max) {
+  if (!points || points.length <= max) return points || [];
+  const per = Math.ceil(points.length / (max / 2));
+  const out = [];
+  for (let i = 0; i < points.length; i += per) {
+    let lo = i, hi = i;
+    for (let j = i + 1; j < Math.min(points.length, i + per); j++) {
+      if (points[j].value < points[lo].value) lo = j;
+      if (points[j].value > points[hi].value) hi = j;
+    }
+    if (lo !== hi) out.push(points[Math.min(lo, hi)], points[Math.max(lo, hi)]); else out.push(points[lo]);
+  }
+  if (out[out.length - 1] !== points[points.length - 1]) out.push(points[points.length - 1]);
+  return out;
+}
+
+/** The bars endpoint's 24-byte records (api.js barsBin) as columns. */
+function columns({ buf, scale, n }) {
+  const dv = new DataView(buf);
+  const k = 10 ** scale;
+  const out = { t: new Float64Array(n), o: new Float64Array(n), h: new Float64Array(n), l: new Float64Array(n), c: new Float64Array(n), v: new Float64Array(n) };
+  for (let i = 0, p = 0; i < n; i++, p += 24) {
+    out.t[i] = dv.getUint32(p, true);
+    out.o[i] = dv.getInt32(p + 4, true) / k;
+    out.h[i] = dv.getInt32(p + 8, true) / k;
+    out.l[i] = dv.getInt32(p + 12, true) / k;
+    out.c[i] = dv.getInt32(p + 16, true) / k;
+    out.v[i] = dv.getFloat32(p + 20, true);
+  }
+  return out;
+}
+
+self.onmessage = (e) => {
+  const { code, tf, align, broker, from } = e.data;
+  try {
+    const base = e.data.base.buf ? columns(e.data.base) : e.data.base;
+    let last = 0;
+    const result = runStrategy({
+      code, base, tf: parseTf(tf), align, broker, from,
+      onProgress: (p) => {
+        const now = Date.now();
+        if (now - last > 100) { last = now; self.postMessage({ type: 'progress', value: p }); }
+      },
+    });
+    // what goes back to the page is copied there on its own thread: a curve
+    // point per bar and line points as objects froze it on long tests
+    result.equity = thinCurve(result.equity, 4000);
+    delete result.markers;                // the chart builds its own
+    const buffers = [];
+    result.plots = result.plots.map(({ key, title, color, data }) => {
+      const t = new Float64Array(data.length), v = new Float64Array(data.length);
+      data.forEach((d, i) => { t[i] = d.time; v[i] = d.value; });
+      buffers.push(t.buffer, v.buffer);
+      return { key, title, color, t, v };
+    });
+    self.postMessage({ type: 'done', result }, buffers);
+  } catch (err) {
+    self.postMessage({ type: 'error', message: err && err.message ? err.message : String(err), stack: err && err.stack ? String(err.stack) : '' });
+  }
+};

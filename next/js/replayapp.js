@@ -4,14 +4,15 @@
 // screens: the app's sections in a sidebar, a banner, the sessions as a grid
 // of cards (P&L, day of the replay, progress). A session opens in a sheet
 // (a drawer on a wide screen).
-import { api } from './api.js?v=5cd63cafc3';
-import * as F from './format.js?v=5cd63cafc3';
-import { confirmBox, h, icon, toast } from './ui/dom.js?v=5cd63cafc3';
-import { SESSION_SETS } from './chart/sessions.js?v=5cd63cafc3';
-import { nyOffset } from './core/timeframes.js?v=5cd63cafc3';
-import { wirePalette } from './ui/palette.js?v=5cd63cafc3';
-import { settingsDialog } from './ui/dialogs.js?v=5cd63cafc3';
-import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, relTime, ring, sheet, symbolBadge, tz } from './rvshell.js?v=5cd63cafc3';
+import { api } from './api.js?v=446247be79';
+import { TEST_COPY } from './local/site.js?v=446247be79';
+import * as F from './format.js?v=446247be79';
+import { confirmBox, h, icon, toast } from './ui/dom.js?v=446247be79';
+import { SESSION_SETS } from './chart/sessions.js?v=446247be79';
+import { nyOffset } from './core/timeframes.js?v=446247be79';
+import { wirePalette } from './ui/palette.js?v=446247be79';
+import { settingsDialog } from './ui/dialogs.js?v=446247be79';
+import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, relTime, ring, sheet, symbolBadge, tz } from './rvshell.js?v=446247be79';
 
 /** A replay's result: its balance against where it started (closed and open trades). */
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
@@ -415,7 +416,7 @@ function more() {
     group([
       { icon: 'palette', title: 'Görünüm', sub: 'Tema, vurgu rengi, mum renkleri', onclick: () => appearanceSheet(homeLook) },
       { icon: 'sliders', title: 'Tercihler', sub: 'Saat dilimi, hesap, işlem ücretleri', tone: 'teal', onclick: () => settingsDialog(host) },
-      { icon: 'user', title: 'Profil', sub: 'Profil değiştir, test sürümü', tone: 'rose', onclick: () => profileDrawer('profile') },
+      { icon: 'user', title: 'Profil', sub: TEST_COPY ? 'Profil değiştir, test sürümü' : 'Profil değiştir, bulut, hesap', tone: 'rose', onclick: () => profileDrawer('profile') },
     ], 'Ayarlar'),
   ];
 }

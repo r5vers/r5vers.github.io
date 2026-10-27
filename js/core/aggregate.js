@@ -1,1 +1,60 @@
-var u=Object.defineProperty;var s=(h,o)=>u(h,"name",{value:o,configurable:!0});import{bucket as a}from"./timeframes.js?v=73a9f08a15";export function columnsToBars(h){const o=h.t.length,i=new Array(o);for(let e=0;e<o;e++)i[e]={time:h.t[e],open:h.o[e],high:h.h[e],low:h.l[e],close:h.c[e],volume:h.v[e]};return i}s(columnsToBars,"columnsToBars");export function aggregateBars(h,o,i){const e=[];let t=null;for(const l of h){const n=a(l.time,o,i);t&&t.time===n?(l.high>t.high&&(t.high=l.high),l.low<t.low&&(t.low=l.low),t.close=l.close,t.volume+=l.volume):(t={time:n,open:l.open,high:l.high,low:l.low,close:l.close,volume:l.volume},e.push(t))}return e}s(aggregateBars,"aggregateBars");const r=class r{constructor(o,i,e=[]){this.tf=o,this.align=i,this.bars=e}label(o){return a(o,this.tf,this.align)}push(o){const i=this.label(o.time),e=this.bars[this.bars.length-1];if(e&&e.time===i)return o.high>e.high&&(e.high=o.high),o.low<e.low&&(e.low=o.low),e.close=o.close,e.volume+=o.volume,{bar:e,isNew:!1};if(e&&i<e.time)throw new Error("base bar older than the chart");const t={time:i,open:o.open,high:o.high,low:o.low,close:o.close,volume:o.volume};return this.bars.push(t),{bar:t,isNew:!0}}};s(r,"BarBuilder");export let BarBuilder=r;
+// Building chart bars from base bars on the client (the replay's forming bar).
+import { bucket } from './timeframes.js?v=446247be79';
+
+/** Columns {t,o,h,l,c,v} from the API -> bar objects for the chart. */
+export function columnsToBars(cols) {
+  const n = cols.t.length, bars = new Array(n);
+  for (let i = 0; i < n; i++) {
+    bars[i] = { time: cols.t[i], open: cols.o[i], high: cols.h[i], low: cols.l[i], close: cols.c[i], volume: cols.v[i] };
+  }
+  return bars;
+}
+
+export function aggregateBars(base, tf, align) {
+  const outBars = [];
+  let cur = null;
+  for (const b of base) {
+    const label = bucket(b.time, tf, align);
+    if (cur && cur.time === label) {
+      if (b.high > cur.high) cur.high = b.high;
+      if (b.low < cur.low) cur.low = b.low;
+      cur.close = b.close;
+      cur.volume += b.volume;
+    } else {
+      cur = { time: label, open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume };
+      outBars.push(cur);
+    }
+  }
+  return outBars;
+}
+
+/**
+ * Keeps `bars` (chart timeframe) current as base bars arrive. The last bar of
+ * `bars` may be the one still forming.
+ */
+export class BarBuilder {
+  constructor(tf, align, bars = []) {
+    this.tf = tf;
+    this.align = align;
+    this.bars = bars;
+  }
+
+  label(time) { return bucket(time, this.tf, this.align); }
+
+  /** Returns { bar, isNew } for the chart bar the base bar landed in. */
+  push(b) {
+    const label = this.label(b.time);
+    const last = this.bars[this.bars.length - 1];
+    if (last && last.time === label) {
+      if (b.high > last.high) last.high = b.high;
+      if (b.low < last.low) last.low = b.low;
+      last.close = b.close;
+      last.volume += b.volume;
+      return { bar: last, isNew: false };
+    }
+    if (last && label < last.time) throw new Error('base bar older than the chart');
+    const bar = { time: label, open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume };
+    this.bars.push(bar);
+    return { bar, isNew: true };
+  }
+}

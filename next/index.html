@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
-  <title>Profil seç · RV Next</title>
+  <title>Profil seç · RV</title>
     <script>
   // If the site's scripts cannot start (an old copy of a file, a failed
   // download), say so and offer to start clean instead of a dead page.
@@ -14,7 +14,7 @@
       if (shown) return; shown = true;
       var d = document.createElement('div');
       d.setAttribute('style', 'position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;padding:14px 16px;border-radius:16px;background:#16171d;color:#eef0f4;font:14px/1.45 -apple-system,system-ui,sans-serif;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 20px 50px rgba(0,0,0,.6)');
-      d.innerHTML = '<b style="display:block;margin-bottom:4px">Site açılamadı</b><span style="display:block;color:#9aa0b4;font-size:12px;word-break:break-word"></span><button style="margin-top:10px;padding:10px 14px;border:0;border-radius:10px;background:#9fa8ff;color:#0b0c10;font:600 14px -apple-system,system-ui,sans-serif">Onar ve yenile</button> <a href="sifirla.html" style="margin-left:10px;color:#9fa8ff;font-size:13px">Test sürümünü sıfırla</a>';
+      d.innerHTML = '<b style="display:block;margin-bottom:4px">Site açılamadı</b><span style="display:block;color:#9aa0b4;font-size:12px;word-break:break-word"></span><button style="margin-top:10px;padding:10px 14px;border:0;border-radius:10px;background:#9fa8ff;color:#0b0c10;font:600 14px -apple-system,system-ui,sans-serif">Onar ve yenile</button> <a href="sifirla.html" style="margin-left:10px;color:#9fa8ff;font-size:13px">Sıfırla</a>';
       d.querySelector('span').textContent = String(msg || '').slice(0, 300);
       d.querySelector('button').onclick = function () {
         var jobs = [];
@@ -40,36 +40,37 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/fonts.css?v=5cd63cafc3">
-  <link rel="stylesheet" href="css/app.css?v=5cd63cafc3">
-  <link rel="stylesheet" href="css/next.css?v=5cd63cafc3">
-  <link rel="stylesheet" href="css/rv.css?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/profiles.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/api.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/boot.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/clone.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/db.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/server.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/core/timeframes.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/query.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/rtc.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/candles.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/series.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/net.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/packs.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/live.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/instruments.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/sync.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/cloud.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/local/firebase-config.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/ui/dom.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/format.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/ui/look.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/chart/chart.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/chart/indicators.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/core/indicators.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="js/chart/sessions.js?v=5cd63cafc3">
-  <link rel="modulepreload" href="vendor/fflate.js?v=5cd63cafc3">
+  <link rel="stylesheet" href="css/fonts.css?v=446247be79">
+  <link rel="stylesheet" href="css/app.css?v=446247be79">
+  <link rel="stylesheet" href="css/next.css?v=446247be79">
+  <link rel="stylesheet" href="css/rv.css?v=446247be79">
+  <link rel="modulepreload" href="js/profiles.js?v=446247be79">
+  <link rel="modulepreload" href="js/api.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/boot.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/clone.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/db.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/site.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/server.js?v=446247be79">
+  <link rel="modulepreload" href="js/core/timeframes.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/query.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/rtc.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/candles.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/series.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/net.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/packs.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/live.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/instruments.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/sync.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/cloud.js?v=446247be79">
+  <link rel="modulepreload" href="js/local/firebase-config.js?v=446247be79">
+  <link rel="modulepreload" href="js/ui/dom.js?v=446247be79">
+  <link rel="modulepreload" href="js/format.js?v=446247be79">
+  <link rel="modulepreload" href="js/ui/look.js?v=446247be79">
+  <link rel="modulepreload" href="js/chart/chart.js?v=446247be79">
+  <link rel="modulepreload" href="js/chart/indicators.js?v=446247be79">
+  <link rel="modulepreload" href="js/core/indicators.js?v=446247be79">
+  <link rel="modulepreload" href="js/chart/sessions.js?v=446247be79">
+  <link rel="modulepreload" href="vendor/fflate.js?v=446247be79">
 </head>
 <body class="page-profiles">
   <main class="profiles" id="profiles">
@@ -84,6 +85,6 @@
   </main>
   <div id="modal-root"></div>
   <div id="toasts" aria-live="polite"></div>
-  <script type="module" src="js/profiles.js?v=5cd63cafc3"></script>
+  <script type="module" src="js/profiles.js?v=446247be79"></script>
 </body>
 </html>

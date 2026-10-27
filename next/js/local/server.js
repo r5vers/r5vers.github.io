@@ -3,13 +3,14 @@
 //
 // handle(db, { method, path, query, body }) -> { status, json } | { status, bytes, headers }
 // `body` is the request body as an ArrayBuffer, a JSON string, or undefined.
-import { canAggregate, parseTf, CHART_TFS } from '../core/timeframes.js?v=5cd63cafc3';
-import { aggregateCols } from './query.js?v=5cd63cafc3';
-import { barsAnswer, replayAnswer } from './candles.js?v=5cd63cafc3';
-import { ChunkRows, deleteSeries, deviceSource, readAll, replaceSeries } from './series.js?v=5cd63cafc3';
-import * as packs from './packs.js?v=5cd63cafc3';
-import * as live from './live.js?v=5cd63cafc3';
-import * as sync from './sync.js?v=5cd63cafc3';
+import { canAggregate, parseTf, CHART_TFS } from '../core/timeframes.js?v=446247be79';
+import { aggregateCols } from './query.js?v=446247be79';
+import { barsAnswer, replayAnswer } from './candles.js?v=446247be79';
+import { ChunkRows, deleteSeries, deviceSource, readAll, replaceSeries } from './series.js?v=446247be79';
+import * as packs from './packs.js?v=446247be79';
+import * as live from './live.js?v=446247be79';
+import * as sync from './sync.js?v=446247be79';
+import { TEST_COPY } from './site.js?v=446247be79';
 
 const KV_MAX_BYTES = 4 * 1024 * 1024;
 const PHOTO_MAX_BYTES = 1024 * 1024;
@@ -104,7 +105,7 @@ function dataWorker() {
   if (broken || typeof Worker === 'undefined') return null;
   if (!worker) {
     try {
-      worker = new Worker(new URL('../workers/data.worker.js?v=5cd63cafc3', import.meta.url), { type: 'module' });
+      worker = new Worker(new URL('../workers/data.worker.js?v=446247be79', import.meta.url), { type: 'module' });
     } catch { broken = true; return null; }
     worker.onmessage = (e) => {
       const w = waiting.get(e.data.id);
@@ -480,8 +481,17 @@ route('DELETE', '/strategies/{name}', async (db, { p }) => {
 route('GET', '/cloud/status', async (db) => ok(await sync.status(db)));
 // the test copy stays off the group's cloud: it brought a copy of this
 // device's profiles once (clone.js) and keeps what is done here to itself
-route('POST', '/cloud/connect', () => { throw new HttpError(403, 'Test sürümü buluta bağlanmaz: veriler ana siteden bir kez kopyalandı ve burada kalır'); });
-route('POST', '/cloud/sync', async (db) => ok({ ...(await sync.status(db)), changed: 0 }));
+route('POST', '/cloud/connect', async (db, { body }) => {
+  if (TEST_COPY) throw new HttpError(403, 'Test sürümü buluta bağlanmaz: veriler ana siteden bir kez kopyalandı ve burada kalır');
+  const { password, create } = json(body);
+  const changed = await sync.connect(db, String(password || ''), { create: !!create });
+  return ok({ ...(await sync.status(db)), changed: changed.length });
+});
+route('POST', '/cloud/sync', async (db) => {
+  if (TEST_COPY) return ok({ ...(await sync.status(db)), changed: 0 });
+  const changed = await sync.sync(db, { force: true });
+  return ok({ ...(await sync.status(db)), changed: changed.length });
+});
 route('POST', '/cloud/disconnect', async (db) => { await sync.disconnect(db); return ok(await sync.status(db)); });
 
 /** Answer one API request. `path` is without the /api prefix. */

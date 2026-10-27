@@ -1,31 +1,35 @@
 // Replay Terminal - application controller.
-import { api } from './api.js?v=5cd63cafc3';
-import { columnsToBars } from './core/aggregate.js?v=5cd63cafc3';
-import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=5cd63cafc3';
-import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=5cd63cafc3';
-import { computeStats } from './core/stats.js?v=5cd63cafc3';
-import { bucket, parseTf } from './core/timeframes.js?v=5cd63cafc3';
-import { TradingChart } from './chart/chart.js?v=5cd63cafc3';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=5cd63cafc3';
-import { configureICT } from './chart/sessions.js?v=5cd63cafc3';
-import { INDICATORS } from './chart/indicators.js?v=5cd63cafc3';
-import { TradeLines } from './chart/tradelines.js?v=5cd63cafc3';
-import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=5cd63cafc3';
-import * as F from './format.js?v=5cd63cafc3';
-import { appearanceSheet } from './rvshell.js?v=5cd63cafc3';
-import { ReplayEngine } from './replay.js?v=5cd63cafc3';
-import * as D from './ui/dialogs.js?v=5cd63cafc3';
-import { DataView } from './ui/dataview.js?v=5cd63cafc3';
-import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=5cd63cafc3';
-import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=5cd63cafc3';
-import { openPalette, wirePalette } from './ui/palette.js?v=5cd63cafc3';
-import { wireTooltips } from './ui/tooltip.js?v=5cd63cafc3';
-import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=5cd63cafc3';
-import { scrubWheel } from './ui/scrubwheel.js?v=5cd63cafc3';
-import { StatsView } from './ui/statsview.js?v=5cd63cafc3';
-import { StrategyView } from './ui/strategyview.js?v=5cd63cafc3';
-import { Ticket } from './ui/ticket.js?v=5cd63cafc3';
-import { SidePane } from './ui/sidepane.js?v=5cd63cafc3';
+import { api } from './api.js?v=446247be79';
+import { LOCAL_NAMES, TEST_COPY } from './local/site.js?v=446247be79';
+import { columnsToBars } from './core/aggregate.js?v=446247be79';
+import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=446247be79';
+import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=446247be79';
+import { computeStats } from './core/stats.js?v=446247be79';
+import { bucket, parseTf } from './core/timeframes.js?v=446247be79';
+import { TradingChart } from './chart/chart.js?v=446247be79';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=446247be79';
+import { configureICT } from './chart/sessions.js?v=446247be79';
+import { INDICATORS } from './chart/indicators.js?v=446247be79';
+import { TradeLines } from './chart/tradelines.js?v=446247be79';
+import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=446247be79';
+import * as F from './format.js?v=446247be79';
+import { appearanceSheet } from './rvshell.js?v=446247be79';
+import { ReplayEngine } from './replay.js?v=446247be79';
+import * as D from './ui/dialogs.js?v=446247be79';
+import { DataView } from './ui/dataview.js?v=446247be79';
+import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=446247be79';
+import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=446247be79';
+import { openPalette, wirePalette } from './ui/palette.js?v=446247be79';
+import { wireTooltips } from './ui/tooltip.js?v=446247be79';
+import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=446247be79';
+import { scrubWheel } from './ui/scrubwheel.js?v=446247be79';
+import { StatsView } from './ui/statsview.js?v=446247be79';
+import { StrategyView } from './ui/strategyview.js?v=446247be79';
+import { Ticket } from './ui/ticket.js?v=446247be79';
+import { SidePane } from './ui/sidepane.js?v=446247be79';
+
+// the page that starts this device over (the test copy's starts it from the main site)
+const RESET_LABEL = TEST_COPY ? 'Test sürümünü sıfırla' : 'Cihazı sıfırla';
 
 const LW = window.LightweightCharts;
 const SPEEDS = [[1, '1x'], [2, '2x'], [4, '4x'], [8, '8x'], [16, '16x'], [40, '40x'], [0, 'Maks']];
@@ -130,10 +134,10 @@ class App {
     store('rt:settings', shared);
     try { localStorage.setItem(this._deviceKey(), JSON.stringify({ bottomHeight, bottomCollapsed, panel })); } catch { /* private mode */ }
     // the profile screen opens in the look of whoever used this browser last
-    try { localStorage.setItem('nx-last-look', JSON.stringify(this.settings.appearance)); } catch { /* private mode */ }
+    try { localStorage.setItem(LOCAL_NAMES.lastLook, JSON.stringify(this.settings.appearance)); } catch { /* private mode */ }
   }
 
-  _deviceKey() { return `nx-device:p${this.profile?.id ?? 0}`; }
+  _deviceKey() { return `${LOCAL_NAMES.device}p${this.profile?.id ?? 0}`; }
 
   // ── boot ────────────────────────────────────────────────────────────────
   async init() {
@@ -268,7 +272,7 @@ class App {
     this.showMessage('Grafik açılıyor…');
     const sides = Promise.allSettled([this.strategyView.init(), this.dataView.init()]).then(() => this.renderTab());
     // a step that does not end is named on the screen, never a silent blank
-    const slow = setTimeout(() => { if (!this.ds) this.showMessage('Veri listesi bekleniyor… Uzun sürerse sayfayı yenile; düzelmezse “Test sürümünü sıfırla” ile baştan başla.'); }, 12000);
+    const slow = setTimeout(() => { if (!this.ds) this.showMessage(`Veri listesi bekleniyor… Uzun sürerse sayfayı yenile; düzelmezse “${RESET_LABEL}” ile baştan başla.`); }, 12000);
     // links from the home screen: /chart.html?ds=..&tf=.., ?session=.., ?backtest=.., ?tab=.., ?new=replay
     const q = new URLSearchParams(location.search);
     if (q.toString()) history.replaceState(null, '', location.pathname);
@@ -336,7 +340,7 @@ class App {
       const msg = $('#chart-msg');
       msg.append(h('div', { style: { marginTop: '10px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' } },
         h('button.btn.small.primary', { onclick: () => { this.showMessage('Grafik açılıyor…'); this.loadDatasets(selectId); } }, 'Tekrar dene'),
-        h('a.btn.small', { href: 'sifirla.html' }, 'Test sürümünü sıfırla')));
+        h('a.btn.small', { href: 'sifirla.html' }, RESET_LABEL)));
       return;
     }
     this.renderInstrument();
@@ -3142,6 +3146,7 @@ class App {
     cmd('İndikatör ekle', () => D.indicatorsDialog(this), 'indicator');
     cmd('Canlı grafik', () => D.liveDialog(this), 'live', { keys: 'oanda binance' });
     cmd('Otomatik ölçek', () => this.chart.autoScale(), 'refresh', { keys: 'fiyat ekseni A' });
+    cmd('Grafiği sıfırla', () => this.chart.resetView(), 'refresh', { keys: 'görünüm normal Alt+R' });
     cmd('Son bara git', () => this.chart.scrollToEnd(), 'ffwd');
     cmd('Görünüm', () => this.lookSheet(), 'palette', { keys: 'tema renk font yazı' });
     cmd('Ayarlar', () => D.settingsDialog(this), 'sliders', { keys: 'saat dilimi hesap api' });
@@ -3213,7 +3218,7 @@ class App {
       if (mod && !e.altKey && ['KeyZ', 'KeyY'].includes(e.code)) { e.preventDefault(); this.drawings.historyStep(e.code === 'KeyY' || e.shiftKey ? 1 : -1); return; }
       if (mod && e.altKey && e.code === 'KeyH') { e.preventDefault(); this.drawings.hideAll = !this.drawings.hideAll; this.drawings.select(null); this.drawings.redraw(); this.renderToolbar(); return; }
       if (e.altKey && !mod && e.code === 'KeyG') { e.preventDefault(); if (this.mode === 'replay') D.jumpDialog(this); return; }
-      if (e.altKey && !mod && e.code === 'KeyR') { e.preventDefault(); if (e.shiftKey) this.drawings.setTool('rect'); else { this.chart.chart.timeScale().resetTimeScale(); this.chart.autoScale(); } return; }
+      if (e.altKey && !mod && e.code === 'KeyR') { e.preventDefault(); if (e.shiftKey) this.drawings.setTool('rect'); else this.chart.resetView(); return; }
       if (e.altKey && !mod && e.code === 'KeyI') { e.preventDefault(); const ps = this.chart.chart.priceScale('right'); ps.applyOptions({ invertScale: !ps.options().invertScale }); return; }
       if (e.altKey && !mod && ['KeyL', 'KeyP'].includes(e.code)) { e.preventDefault(); if (e.shiftKey && e.code === 'KeyL') { this.drawings.setTool('long'); return; } const ps = this.chart.chart.priceScale('right'), mode = e.code === 'KeyL' ? 1 : 2; ps.applyOptions({ mode: ps.options().mode === mode ? 0 : mode }); return; }
       if ((mod && ['ArrowUp', 'ArrowDown'].includes(e.code)) || (e.altKey && !mod && ['Equal', 'Minus'].includes(e.code))) {
