@@ -2,12 +2,12 @@
 // as large cards, recents, markets, one market's chart, the floating bar.
 // Wide screens (Alltra's overview): the greeting and a large search in the
 // middle, the apps in a row, then an overview of glass cards.
-import { api } from './api.js?v=279ddf48f5';
-import * as F from './format.js?v=279ddf48f5';
-import { brandMark, h, icon, sparkline } from './ui/dom.js?v=279ddf48f5';
-import { openPalette, wirePalette } from './ui/palette.js?v=279ddf48f5';
-import { wireTooltips } from './ui/tooltip.js?v=279ddf48f5';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=279ddf48f5';
+import { api } from './api.js?v=131e7ce3e0';
+import * as F from './format.js?v=131e7ce3e0';
+import { brandMark, h, icon, sparkline } from './ui/dom.js?v=131e7ce3e0';
+import { openPalette, wirePalette } from './ui/palette.js?v=131e7ce3e0';
+import { wireTooltips } from './ui/tooltip.js?v=131e7ce3e0';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=131e7ce3e0';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
@@ -77,7 +77,7 @@ const foot = () => h('footer.hub-foot', {}, 'RV Next · test sürümü · verile
 // ── the apps: large cards (phone), a row of tiles (wide) ────────────────
 function appRow(wide) {
   const row = h(`div.hub-apps${wide ? '.wide' : ''}`, {}, APPS.map((a) => h(`a.hub-app.gl.app-${a.id}`, { href: a.href, onclick: (e) => { e.preventDefault(); go(a.href); } },
-    h('span.hub-app-fill', { 'aria-hidden': 'true' }),
+    h('span.hub-app-fill', { 'aria-hidden': 'true' }), h('span.hub-app-art', { 'aria-hidden': 'true' }, icon(a.icon, wide ? 150 : 140)),
     h('span.hub-app-top', {}, h('span.hub-app-ic', {}, icon(a.icon, wide ? 24 : 26)), a.badge ? h('span.hub-badge', {}, a.badge) : null),
     h('span.hub-app-txt', {}, h('b', {}, a.name), h('small', {}, a.sub)))));
   // the cards are clear glass; the one at the row's start takes its colour,

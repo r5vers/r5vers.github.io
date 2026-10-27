@@ -1,6 +1,6 @@
 // Thin client for the terminal's REST API.
 // Without a server (static hosting) local/boot.js answers it on the device.
-import './local/boot.js?v=279ddf48f5';
+import './local/boot.js?v=131e7ce3e0';
 
 async function request(method, path, { body, params, raw = false, keepalive = false } = {}) {
   let url = `/api${path}`;
