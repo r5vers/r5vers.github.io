@@ -2,12 +2,12 @@
 // as large cards, recents, markets, one market's chart, the floating bar.
 // Wide screens (Alltra's overview): the greeting and a large search in the
 // middle, the apps in a row, then an overview of glass cards.
-import { api } from './api.js?v=fd94038260';
-import * as F from './format.js?v=fd94038260';
-import { brandMark, h, icon, sparkline } from './ui/dom.js?v=fd94038260';
-import { openPalette, wirePalette } from './ui/palette.js?v=fd94038260';
-import { wireTooltips } from './ui/tooltip.js?v=fd94038260';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=fd94038260';
+import { api } from './api.js?v=0f8583c5e0';
+import * as F from './format.js?v=0f8583c5e0';
+import { brandMark, h, icon, sparkline } from './ui/dom.js?v=0f8583c5e0';
+import { openPalette, wirePalette } from './ui/palette.js?v=0f8583c5e0';
+import { wireTooltips } from './ui/tooltip.js?v=0f8583c5e0';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=0f8583c5e0';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
