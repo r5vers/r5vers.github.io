@@ -322,3 +322,21 @@ body.page-chart :is(.modal, #replay-controls) .btn.primary::before { opacity: .9
 /* (the run along the top edge stays for the plain keys only) */
 .rv-page .rv-btn:not(.ghost)::after { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .rv-page .rv-btn::before, body.page-chart .btn.primary::before { animation: none !important; } }
+
+/* ── the dot pattern: a fine grid of dots over the lights, lit by them,
+   fading towards the edges and drifting very slowly ───────────────────── */
+body.rv-page > .ambient::before {
+  content: ''; position: absolute; inset: -42px; pointer-events: none; z-index: 1;
+  background-image:
+    radial-gradient(circle at center, rgba(255, 255, 255, .55) 0 1px, transparent 1.6px),
+    radial-gradient(circle at center, rgba(255, 255, 255, .3) 0 .8px, transparent 1.3px);
+  background-size: 21px 21px, 21px 21px;
+  background-position: 0 0, 10.5px 10.5px;
+  mix-blend-mode: overlay; opacity: .55;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 30%, #000 20%, rgba(0, 0, 0, .35) 60%, transparent 92%);
+  mask-image: radial-gradient(120% 90% at 50% 30%, #000 20%, rgba(0, 0, 0, .35) 60%, transparent 92%);
+  animation: rv-dots 89s linear infinite;
+}
+@keyframes rv-dots { to { transform: translate3d(21px, 42px, 0); } }
+@media (max-width: 760px) { body.rv-page > .ambient::before { background-size: 17px 17px, 17px 17px; background-position: 0 0, 8.5px 8.5px; } }
+@media (prefers-reduced-motion: reduce) { body.rv-page > .ambient::before { animation: none; } }
