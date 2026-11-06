@@ -102,14 +102,15 @@ body.rv-page > .ambient::after { opacity: .1 !important; mix-blend-mode: overlay
     height: auto !important; aspect-ratio: 1.5 / 1 !important; padding: 21px !important; border-radius: 30px !important;
     transform: translateZ(0) scale(calc(.9 + .1 * var(--on, 0))) rotateY(calc(var(--p, 0) * -5deg));
     transform-origin: 50% 60%; transition: transform .35s var(--ease-glass), box-shadow .35s var(--ease-glass);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 12px 24px -16px color-mix(in srgb, var(--app) calc(var(--on, 0) * 55%), rgba(0, 0, 0, .5)) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 12px 24px -16px rgba(0, 0, 0, .5) !important;
   }
-  .hub-app-fill { transition: opacity .45s var(--ease-glass); opacity: calc(var(--on, 0) * .62) !important;
-    background: radial-gradient(90% 70% at 85% 0%, rgba(255, 255, 255, .22), transparent 70%), linear-gradient(155deg, color-mix(in srgb, var(--app) 70%, #fff 12%) 0%, color-mix(in srgb, var(--app) 62%, transparent) 55%, color-mix(in srgb, var(--app) 30%, transparent) 100%) !important;
-    box-shadow: none !important; }
+  /* the card in front takes its app's colour as one flat tint: no sheen, no fade from light to dark */
+  .hub-app-fill { transition: opacity .45s var(--ease-glass); opacity: var(--on, 0) !important;
+    background: color-mix(in srgb, var(--app) 30%, transparent) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app) 50%, transparent) !important; }
   .hub-app-art { opacity: calc(.05 + var(--on, 0) * .16) !important; transform: translateX(calc(var(--p, 0) * -34px)); transition: transform .35s var(--ease-glass), opacity .45s var(--ease-glass); right: -21px !important; bottom: -34px !important; }
   .hub-app-art svg { width: 130px; height: 130px; }
-  .hub-app-ic { width: 46px; height: 46px; border-radius: 13px; background: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
+  .hub-app-ic { width: 46px; height: 46px; border-radius: 13px; background: color-mix(in srgb, var(--app) calc(var(--on, 0) * 100%), rgba(255, 255, 255, .1)); box-shadow: none; transition: background .45s var(--ease-glass); }
   .hub-app-txt b { font-size: 19px !important; letter-spacing: -.02em; }
   .hub-badge { border-radius: 99px; background: rgba(255, 255, 255, .16); -webkit-backdrop-filter: blur(13px); backdrop-filter: blur(13px); }
   .hub-dots { display: flex; justify-content: center; gap: 6px; margin-top: -8px; }
@@ -117,6 +118,16 @@ body.rv-page > .ambient::after { opacity: .1 !important; mix-blend-mode: overlay
   .hub-dots i.on { width: 21px; background: rgba(255, 255, 255, .85); }
 }
 @media (min-width: 1024px) { .hub-dots { display: none; } }
+/* wide: a card under the pointer takes its app's colour as one flat tint */
+@media (min-width: 1024px) {
+  .hub-apps.wide .hub-app-fill { background: color-mix(in srgb, var(--app) 20%, transparent) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app) 50%, transparent) !important; transition: opacity .3s var(--ease-glass); }
+  .hub-apps.wide .hub-app-ic { background: color-mix(in srgb, var(--app) 18%, transparent); box-shadow: none; transition: background .3s var(--ease-glass); }
+  .hub-apps.wide .hub-app:hover .hub-app-ic { background: var(--app); box-shadow: none; }
+  .hub-apps.wide .hub-app:hover .hub-app-go { transform: none; color: #fff; background: color-mix(in srgb, var(--app) 30%, transparent); box-shadow: none; }
+  .hub-app-go svg { transition: transform .25s var(--ease-glass); }
+  .hub-apps.wide .hub-app:hover .hub-app-go svg { transform: rotate(-45deg); }
+}
 
 /* ── the main buttons: flat, an LED running round the edge ─────────────── */
 .rv-page .rv-btn:not(.ghost), body.page-chart :is(.modal, #replay-controls) .btn.primary {
