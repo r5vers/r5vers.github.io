@@ -3,14 +3,15 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=60be322688';
-import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=60be322688';
-import * as F from './format.js?v=60be322688';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=60be322688';
-import { configureICT } from './chart/sessions.js?v=60be322688';
-import { settingsDialog } from './ui/dialogs.js?v=60be322688';
-import { openPalette } from './ui/palette.js?v=60be322688';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=60be322688';
+import { api } from './api.js?v=b057e59644';
+import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=b057e59644';
+import * as F from './format.js?v=b057e59644';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=b057e59644';
+import { configureICT } from './chart/sessions.js?v=b057e59644';
+import { settingsDialog } from './ui/dialogs.js?v=b057e59644';
+import { openPalette } from './ui/palette.js?v=b057e59644';
+import { wireGlassLight } from './ui/glasslight.js?v=b057e59644';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=b057e59644';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };
@@ -36,6 +37,7 @@ export const host = {
 export async function bootShell(onRepaint) {
   shell.onRepaint = onRepaint;
   paintLastLook('home');
+  wireGlassLight();
   const me = await api.me();
   if (!me.profile) { window.location.replace('profiles.html'); return null; }
   shell.me = me;
@@ -123,14 +125,13 @@ export function appFrame({ current, sections = null, section = null, crumbs = []
   if (!WIDE.matches) { rail?.remove(); document.getElementById('rv-side')?.remove(); document.getElementById('rv-top')?.remove(); return; }
   if (!rail) { rail = h('nav.rv-rail', { id: 'rv-rail', 'aria-label': 'Uygulamalar' }); document.body.append(rail); }
   const p = shell.me.profile;
-  // icon and name, as a desk app's sidebar; with a section list beside it the names fold away
-  const tile = (id, label, ic, href) => h(`a.rv-rail-app${id === current ? '.on' : ''}`, { href, title: label, 'aria-label': label, onclick: (e) => { e.preventDefault(); go(href); } }, icon(ic, 18), h('span.rv-rail-lbl', {}, label));
+  const tile = (id, label, ic, href) => h(`a.rv-rail-app${id === current ? '.on' : ''}`, { href, title: label, 'aria-label': label, onclick: (e) => { e.preventDefault(); go(href); } }, icon(ic, 21));
   rail.replaceChildren(
-    h('a.rv-rail-mark', { href: 'home.html', title: 'Ana ekran', 'aria-label': 'Ana ekran', onclick: (e) => { e.preventDefault(); go('home.html'); } }, brandMark(22), h('span.rv-rail-lbl.rv-rail-word', {}, 'ReplayView')),
+    h('a.rv-rail-mark', { href: 'home.html', title: 'Ana ekran', 'aria-label': 'Ana ekran', onclick: (e) => { e.preventDefault(); go('home.html'); } }, brandMark(26)),
     h('div.rv-rail-apps', {}, tile('home', 'Ana ekran', 'home', 'home.html'), ...APPS.map((a) => tile(a.id, a.name, a.icon, a.href))),
     h('div.rv-rail-foot', {},
-      h('button.rv-rail-app', { type: 'button', title: 'Görünüm', 'aria-label': 'Görünüm', onclick: () => profileDrawer('look') }, icon('palette', 18), h('span.rv-rail-lbl', {}, 'Görünüm')),
-      h('button.rv-rail-me', { type: 'button', title: p.name, 'aria-label': 'Profil', onclick: () => profileDrawer('profile') }, avatar({ ...p, locked: false }, 'sm'), h('span.rv-rail-lbl', {}, p.name))));
+      h('button.rv-rail-app', { type: 'button', title: 'Görünüm', 'aria-label': 'Görünüm', onclick: () => profileDrawer('look') }, icon('palette', 20)),
+      h('button.rv-rail-me', { type: 'button', title: p.name, 'aria-label': 'Profil', onclick: () => profileDrawer('profile') }, avatar({ ...p, locked: false }, 'sm'))));
 
   let side = document.getElementById('rv-side');
   if (sections) {
@@ -206,7 +207,8 @@ export function group(rows, title = null, { mono = false } = {}) {
 // ── appearance: theme, colour, type, chart ───────────────────────────────
 export const ACCENTS = [['#a855f7', 'Mor'], ['#8b5cf6', 'Menekşe'], ['#6366f1', 'Çivit'], ['#3b82f6', 'Mavi'], ['#0ea5e9', 'Gök'], ['#22d3ee', 'Buz'],
   ['#14b8a6', 'Turkuaz'], ['#10b981', 'Zümrüt'], ['#22c55e', 'Yeşil'], ['#84cc16', 'Lime'], ['#eab308', 'Altın'], ['#f59e0b', 'Kehribar'],
-  ['#f97316', 'Turuncu'], ['#ef4444', 'Kırmızı'], ['#f43f5e', 'Gül'], ['#ec4899', 'Pembe'], ['#d946ef', 'Fuşya'], ['#e4e4e7', 'Platin']];
+  ['#f97316', 'Turuncu'], ['#ef4444', 'Kırmızı'], ['#f43f5e', 'Gül'], ['#ec4899', 'Pembe'], ['#d946ef', 'Fuşya'], ['#e4e4e7', 'Platin'],
+  ['#3b6cff', 'Safir'], ['#b8a1ff', 'Lavanta'], ['#5eead4', 'Nane'], ['#e8c27a', 'Şampanya'], ['#ff7a6b', 'Mercan'], ['#be123c', 'Bordo']];
 export const CANDLES = [['Klasik', '#26a69a', '#ef5350'], ['Zümrüt / gül', '#34d399', '#fb7185'], ['Gök / gül', '#38bdf8', '#f43f5e'], ['Yeşil / kırmızı', '#22c55e', '#ef4444'],
   ['Lavanta', '#8fa8ff', '#c77dff'], ['Neon', '#2ee6a6', '#ff4d6d'], ['Altın / mor', '#facc15', '#a855f7'], ['Sade', '#e5e7eb', '#6b7280']];
 // money made / lost on the app pages; the first is the default (null)

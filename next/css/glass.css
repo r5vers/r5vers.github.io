@@ -1,0 +1,170 @@
+/* RV · glass edition
+   The RV design as it is on the main site, in liquid glass. Loaded after
+   rv.css on the app pages (not the chart, which stays solid).
+
+   The material: a pane barely tinted, the page behind it blurred, saturated
+   and lifted; a bright line where light meets its top edge, a fainter one
+   along the bottom where it leaves; a rim that is brighter on the side the
+   light comes from; a little inner glow at the foot, as thick glass has; a
+   soft shadow that carries an offset. Under the pointer the light moves with
+   it (js/ui/glasslight.js sets --mx / --my).
+
+   The lights behind: five broad, slow lights of the theme's colours drifting
+   on paths of prime-length loops (they never fall back into step), added
+   together like light, a faint caustic turning over them, and grain so
+   nothing bands.
+
+   Proportion: the golden ratio. Spacing steps by φ from 8px (8 13 21 34 55
+   89), type by √φ from 15px (15 19 24 31 39 50), radii 13 / 21 / 34, and
+   splits of φ:1 where two things share a row. */
+
+body.rv-page {
+  --phi: 1.618;
+  --s1: 8px; --s2: 13px; --s3: 21px; --s4: 34px; --s5: 55px; --s6: 89px;
+  --t-0: 15px; --t-1: 19px; --t-2: 24px; --t-3: 31px; --t-4: 39px; --t-5: 50px;
+  --r-xl: 34px; --r-lg: 21px; --r-md: 13px;
+  /* the pane and its light */
+  --pane: linear-gradient(150deg, rgba(255, 255, 255, .105) 0%, rgba(255, 255, 255, .045) 34%, rgba(255, 255, 255, .025) 62%, rgba(255, 255, 255, .06) 100%);
+  --pane-strong: linear-gradient(150deg, rgba(255, 255, 255, .15) 0%, rgba(255, 255, 255, .07) 40%, rgba(255, 255, 255, .05) 100%);
+  --pane-blur: blur(26px) saturate(185%) brightness(1.06);
+  --pane-edge:
+    inset 0 1px 0 rgba(255, 255, 255, .30),
+    inset 0 -1px 0 rgba(255, 255, 255, .07),
+    inset 0 0 0 1px rgba(255, 255, 255, .055),
+    inset 0 -21px 34px -26px rgba(255, 255, 255, .16);
+  --pane-drop: 0 1px 2px rgba(0, 0, 0, .3), 0 13px 34px -13px rgba(0, 0, 0, .55), 0 34px 89px -34px rgba(0, 0, 0, .6);
+  --frost: rgba(18, 18, 24, .42); --frost-blur: var(--pane-blur);
+  --sheet: rgba(16, 16, 22, .62);
+  --ease-glass: cubic-bezier(.23, 1, .32, 1);
+  font-size: var(--t-0);
+}
+
+/* ── the lights behind ───────────────────────────────────────────────── */
+body.rv-page > .ambient[data-scene="rv"] { opacity: calc(1.3 - var(--depth) * .55); background: none; }
+body.rv-page .rv-nebula { position: absolute; inset: 0; }
+body.rv-page .rv-nebula i {
+  position: absolute; width: 68vmax; height: 68vmax; border-radius: 50%; mix-blend-mode: screen; will-change: transform;
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--c) 34%, transparent) 0%, color-mix(in srgb, var(--c) 14%, transparent) 34%, transparent 66%);
+  animation: rv-drift-a 37s cubic-bezier(.45, 0, .55, 1) infinite alternate;
+}
+body.rv-page .rv-nebula i:nth-child(1) { --c: var(--o1); left: -24vmax; top: -30vmax; }
+body.rv-page .rv-nebula i:nth-child(2) { --c: var(--o2); right: -28vmax; top: -6vmax; width: 60vmax; height: 60vmax; animation-name: rv-drift-b; animation-duration: 43s; animation-delay: -11s; }
+body.rv-page .rv-nebula i:nth-child(3) { --c: var(--o3); left: 18vw; bottom: -40vmax; width: 74vmax; height: 74vmax; animation-name: rv-drift-c; animation-duration: 53s; animation-delay: -23s; }
+body.rv-page .rv-nebula i:nth-child(4) { --c: var(--accent); right: 8vw; bottom: -30vmax; width: 50vmax; height: 50vmax; animation-name: rv-drift-a; animation-duration: 61s; animation-delay: -37s; opacity: .8; }
+body.rv-page .rv-nebula i:nth-child(5) { --c: color-mix(in srgb, var(--accent) 50%, #fff); left: 30vw; top: 12vh; width: 34vmax; height: 34vmax; animation-name: rv-drift-b; animation-duration: 71s; animation-delay: -5s; opacity: .35; }
+/* a caustic: light through water, turning slowly */
+body.rv-page .rv-nebula b {
+  position: absolute; left: 50%; top: 50%; width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax; mix-blend-mode: soft-light; opacity: .55;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, .07) 40deg, transparent 90deg, rgba(255, 255, 255, .05) 160deg, transparent 220deg, rgba(255, 255, 255, .06) 290deg, transparent 360deg);
+  filter: blur(34px); animation: rv-turn 144s linear infinite;
+}
+@keyframes rv-drift-a { 0% { transform: translate3d(0, 0, 0) scale(1); } 33% { transform: translate3d(8vmax, 5vmax, 0) scale(1.09); } 66% { transform: translate3d(-3vmax, 9vmax, 0) scale(.95); } 100% { transform: translate3d(5vmax, -4vmax, 0) scale(1.04); } }
+@keyframes rv-drift-b { 0% { transform: translate3d(0, 0, 0) scale(1.02); } 30% { transform: translate3d(-9vmax, 4vmax, 0) scale(.94); } 70% { transform: translate3d(-4vmax, -6vmax, 0) scale(1.1); } 100% { transform: translate3d(6vmax, 3vmax, 0) scale(.98); } }
+@keyframes rv-drift-c { 0% { transform: translate3d(0, 0, 0) scale(.96); } 40% { transform: translate3d(10vmax, -7vmax, 0) scale(1.06); } 100% { transform: translate3d(-8vmax, -3vmax, 0) scale(1); } }
+@keyframes rv-turn { to { transform: rotate(360deg); } }
+
+/* ── the glass ────────────────────────────────────────────────────────── */
+.rv-page .gl {
+  background: var(--pane) !important;
+  -webkit-backdrop-filter: var(--pane-blur); backdrop-filter: var(--pane-blur);
+  box-shadow: var(--pane-edge), var(--pane-drop) !important;
+  border-radius: var(--r-lg);
+  transition: transform .5s var(--ease-glass), box-shadow .5s var(--ease-glass), background .5s var(--ease-glass);
+}
+/* the rim: brighter where the light comes from (top left at rest, the pointer under it) */
+.rv-page .gl::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
+  background: radial-gradient(120% 90% at var(--mx, 18%) var(--my, 0%), rgba(255, 255, 255, .55), rgba(255, 255, 255, .12) 38%, rgba(255, 255, 255, .04) 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: .9; transition: opacity .5s var(--ease-glass);
+}
+/* the sheen: a wide soft highlight on the face, following the pointer */
+.rv-page .gl::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  background: radial-gradient(55% 70% at var(--mx, 22%) var(--my, -10%), rgba(255, 255, 255, .10), transparent 70%);
+  opacity: .8; transition: opacity .6s var(--ease-glass);
+}
+.rv-page .gl.lit::before { opacity: 1; }
+.rv-page .gl.lit::after { opacity: 1; background: radial-gradient(42% 60% at var(--mx, 22%) var(--my, -10%), rgba(255, 255, 255, .16), transparent 72%); }
+.rv-page :is(button, a).gl:hover { background: var(--pane-strong) !important; box-shadow: var(--pane-edge), 0 1px 2px rgba(0, 0, 0, .3), 0 21px 55px -21px rgba(0, 0, 0, .65) !important; transform: translateY(-2px); }
+.rv-page :is(button, a).gl:active { transform: translateY(0) scale(.985); transition-duration: .15s; }
+
+/* what floats: the rail, the sidebar, the path, the bar at the foot, sheets */
+.rv-page :is(.rv-rail, .rv-side, .rv-crumbs, .rv-top-actions .rv-btn.ghost, .rv-dock .rv-round, .rv-dock .rv-pill) {
+  background: var(--pane), rgba(14, 14, 20, .28) !important;
+  -webkit-backdrop-filter: var(--pane-blur) !important; backdrop-filter: var(--pane-blur) !important;
+  box-shadow: var(--pane-edge), var(--pane-drop) !important;
+}
+.rv-sheet { background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02) 30%), var(--sheet) !important;
+  -webkit-backdrop-filter: blur(34px) saturate(190%) !important; backdrop-filter: blur(34px) saturate(190%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), inset 0 0 0 1px rgba(255, 255, 255, .06), 0 34px 89px -21px rgba(0, 0, 0, .75) !important; }
+
+/* buttons: the accent as lit glass, the ghost as clear glass */
+.rv-page .rv-btn { border-radius: var(--r-md); font-weight: 600; letter-spacing: -.01em;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, #fff) 0%, var(--accent) 52%, color-mix(in srgb, var(--accent) 86%, #000) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .38), inset 0 -1px 0 rgba(0, 0, 0, .18), 0 8px 21px -8px color-mix(in srgb, var(--accent) 75%, transparent), 0 1px 2px rgba(0, 0, 0, .3);
+  transition: transform .2s var(--ease-glass), box-shadow .3s var(--ease-glass), filter .3s var(--ease-glass); }
+.rv-page .rv-btn:hover { filter: brightness(1.08); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(0, 0, 0, .18), 0 13px 34px -13px color-mix(in srgb, var(--accent) 85%, transparent), 0 1px 2px rgba(0, 0, 0, .3); }
+.rv-page .rv-btn:active { transform: scale(.97); }
+.rv-page .rv-btn.ghost { background: var(--pane) !important; -webkit-backdrop-filter: var(--pane-blur); backdrop-filter: var(--pane-blur); box-shadow: var(--pane-edge), 0 8px 21px -13px rgba(0, 0, 0, .6) !important; }
+.rv-page .rv-btn:focus-visible, .rv-page .gl:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 70%, #fff); outline-offset: 3px; }
+
+/* ── type: √φ steps, tighter as it grows ─────────────────────────────── */
+.rv-page .hub-h { font-size: var(--t-2) !important; font-weight: 600 !important; letter-spacing: -.025em; }
+.rv-page .ov-head h3 { font-size: var(--t-1) !important; letter-spacing: -.02em; }
+.rv-page ::selection { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+
+/* ── the wide home, in φ ──────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  body.rv-wide main { gap: var(--s5) !important; }
+  .hub-wide .hub-hero { padding-top: var(--s5); }
+  .hub-wide .hub-hero h1 { font-size: clamp(var(--t-4), 4.2vw, 62px); margin: var(--s3) 0 var(--s3); letter-spacing: -.035em; }
+  .hub-wide .hub-lead { margin-top: var(--s3); font-size: var(--t-0); }
+  .hub-wide .hub-hero-acts { margin-top: var(--s4); gap: var(--s2); }
+  .hub-wide .hub-hero-acts .rv-btn { border-radius: var(--r-md); }
+  .hub-apps.wide { gap: var(--s3); }
+  /* a tile about a golden rectangle laid down (its text may make it taller) */
+  .hub-apps.wide .hub-app { min-height: 178px; padding: var(--s3); border-radius: var(--r-lg); }
+  .hub-mkts { gap: var(--s3); }
+  .hub-mk { padding: var(--s3) var(--s3) var(--s2); border-radius: var(--r-lg); }
+  .hub-kpis { gap: var(--s3); }
+  .hub-kpi { padding: var(--s3); border-radius: var(--r-lg); }
+  .hub-duo { grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr); gap: var(--s3); }
+  .hub-sec { gap: var(--s3); }
+}
+@media (min-width: 1024px) and (max-width: 1300px) { .hub-apps.wide .hub-app { min-height: 150px; } .hub-duo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+/* ── phones: the app cards ───────────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .rv-page main { gap: var(--s4) !important; }
+  .rv-page .hub-hello h1 { font-size: var(--t-3) !important; letter-spacing: -.03em; }
+  .rv-page .hub-hello p { font-size: var(--t-3) !important; letter-spacing: -.03em; }
+  .rv-page .hub-h { font-size: var(--t-1) !important; }
+  /* a card a golden rectangle stood up; the next one peeks in */
+  .hub-apps { grid-auto-columns: min(62vw, 233px) !important; gap: var(--s2) !important; padding: var(--s1) 22px var(--s3) !important; scroll-snap-type: x mandatory; perspective: 900px; }
+  .hub-app {
+    height: auto !important; aspect-ratio: 1 / 1.272; padding: var(--s3) !important; border-radius: var(--r-xl) !important;
+    transform: translateZ(0) scale(calc(.9 + .1 * var(--on, 0))) rotateY(calc(var(--p, 0) * -5deg));
+    transform-origin: 50% 60%; transition: transform .35s var(--ease-glass), box-shadow .35s var(--ease-glass);
+    box-shadow: var(--pane-edge), 0 21px 55px -21px color-mix(in srgb, var(--app) calc(var(--on, 0) * 85%), rgba(0, 0, 0, .6)) !important;
+  }
+  .hub-app-fill { transition: opacity .45s var(--ease-glass); }
+  .hub-app-art { opacity: calc(.05 + var(--on, 0) * .16) !important; transform: translateX(calc(var(--p, 0) * -34px)); transition: transform .35s var(--ease-glass), opacity .45s var(--ease-glass); right: -30px !important; bottom: -36px !important; }
+  .hub-app-ic { width: 46px; height: 46px; border-radius: var(--r-md); background: rgba(255, 255, 255, .12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 0 0 1px rgba(255, 255, 255, .08); }
+  .hub-app-txt b { font-size: var(--t-1) !important; letter-spacing: -.02em; }
+  .hub-badge { border-radius: 99px; background: rgba(255, 255, 255, .16); -webkit-backdrop-filter: blur(13px); backdrop-filter: blur(13px); }
+  .hub-dots { display: flex; justify-content: center; gap: 6px; margin-top: calc(-1 * var(--s1)); }
+  .hub-dots i { width: 6px; height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .22); transition: width .35s var(--ease-glass), background .35s var(--ease-glass); }
+  .hub-dots i.on { width: 21px; background: rgba(255, 255, 255, .85); }
+  .rv-page .gl:not(.hub-app) { border-radius: var(--r-lg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.rv-page .rv-nebula i, body.rv-page .rv-nebula b { animation: none !important; }
+  .hub-app { transform: none !important; }
+}
+/* where backdrop-filter is missing the pane must still read */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .rv-page .gl, .rv-page :is(.rv-rail, .rv-side, .rv-crumbs, .rv-dock .rv-round, .rv-dock .rv-pill) { background: rgba(26, 26, 34, .92) !important; }
+}
