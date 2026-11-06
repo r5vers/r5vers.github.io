@@ -9,7 +9,7 @@
 //
 // The Firestore rules (see README) let only the signed-in owner read or
 // write users/{uid}.
-import { FIREBASE_CONFIG } from './firebase-config.js?v=10ed68bf4e';
+import { FIREBASE_CONFIG } from './firebase-config.js?v=c56af299a5';
 
 const AUTH = 'https://identitytoolkit.googleapis.com/v1/accounts';
 const TOKEN = 'https://securetoken.googleapis.com/v1/token';

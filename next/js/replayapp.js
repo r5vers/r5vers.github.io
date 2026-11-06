@@ -4,15 +4,15 @@
 // screens: the app's sections in a sidebar, a banner, the sessions as a grid
 // of cards (P&L, day of the replay, progress). A session opens in a sheet
 // (a drawer on a wide screen).
-import { api } from './api.js?v=bdf03b7dc4';
-import { TEST_COPY } from './local/site.js?v=bdf03b7dc4';
-import * as F from './format.js?v=bdf03b7dc4';
-import { confirmBox, h, icon, toast } from './ui/dom.js?v=bdf03b7dc4';
-import { SESSION_SETS } from './chart/sessions.js?v=bdf03b7dc4';
-import { nyOffset } from './core/timeframes.js?v=bdf03b7dc4';
-import { wirePalette } from './ui/palette.js?v=bdf03b7dc4';
-import { settingsDialog } from './ui/dialogs.js?v=bdf03b7dc4';
-import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, relTime, ring, sheet, symbolBadge, tz } from './rvshell.js?v=bdf03b7dc4';
+import { api } from './api.js?v=c56af299a5';
+import { TEST_COPY } from './local/site.js?v=c56af299a5';
+import * as F from './format.js?v=c56af299a5';
+import { confirmBox, h, icon, toast } from './ui/dom.js?v=c56af299a5';
+import { SESSION_SETS } from './chart/sessions.js?v=c56af299a5';
+import { nyOffset } from './core/timeframes.js?v=c56af299a5';
+import { wirePalette } from './ui/palette.js?v=c56af299a5';
+import { settingsDialog } from './ui/dialogs.js?v=c56af299a5';
+import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, relTime, ring, sheet, symbolBadge, tz } from './rvshell.js?v=c56af299a5';
 
 /** A replay's result: its balance against where it started (closed and open trades). */
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
@@ -353,12 +353,14 @@ function analytics() {
   const wins = trades.filter((t) => t.pnl > 0);
   const gw = sum(wins), gl = -sum(trades.filter((t) => t.pnl < 0));
   const pfv = gl > 0 ? gw / gl : null;
-  const kpi = (k, v, cls, extra = null) => h('article.gl.ra-kpi', {}, h('div', {}, h('span', {}, k), h(`b.num${cls ? `.${cls}` : ''}`, {}, v)), extra);
+  const kpi = (kind, k, v, cls, extra = null) => h(`article.gl.ra-kpi.${kind}`, {}, h('div', {}, h('span', {}, k), h(`b.num${cls ? `.${cls}` : ''}`, {}, v)), extra);
+  // on a phone the net figure takes the whole row and carries the trade count;
+  // the two ratios sit side by side under it
   const kpis = h('div.ra-kpis', {},
-    kpi('Net K/Z', F.signedMoney(net, ccy), tone(net)),
-    kpi('Kâr faktörü', pfv != null ? F.num(pfv, 2) : '∞', '', ring(pfv != null ? pfv / (pfv + 1) : 1, { size: 60, stroke: 6, tone: pfv != null && pfv < 1 ? 'neg' : 'pos' })),
-    kpi('Kazanma oranı', F.pct(wins.length / trades.length, 1), '', ring(wins.length / trades.length, { size: 60, stroke: 6, tone: wins.length / trades.length < 0.5 ? 'neg' : 'pos' })),
-    kpi('İşlem', String(trades.length), ''));
+    kpi('net', 'Net K/Z', F.signedMoney(net, ccy), tone(net), h('small.ra-kpi-sub', {}, h('b.num', {}, String(trades.length)), ' işlem')),
+    kpi('pf', 'Kâr faktörü', pfv != null ? F.num(pfv, 2) : '∞', '', ring(pfv != null ? pfv / (pfv + 1) : 1, { size: 60, stroke: 6, tone: pfv != null && pfv < 1 ? 'neg' : 'pos' })),
+    kpi('wr', 'Kazanma oranı', F.pct(wins.length / trades.length, 1), '', ring(wins.length / trades.length, { size: 60, stroke: 6, tone: wins.length / trades.length < 0.5 ? 'neg' : 'pos' })),
+    kpi('count', 'İşlem', String(trades.length), ''));
 
   const zones = ['ASIA', 'LONDON', 'NEW YORK'].map((z) => { const xs = trades.filter((t) => zoneOf(t.entryTime) === z); return { z, n: xs.length, pnl: sum(xs) }; });
   const zmax = Math.max(...zones.map((x) => Math.abs(x.pnl)), 1e-9);
@@ -367,7 +369,7 @@ function analytics() {
     h('div.ra-cols', {}, zones.map((x) => h('div.ra-col', {},
       h('span.ra-col-k', {}, ZONE_NAMES[x.z]), h('span.ra-col-n', {}, h('b.num', {}, String(x.n)), ' işlem'),
       h('div.ra-col-bar', {}, h(`i.${tone(x.pnl) || 'zero'}`, { style: { height: `${Math.max(8, (Math.abs(x.pnl) / zmax) * 100)}%` } })),
-      h(`span.ra-col-v.num.${tone(x.pnl)}`, {}, F.signedMoney(x.pnl, ccy))))));
+      h(`span.ra-col-v.num.${tone(x.pnl)}`, {}, F.signedMoney(x.pnl, ccy, Math.abs(x.pnl) >= 1000 ? 0 : 2))))));
 
   const fmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', hour: 'numeric', hourCycle: 'h23', timeZone: tz() });
   const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

@@ -3,15 +3,15 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=bdf03b7dc4';
-import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=bdf03b7dc4';
-import * as F from './format.js?v=bdf03b7dc4';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=bdf03b7dc4';
-import { configureICT } from './chart/sessions.js?v=bdf03b7dc4';
-import { settingsDialog } from './ui/dialogs.js?v=bdf03b7dc4';
-import { openPalette } from './ui/palette.js?v=bdf03b7dc4';
-import { wireGlassLight } from './ui/glasslight.js?v=bdf03b7dc4';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=bdf03b7dc4';
+import { api } from './api.js?v=c56af299a5';
+import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=c56af299a5';
+import * as F from './format.js?v=c56af299a5';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=c56af299a5';
+import { configureICT } from './chart/sessions.js?v=c56af299a5';
+import { settingsDialog } from './ui/dialogs.js?v=c56af299a5';
+import { openPalette } from './ui/palette.js?v=c56af299a5';
+import { wireGlassLight } from './ui/glasslight.js?v=c56af299a5';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=c56af299a5';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };

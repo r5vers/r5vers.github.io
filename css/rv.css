@@ -674,9 +674,45 @@ body.rv-page :is(.rv-metal, .hub-hello h1, .hub-brand span, .ra-top h1, .ra-hero
 .ra-ls-row b { color: #fff; font: 700 22px/1 var(--rv-sans); margin-left: 4px; }
 .ra-ls-bar { display: flex; height: 12px; gap: 3px; }
 .ra-ls-bar i { border-radius: 6px; } .ra-ls-bar .long { background: linear-gradient(90deg, #4f7cff, #8ea8ff); } .ra-ls-bar .short { background: linear-gradient(90deg, #ff8fa3, #f43f5e); }
+/* a figure never breaks: the sign stays with its number */
+.ra-kpi b, .ra-acard-big b, .ra-col-n, .ra-col-v { white-space: nowrap; }
+.ra-kpi-sub { display: none; }
+/* the bars: one flat tone with a hairline, corners in proportion to their width */
+.ra-col-bar i.pos, .ra-day-bar i.pos { background: rgba(52, 211, 153, .3); box-shadow: inset 0 0 0 1px rgba(52, 211, 153, .5); }
+.ra-col-bar i.neg, .ra-day-bar i.neg { background: rgba(251, 113, 133, .3); box-shadow: inset 0 0 0 1px rgba(251, 113, 133, .5); }
+.ra-col-bar i, .ra-day-bar i { border-radius: 10px; }
+.ra-day-bar i { border-radius: 8px; }
 @media (min-width: 1024px) {
   .ra-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .ra-acards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* phones: the net figure across the row with the trade count; the two
+   ratios side by side, each a ring over its label and figure; three equal
+   session columns with the count under its number */
+@media (max-width: 1023px) {
+  .ra-kpi.count { display: none; }
+  .ra-kpi.net { grid-column: 1 / -1; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; min-height: 0; padding: 20px 22px; }
+  .ra-kpi.net > div { gap: 10px; min-width: 0; }
+  .ra-kpi.net b { font-size: clamp(24px, 8vw, 32px); letter-spacing: -.03em; }
+  .ra-kpi-sub { display: block; flex: none; color: var(--t3); font-size: 13px; padding-bottom: 3px; }
+  .ra-kpi-sub b { color: #fff; font: 650 17px/1 var(--rv-sans); margin-right: 2px; }
+  .ra-kpi.pf, .ra-kpi.wr { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: start; align-content: start; gap: 14px; min-height: 0; padding: 18px 18px 20px; }
+  .ra-kpi.pf .rv-ring, .ra-kpi.wr .rv-ring { order: -1; }
+  .ra-kpi.pf .rv-ring svg, .ra-kpi.wr .rv-ring svg { display: block; width: 40px; height: 40px; }
+  .ra-kpi.pf > div, .ra-kpi.wr > div { gap: 8px; min-width: 0; }
+  .ra-kpi span { font-size: 13px; white-space: nowrap; }
+  .ra-kpi b, .ra-col-n b, .ra-col-v { text-align: left; }
+  .ra-kpi.pf b, .ra-kpi.wr b { font-size: 24px; }
+  .ra-acard-big b { font-size: clamp(24px, 7.4vw, 30px); }
+  .ra-cols { margin: 0 -10px; }
+  .ra-col, .ra-col:first-child { grid-template-rows: auto auto 120px auto; gap: 10px; padding: 0 10px; }
+  .ra-col-k { font-size: 14px; }
+  .ra-col-n { display: grid; gap: 4px; font-size: 12.5px; }
+  .ra-col-n b { font-size: 24px; margin: 0; }
+  .ra-col-v { font-size: 13px; }
+  .ra-day { grid-template-rows: 110px auto; }
+  .ra-heat { gap: 5px 4px; }
+  .ra-heat-c { height: 20px; border-radius: 6px; }
 }
 
 /* ══ the shared parts in the new material ══════════════════════════════ */
