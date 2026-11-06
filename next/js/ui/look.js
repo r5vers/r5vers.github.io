@@ -1,8 +1,8 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=4845b44dd6';
-import { field, h, icon } from './dom.js?v=4845b44dd6';
-import { LOCAL_NAMES } from '../local/site.js?v=4845b44dd6';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=7df3338c30';
+import { field, h, icon } from './dom.js?v=7df3338c30';
+import { LOCAL_NAMES, TEST_COPY } from '../local/site.js?v=7df3338c30';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -230,7 +230,8 @@ export const RV_THEMES = PRESETS.map((p) => p.id);
 
 export const DEFAULT_APPEARANCE = {
   v: APPEARANCE_VERSION,
-  preset: 'onyx', bg: 'onyx', accent: '#a855f7', font: 'geist', nxOnyx: 1,
+  // Geist is the test copy's type; the main site keeps the device's own
+  preset: 'onyx', bg: 'onyx', accent: '#a855f7', font: TEST_COPY ? 'geist' : 'sistem', nxOnyx: 1,
   depth: 55,               // how dark the page and its glass are, 0..100
   scene: 'rv',             // behind the page: rv (the accent's light) | ipek | dalga | halka | sirt | duz
   pos: null, neg: null,    // money made / lost on the app pages (null: emerald / rose)
@@ -306,9 +307,9 @@ export function normalizeAppearance(saved) {
   a.nxRvBg = 1;
   // the type: one family for text and titles; the old pairs go to theirs
   a.font = FONT_OF[a.font] || a.font;
-  if (!RV_FONTS.includes(a.font)) a.font = 'geist';
-  if (!saved.nxGeist && a.font === 'sistem') a.font = 'geist';
-  a.nxGeist = 1;
+  if (!RV_FONTS.includes(a.font)) a.font = DEFAULT_APPEARANCE.font;
+  if (TEST_COPY && !saved.nxGeist && a.font === 'sistem') a.font = 'geist';
+  if (TEST_COPY) a.nxGeist = 1;
   if (!['glass', 'solid', 'gradient'].includes(a.chartBg)) a.chartBg = 'glass';
   if (!hex(a.chartColor2)) a.chartColor2 = DEFAULT_APPEARANCE.chartColor2;
   return a;

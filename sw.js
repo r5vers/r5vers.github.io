@@ -8,7 +8,7 @@
 // filled phones (iPhone) before IndexedDB could hold the candles. Each
 // release has its own cache (tools/build_site.py writes BUILD), and the old
 // one goes when the new worker takes over.
-const BUILD = 'd93fdedfec';
+const BUILD = '7df3338c30';
 const CACHE = `rv-app-${BUILD}`;
 
 self.addEventListener('install', () => self.skipWaiting());

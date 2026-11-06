@@ -5,15 +5,15 @@
 // the actions, centred; then the apps as five equal tiles, the markets as
 // a three-by-two grid, the numbers as four equal tiles, and where you left
 // off beside your recents, in two equal halves.
-import { api } from './api.js?v=d93fdedfec';
-import { SITE_TAG } from './local/site.js?v=d93fdedfec';
-import * as F from './format.js?v=d93fdedfec';
-import { brandMark, h, icon } from './ui/dom.js?v=d93fdedfec';
-import { SESSION_SETS } from './chart/sessions.js?v=d93fdedfec';
-import { nyOffset } from './core/timeframes.js?v=d93fdedfec';
-import { openPalette, wirePalette } from './ui/palette.js?v=d93fdedfec';
-import { wireTooltips } from './ui/tooltip.js?v=d93fdedfec';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=d93fdedfec';
+import { api } from './api.js?v=7df3338c30';
+import { SITE_TAG } from './local/site.js?v=7df3338c30';
+import * as F from './format.js?v=7df3338c30';
+import { brandMark, h, icon } from './ui/dom.js?v=7df3338c30';
+import { SESSION_SETS } from './chart/sessions.js?v=7df3338c30';
+import { nyOffset } from './core/timeframes.js?v=7df3338c30';
+import { openPalette, wirePalette } from './ui/palette.js?v=7df3338c30';
+import { wireTooltips } from './ui/tooltip.js?v=7df3338c30';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=7df3338c30';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
@@ -87,23 +87,32 @@ function appRow(wide) {
       wide ? h('span.hub-app-go', { 'aria-hidden': 'true' }, icon('arrow', 16)) : a.badge ? h('span.hub-badge', {}, a.badge) : null),
     h('span.hub-app-txt', {}, h('b', {}, a.name), h('small', {}, a.sub)))));
   // the cards are clear glass; the one at the row's start takes its colour,
-  // fading in as it slides into place and out as it leaves
+  // fading in as it slides into place and out as it leaves. --p is where a
+  // card is against that place (-1 gone left, 0 in it, 1 next): the cards
+  // settle into depth by it and their art drifts the other way
   const cards = [...row.children];
+  const dots = wide ? null : h('div.hub-dots', { 'aria-hidden': 'true' }, cards.map(() => h('i')));
   let raf = 0;
   const tint = () => {
     raf = 0;
     if (!row.isConnected) return;
     const anchor = row.getBoundingClientRect().left + (parseFloat(getComputedStyle(row).paddingLeft) || 0);
-    for (const c of cards) {
-      const d = Math.abs(c.getBoundingClientRect().left - anchor);
-      c.style.setProperty('--on', Math.max(0, 1 - d / (c.offsetWidth * 0.7)).toFixed(3));
-    }
+    let best = 0, bestOn = -1;
+    cards.forEach((c, i) => {
+      const step = c.offsetWidth + (parseFloat(getComputedStyle(row).columnGap) || 0);
+      const p = (c.getBoundingClientRect().left - anchor) / (step || 1);
+      const on = Math.max(0, 1 - Math.abs(p) / 0.7);
+      c.style.setProperty('--on', on.toFixed(3));
+      c.style.setProperty('--p', Math.max(-1, Math.min(1, p)).toFixed(3));
+      if (on > bestOn) { bestOn = on; best = i; }
+    });
+    dots?.querySelectorAll('i').forEach((d, i) => d.classList.toggle('on', i === best));
   };
   const queue = () => { if (!raf) raf = requestAnimationFrame(tint); };
   row.addEventListener('scroll', queue, { passive: true });
   window.addEventListener('resize', queue, { passive: true });
   requestAnimationFrame(() => requestAnimationFrame(tint));
-  if (!wide) return h('section.hub-sec', {}, h('h2.hub-h', {}, 'Uygulamaların'), row);
+  if (!wide) return h('section.hub-sec', {}, h('h2.hub-h', {}, 'Uygulamaların'), row, dots);
   return h('section.hub-sec', {}, row);
 }
 

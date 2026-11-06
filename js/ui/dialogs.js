@@ -1,10 +1,10 @@
 // Modal dialogs: new replay session, saved sessions, settings, indicators, jump.
-import { api } from '../api.js?v=d93fdedfec';
-import { INDICATORS } from '../chart/indicators.js?v=d93fdedfec';
-import { SESSION_SETS } from '../chart/sessions.js?v=d93fdedfec';
-import * as F from '../format.js?v=d93fdedfec';
-import { confirmBox, field, flushStorage, h, icon, modal, storage, toast } from './dom.js?v=d93fdedfec';
-import { appearanceSection } from './look.js?v=d93fdedfec';
+import { api } from '../api.js?v=7df3338c30';
+import { INDICATORS } from '../chart/indicators.js?v=7df3338c30';
+import { SESSION_SETS } from '../chart/sessions.js?v=7df3338c30';
+import * as F from '../format.js?v=7df3338c30';
+import { confirmBox, field, flushStorage, h, icon, modal, storage, toast } from './dom.js?v=7df3338c30';
+import { appearanceSection } from './look.js?v=7df3338c30';
 
 const TIMEZONES = ['Europe/Istanbul', 'UTC', 'America/New_York', 'Europe/London', 'Europe/Berlin', 'Asia/Tokyo', 'Asia/Dubai', 'Australia/Sydney'];
 
@@ -48,13 +48,16 @@ export function newSessionDialog(app, { start = null } = {}) {
   } }, icon('dice', 15), 'Rastgele tarih');
   modal({
     title: 'Yeni replay oturumu',
-    body: h('div', { style: { display: 'grid', gap: '10px' } },
-      h('p.muted', { style: { margin: 0 } }, `${ds.name} · veri: ${F.dateOnly(ds.first_ts, tz)} → ${F.dateOnly(ds.last_ts, tz)}`),
-      h('div.row2', {}, field(`Başlangıç (${tz})`, when, 'Grafik bu ana kadar olanı gösterir'), h('div', { style: { alignSelf: 'center' } }, random)),
-      field('Oturum adı', name),
-      others.length ? field(`Başka piyasalar (${ds.symbol} ile aynı anda ilerler, tek hesap)`, marketChips, 'Sonradan da eklenebilir: replay sırasında üstteki + ile') : null,
-      h('div.row2', {}, field(`Başlangıç bakiyesi (${ds.currency})`, balance), field('Spread (pip)', spread)),
-      h('div.row2', {}, field(`Komisyon (${ds.currency} / lot / yön)`, comm), field('Aynı mumda SL ve TP', sameBar))),
+    // four parts, each under its own heading: when, what it is called, the
+    // markets that move with it, the account
+    body: h('div.ns', {},
+      h('p.ns-meta', {}, `${ds.name}, veri ${F.dateOnly(ds.first_ts, tz)} – ${F.dateOnly(ds.last_ts, tz)}`),
+      h('section.ns-sec', {}, h('h4', {}, 'Başlangıç'), h('div.ns-when', {}, when, random), h('small', {}, `Grafik bu ana kadar olanı gösterir (${tz} saati)`)),
+      h('section.ns-sec', {}, h('h4', {}, 'Oturum adı'), name),
+      others.length ? h('section.ns-sec', {}, h('h4', {}, `${ds.symbol} ile birlikte ilerleyen piyasalar`), marketChips, h('small', {}, 'Tek hesap; replay sırasında üstteki + ile de eklenir')) : null,
+      h('section.ns-sec', {}, h('h4', {}, 'Hesap'), h('div.ns-grid', {},
+        field(`Başlangıç bakiyesi (${ds.currency})`, balance), field('Spread (pip)', spread),
+        field(`Komisyon (${ds.currency} / lot / yön)`, comm), field('Aynı mumda SL ve TP', sameBar)))),
     actions: [
       { label: 'Vazgeç' },
       { label: 'Başlat', kind: 'primary', onClick: async () => {

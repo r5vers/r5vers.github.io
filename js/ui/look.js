@@ -1,8 +1,8 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=d93fdedfec';
-import { field, h, icon } from './dom.js?v=d93fdedfec';
-import { LOCAL_NAMES } from '../local/site.js?v=d93fdedfec';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=7df3338c30';
+import { field, h, icon } from './dom.js?v=7df3338c30';
+import { LOCAL_NAMES, TEST_COPY } from '../local/site.js?v=7df3338c30';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.
@@ -11,6 +11,9 @@ const MIN_APPEARANCE_VERSION = 5;
 
 /** Type pairings: display (headings), ui (text) and data (numbers, chart). */
 export const FONT_PAIRS = {
+  geist: { name: 'Geist', note: 'Vercel’in yazısı: keskin, sakin, prestijli',
+    display: "'Geist'", ui: "'Geist'", mono: "'Geist'",
+    dWeight: 600, dTrack: '-0.03em', dCase: 'none', dStretch: '100%', dSettings: 'normal', monoStretch: '100%', uiSize: '14px' },
   sistem: { name: 'Sistem', note: 'cihazın kendi yazısı (iPhone’da SF, Android’de Roboto) · Inter gibi',
     display: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto", ui: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto", mono: "'Inter'",
     dWeight: 650, dTrack: '-0.02em', dCase: 'none', dStretch: '100%', dSettings: 'normal', monoStretch: '100%', uiSize: '14px' },
@@ -56,7 +59,7 @@ Object.assign(FONT_PAIRS, Object.fromEntries([
   ['instrument', 'Instrument', "'Instrument Sans'"], ['schibsted', 'Schibsted', "'Schibsted Grotesk'"], ['familjen', 'Familjen', "'Familjen Grotesk'"],
   ['bricolage', 'Bricolage', "'Bricolage Grotesque'"], ['spline', 'Spline', "'Spline Sans'"],
 ].map(([id, name, fam]) => [id, { name, note: fam.replace(/'/g, ''), display: fam, ui: fam, mono: fam, dWeight: 650, dTrack: '-0.02em', dCase: 'none', dStretch: '100%', dSettings: 'normal', monoStretch: '100%', uiSize: '14px' }])));
-export const RV_FONTS = ['sistem', 'instrument', 'schibsted', 'familjen', 'bricolage', 'spline'];
+export const RV_FONTS = ['geist', 'sistem', 'instrument', 'schibsted', 'familjen', 'bricolage', 'spline'];
 const FONT_OF = { nokta: 'instrument', maison: 'instrument', sade: 'instrument', yumusak: 'instrument', atolye: 'schibsted', editoryal: 'schibsted',
   gazete: 'familjen', genis: 'familjen', grotesk: 'bricolage', teknik: 'spline', terminal: 'spline' };
 
@@ -198,17 +201,25 @@ const shade = (hex, f) => {
 /** One-click looks: background, accent, candles and a type pairing. `orbs`
  *  are the three lights behind the glass, `base` the page's own tone. */
 export const PRESETS = [
-  { id: 'onyx', name: 'Oniks', bg: 'onyx', accent: '#a855f7', up: '#26a69a', down: '#ef5350', font: 'sistem', orbs: ['#7c3aed', '#2563eb', '#db2777'], base: '#05060b' },
-  { id: 'grafit', name: 'Grafit', bg: 'grafit', accent: '#e4e4e7', up: '#26a69a', down: '#ef5350', font: 'sistem', orbs: ['#3f3f46', '#52525b', '#27272a'], base: '#040404' },
-  { id: 'gece', name: 'Gece', bg: 'gece', accent: '#3b82f6', up: '#26a69a', down: '#ef5350', font: 'sistem', orbs: ['#2563eb', '#0ea5e9', '#6366f1'], base: '#04070f' },
-  { id: 'buzul', name: 'Buzul', bg: 'buzul', accent: '#22d3ee', up: '#2dd4bf', down: '#fb7185', font: 'sistem', orbs: ['#0891b2', '#0ea5e9', '#0d9488'], base: '#03090c' },
-  { id: 'iris', name: 'İris', bg: 'iris', accent: '#8b5cf6', up: '#38bdf8', down: '#f43f5e', font: 'sistem', orbs: ['#6d28d9', '#4f46e5', '#c026d3'], base: '#06050f' },
-  { id: 'okyanus', name: 'Okyanus', bg: 'okyanus', accent: '#14b8a6', up: '#2dd4bf', down: '#fb7185', font: 'sistem', orbs: ['#0d9488', '#059669', '#0284c7'], base: '#030908' },
-  { id: 'zumrut', name: 'Zümrüt', bg: 'zumrut', accent: '#10b981', up: '#34d399', down: '#f87171', font: 'sistem', orbs: ['#047857', '#4d7c0f', '#0f766e'], base: '#030805' },
-  { id: 'amber', name: 'Kehribar', bg: 'amber', accent: '#f59e0b', up: '#2dd4bf', down: '#f97316', font: 'sistem', orbs: ['#d97706', '#ea580c', '#be123c'], base: '#0b0705' },
-  { id: 'gunbatimi', name: 'Gün batımı', bg: 'gunbatimi', accent: '#fb923c', up: '#2dd4bf', down: '#f43f5e', font: 'sistem', orbs: ['#ea580c', '#db2777', '#7c3aed'], base: '#0b0507' },
-  { id: 'kizil', name: 'Kızıl', bg: 'kizil', accent: '#ef4444', up: '#26a69a', down: '#ef5350', font: 'sistem', orbs: ['#b91c1c', '#9f1239', '#7c2d12'], base: '#0a0404' },
-  { id: 'gul', name: 'Gül', bg: 'gul', accent: '#ec4899', up: '#34d399', down: '#fb7185', font: 'sistem', orbs: ['#be185d', '#7c3aed', '#e11d48'], base: '#0a0408' },
+  { id: 'onyx', name: 'Oniks', bg: 'onyx', accent: '#a855f7', up: '#26a69a', down: '#ef5350', font: 'geist', orbs: ['#7c3aed', '#2563eb', '#db2777'], base: '#05060b' },
+  { id: 'grafit', name: 'Grafit', bg: 'grafit', accent: '#e4e4e7', up: '#26a69a', down: '#ef5350', font: 'geist', orbs: ['#3f3f46', '#52525b', '#27272a'], base: '#040404' },
+  { id: 'gece', name: 'Gece', bg: 'gece', accent: '#3b82f6', up: '#26a69a', down: '#ef5350', font: 'geist', orbs: ['#2563eb', '#0ea5e9', '#6366f1'], base: '#04070f' },
+  { id: 'buzul', name: 'Buzul', bg: 'buzul', accent: '#22d3ee', up: '#2dd4bf', down: '#fb7185', font: 'geist', orbs: ['#0891b2', '#0ea5e9', '#0d9488'], base: '#03090c' },
+  { id: 'iris', name: 'İris', bg: 'iris', accent: '#8b5cf6', up: '#38bdf8', down: '#f43f5e', font: 'geist', orbs: ['#6d28d9', '#4f46e5', '#c026d3'], base: '#06050f' },
+  { id: 'okyanus', name: 'Okyanus', bg: 'okyanus', accent: '#14b8a6', up: '#2dd4bf', down: '#fb7185', font: 'geist', orbs: ['#0d9488', '#059669', '#0284c7'], base: '#030908' },
+  { id: 'zumrut', name: 'Zümrüt', bg: 'zumrut', accent: '#10b981', up: '#34d399', down: '#f87171', font: 'geist', orbs: ['#047857', '#4d7c0f', '#0f766e'], base: '#030805' },
+  { id: 'amber', name: 'Kehribar', bg: 'amber', accent: '#f59e0b', up: '#2dd4bf', down: '#f97316', font: 'geist', orbs: ['#d97706', '#ea580c', '#be123c'], base: '#0b0705' },
+  { id: 'gunbatimi', name: 'Gün batımı', bg: 'gunbatimi', accent: '#fb923c', up: '#2dd4bf', down: '#f43f5e', font: 'geist', orbs: ['#ea580c', '#db2777', '#7c3aed'], base: '#0b0507' },
+  { id: 'kizil', name: 'Kızıl', bg: 'kizil', accent: '#ef4444', up: '#26a69a', down: '#ef5350', font: 'geist', orbs: ['#b91c1c', '#9f1239', '#7c2d12'], base: '#0a0404' },
+  { id: 'gul', name: 'Gül', bg: 'gul', accent: '#ec4899', up: '#34d399', down: '#fb7185', font: 'geist', orbs: ['#be185d', '#7c3aed', '#e11d48'], base: '#0a0408' },
+  { id: 'aurora', name: 'Aurora', bg: 'aurora', accent: '#34d399', up: '#34d399', down: '#fb7185', font: 'geist', orbs: ['#059669', '#7c3aed', '#0ea5e9'], base: '#02070a' },
+  { id: 'safir', name: 'Safir', bg: 'safir', accent: '#3b6cff', up: '#38bdf8', down: '#fb7185', font: 'geist', orbs: ['#1d4ed8', '#0ea5e9', '#4338ca'], base: '#03050d' },
+  { id: 'sampanya', name: 'Şampanya', bg: 'sampanya', accent: '#e8c27a', up: '#86efac', down: '#fca5a5', font: 'geist', orbs: ['#b45309', '#a16207', '#78350f'], base: '#0a0806' },
+  { id: 'lavanta', name: 'Lavanta', bg: 'lavanta', accent: '#b8a1ff', up: '#5eead4', down: '#fda4af', font: 'geist', orbs: ['#7c3aed', '#a78bfa', '#db2777'], base: '#07060d' },
+  { id: 'lagun', name: 'Lagün', bg: 'lagun', accent: '#2dd4bf', up: '#5eead4', down: '#fb7185', font: 'geist', orbs: ['#0e7490', '#0891b2', '#14b8a6'], base: '#020a0b' },
+  { id: 'nebula', name: 'Nebula', bg: 'nebula', accent: '#f472b6', up: '#38bdf8', down: '#fb7185', font: 'geist', orbs: ['#c026d3', '#4f46e5', '#0891b2'], base: '#07040c' },
+  { id: 'mercan', name: 'Mercan', bg: 'mercan', accent: '#ff7a6b', up: '#2dd4bf', down: '#ff7a6b', font: 'geist', orbs: ['#e11d48', '#ea580c', '#9333ea'], base: '#0b0506' },
+  { id: 'platin', name: 'Platin', bg: 'platin', accent: '#cbd5e1', up: '#5eead4', down: '#fda4af', font: 'geist', orbs: ['#475569', '#64748b', '#334155'], base: '#050608' },
 ];
 // the RV themes' backgrounds (previews, the chart's flat tone) from their lights
 for (const p of PRESETS) {
@@ -219,7 +230,8 @@ export const RV_THEMES = PRESETS.map((p) => p.id);
 
 export const DEFAULT_APPEARANCE = {
   v: APPEARANCE_VERSION,
-  preset: 'onyx', bg: 'onyx', accent: '#a855f7', font: 'sistem', nxOnyx: 1,
+  // Geist is the test copy's type; the main site keeps the device's own
+  preset: 'onyx', bg: 'onyx', accent: '#a855f7', font: TEST_COPY ? 'geist' : 'sistem', nxOnyx: 1,
   depth: 55,               // how dark the page and its glass are, 0..100
   scene: 'rv',             // behind the page: rv (the accent's light) | ipek | dalga | halka | sirt | duz
   pos: null, neg: null,    // money made / lost on the app pages (null: emerald / rose)
@@ -295,7 +307,9 @@ export function normalizeAppearance(saved) {
   a.nxRvBg = 1;
   // the type: one family for text and titles; the old pairs go to theirs
   a.font = FONT_OF[a.font] || a.font;
-  if (!RV_FONTS.includes(a.font)) a.font = 'sistem';
+  if (!RV_FONTS.includes(a.font)) a.font = DEFAULT_APPEARANCE.font;
+  if (TEST_COPY && !saved.nxGeist && a.font === 'sistem') a.font = 'geist';
+  if (TEST_COPY) a.nxGeist = 1;
   if (!['glass', 'solid', 'gradient'].includes(a.chartBg)) a.chartBg = 'glass';
   if (!hex(a.chartColor2)) a.chartColor2 = DEFAULT_APPEARANCE.chartColor2;
   return a;
@@ -400,7 +414,7 @@ const ring = (p, r, k) => `<circle cx="1380" cy="1080" r="${r}" fill="url(#${p}r
 export const SCENES = {
   // the original RV page: the accent's light from two corners and three slow
   // soft lights of the accent and the candle colours (drawn by CSS)
-  rv: { name: 'RV', html: '<div class="rv-nebula"><i></i><i></i><i></i></div>' },
+  rv: { name: 'RV', html: '<div class="rv-nebula"><i></i><i></i><i></i><i></i><i></i><b></b></div>' },
   ipek: { name: 'İpek', svg: (p) => SILK.map(([d, g, dir, rim], i) => sheetOf(p, i, d, g, dir, rim)).join('') },
   dalga: { name: 'Dalga', svg: (p) => wave(p, CREST_A, '--o1', 'A') + wave(p, CREST_B, '--o2', 'B') },
   halka: { name: 'Halka', svg: (p) => [980, 760, 540].map((r, k) => `<radialGradient id="${p}rf${k}" cx="1380" cy="1080" r="${r}" gradientUnits="userSpaceOnUse"><stop offset=".55" style="stop-color:var(--silk-lo)"/><stop offset="1" style="stop-color:var(--silk-hi)"/></radialGradient><clipPath id="${p}rc${k}"><circle cx="1380" cy="1080" r="${r}"/></clipPath>${ring(p, r, k)}`).join('') },

@@ -3,14 +3,15 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=d93fdedfec';
-import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=d93fdedfec';
-import * as F from './format.js?v=d93fdedfec';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=d93fdedfec';
-import { configureICT } from './chart/sessions.js?v=d93fdedfec';
-import { settingsDialog } from './ui/dialogs.js?v=d93fdedfec';
-import { openPalette } from './ui/palette.js?v=d93fdedfec';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=d93fdedfec';
+import { api } from './api.js?v=7df3338c30';
+import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=7df3338c30';
+import * as F from './format.js?v=7df3338c30';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=7df3338c30';
+import { configureICT } from './chart/sessions.js?v=7df3338c30';
+import { settingsDialog } from './ui/dialogs.js?v=7df3338c30';
+import { openPalette } from './ui/palette.js?v=7df3338c30';
+import { wireGlassLight } from './ui/glasslight.js?v=7df3338c30';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=7df3338c30';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };
@@ -36,6 +37,7 @@ export const host = {
 export async function bootShell(onRepaint) {
   shell.onRepaint = onRepaint;
   paintLastLook('home');
+  wireGlassLight();
   const me = await api.me();
   if (!me.profile) { window.location.replace('profiles.html'); return null; }
   shell.me = me;
@@ -205,7 +207,8 @@ export function group(rows, title = null, { mono = false } = {}) {
 // ── appearance: theme, colour, type, chart ───────────────────────────────
 export const ACCENTS = [['#a855f7', 'Mor'], ['#8b5cf6', 'Menekşe'], ['#6366f1', 'Çivit'], ['#3b82f6', 'Mavi'], ['#0ea5e9', 'Gök'], ['#22d3ee', 'Buz'],
   ['#14b8a6', 'Turkuaz'], ['#10b981', 'Zümrüt'], ['#22c55e', 'Yeşil'], ['#84cc16', 'Lime'], ['#eab308', 'Altın'], ['#f59e0b', 'Kehribar'],
-  ['#f97316', 'Turuncu'], ['#ef4444', 'Kırmızı'], ['#f43f5e', 'Gül'], ['#ec4899', 'Pembe'], ['#d946ef', 'Fuşya'], ['#e4e4e7', 'Platin']];
+  ['#f97316', 'Turuncu'], ['#ef4444', 'Kırmızı'], ['#f43f5e', 'Gül'], ['#ec4899', 'Pembe'], ['#d946ef', 'Fuşya'], ['#e4e4e7', 'Platin'],
+  ['#3b6cff', 'Safir'], ['#b8a1ff', 'Lavanta'], ['#5eead4', 'Nane'], ['#e8c27a', 'Şampanya'], ['#ff7a6b', 'Mercan'], ['#be123c', 'Bordo']];
 export const CANDLES = [['Klasik', '#26a69a', '#ef5350'], ['Zümrüt / gül', '#34d399', '#fb7185'], ['Gök / gül', '#38bdf8', '#f43f5e'], ['Yeşil / kırmızı', '#22c55e', '#ef4444'],
   ['Lavanta', '#8fa8ff', '#c77dff'], ['Neon', '#2ee6a6', '#ff4d6d'], ['Altın / mor', '#facc15', '#a855f7'], ['Sade', '#e5e7eb', '#6b7280']];
 // money made / lost on the app pages; the first is the default (null)
