@@ -7,9 +7,9 @@
 // And the other way, once the test copy's design is the main site: what was
 // made in the test copy on a device joins the main site there, once
 // (carryFromTestCopy).
-import { snapshotCodec } from './db.js?v=f61656c330';
-import { MAX_PROFILES } from './server.js?v=f61656c330';
-import { datasetByKey, touch } from './sync.js?v=f61656c330';
+import { snapshotCodec } from './db.js?v=f047d7f606';
+import { MAX_PROFILES } from './server.js?v=f047d7f606';
+import { datasetByKey, touch } from './sync.js?v=f047d7f606';
 
 export const MAIN_DB = 'rv-local';
 const MAIN_LIGHT_KEY = 'rv-light-db';
@@ -162,7 +162,7 @@ async function testCopySources(storage = globalThis.localStorage) {
   try { raw = storage?.getItem(TEST_LIGHT_KEY); } catch { raw = null; }
   if (raw) {
     try {
-      const text = raw.startsWith('z:') ? snapshotCodec(await import('../../vendor/fflate.js?v=f61656c330')).unpack(raw) : raw;
+      const text = raw.startsWith('z:') ? snapshotCodec(await import('../../vendor/fflate.js?v=f047d7f606')).unpack(raw) : raw;
       const snap = JSON.parse(text);
       if (snap?.v === 1) out.push({ all: async (store) => snap.data?.[store] || [] });
     } catch { /* unreadable: nothing to bring */ }

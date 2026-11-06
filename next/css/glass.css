@@ -298,3 +298,27 @@ body.page-chart .modal { background: linear-gradient(180deg, rgba(255, 255, 255,
 
 /* phones: start replay is a capsule */
 body.page-chart .m-pbtn.wide { border-radius: 999px !important; padding: 0 21px; }
+
+/* ── the main buttons: flat, one colour, an LED running round the edge ─── */
+@property --led { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.rv-page .rv-btn:not(.ghost), body.page-chart :is(.modal, #tab-body, #replay-controls) .btn.primary {
+  position: relative; background: var(--accent) !important; filter: none !important; border: 0 !important;
+  box-shadow: none !important; color: #fff !important; transition: background .2s var(--ease-glass), transform .15s var(--ease-glass);
+}
+.rv-page .rv-btn:not(.ghost):hover, body.page-chart :is(.modal, #tab-body, #replay-controls) .btn.primary:hover { background: color-mix(in srgb, var(--accent) 90%, #fff) !important; }
+.rv-page .rv-btn:not(.ghost):active, body.page-chart :is(.modal, #tab-body, #replay-controls) .btn.primary:active { transform: scale(.97); }
+/* the LED: a short bright run of light going round a thin ring */
+.rv-page .rv-btn:not(.ghost)::before, body.page-chart :is(.modal, #tab-body, #replay-controls) .btn.primary::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from var(--led), transparent 0deg 250deg, rgba(255, 255, 255, .25) 300deg, #fff 345deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0; transition: opacity .3s var(--ease-glass);
+}
+/* the start keys run it always; the others when the pointer is on them */
+body.page-chart :is(.modal, #replay-controls) .btn.primary::before { opacity: .9; animation: rv-led-ring 2.6s linear infinite; }
+.rv-page .rv-btn:not(.ghost):hover::before { opacity: .9; animation: rv-led-ring 2.6s linear infinite; }
+@keyframes rv-led-ring { to { --led: 360deg; } }
+/* (the run along the top edge stays for the plain keys only) */
+.rv-page .rv-btn:not(.ghost)::after { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .rv-page .rv-btn::before, body.page-chart .btn.primary::before { animation: none !important; } }
