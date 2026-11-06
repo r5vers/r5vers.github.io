@@ -18,6 +18,9 @@
    89), type by √φ from 15px (15 19 24 31 39 50), radii 13 / 21 / 34, and
    splits of φ:1 where two things share a row. */
 
+/* the angle the light comes from, animatable */
+@property --la { syntax: '<angle>'; inherits: true; initial-value: 315deg; }
+
 body.rv-page {
   --phi: 1.618;
   --s1: 8px; --s2: 13px; --s3: 21px; --s4: 34px; --s5: 55px; --s6: 89px;
@@ -71,10 +74,16 @@ body.rv-page .rv-nebula b {
   border-radius: var(--r-lg);
   transition: transform .5s var(--ease-glass), box-shadow .5s var(--ease-glass), background .5s var(--ease-glass);
 }
-/* the rim: brighter where the light comes from (top left at rest, the pointer under it) */
+/* the rim: the light comes from an angle (--la: the pointer over the pane,
+   else the page's light, which turns as you scroll or tilt the phone) and
+   catches the edge there, brightest where it rounds a corner, with a fainter
+   answer on the far side */
 .rv-page .gl::before {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
-  background: radial-gradient(120% 90% at var(--mx, 18%) var(--my, 0%), rgba(255, 255, 255, .55), rgba(255, 255, 255, .12) 38%, rgba(255, 255, 255, .04) 70%);
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.2px; pointer-events: none; z-index: 2;
+  background: conic-gradient(from var(--la) at 50% 50%,
+    rgba(255, 255, 255, .78) 0deg, rgba(255, 255, 255, .22) 34deg, rgba(255, 255, 255, .06) 80deg, rgba(255, 255, 255, .05) 140deg,
+    rgba(255, 255, 255, .34) 180deg, rgba(255, 255, 255, .05) 220deg, rgba(255, 255, 255, .06) 280deg, rgba(255, 255, 255, .22) 326deg, rgba(255, 255, 255, .78) 360deg);
+  transition: --la .9s var(--ease-glass), opacity .5s var(--ease-glass);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   opacity: .9; transition: opacity .5s var(--ease-glass);
@@ -141,16 +150,17 @@ body.rv-page .rv-nebula b {
   .rv-page .hub-hello h1 { font-size: var(--t-3) !important; letter-spacing: -.03em; }
   .rv-page .hub-hello p { font-size: var(--t-3) !important; letter-spacing: -.03em; }
   .rv-page .hub-h { font-size: var(--t-1) !important; }
-  /* a card a golden rectangle stood up; the next one peeks in */
-  .hub-apps { grid-auto-columns: min(62vw, 233px) !important; gap: var(--s2) !important; padding: var(--s1) 22px var(--s3) !important; scroll-snap-type: x mandatory; perspective: 900px; }
+  /* a card a golden rectangle laid down; the next one peeks in */
+  .hub-apps { grid-auto-columns: min(80vw, 340px) !important; gap: var(--s2) !important; padding: var(--s1) 22px var(--s3) !important; scroll-snap-type: x mandatory; perspective: 900px; }
   .hub-app {
-    height: auto !important; aspect-ratio: 1 / 1.272; padding: var(--s3) !important; border-radius: var(--r-xl) !important;
+    height: auto !important; aspect-ratio: var(--phi) / 1; padding: var(--s3) !important; border-radius: var(--r-lg) !important;
     transform: translateZ(0) scale(calc(.9 + .1 * var(--on, 0))) rotateY(calc(var(--p, 0) * -5deg));
     transform-origin: 50% 60%; transition: transform .35s var(--ease-glass), box-shadow .35s var(--ease-glass);
     box-shadow: var(--pane-edge), 0 21px 55px -21px color-mix(in srgb, var(--app) calc(var(--on, 0) * 85%), rgba(0, 0, 0, .6)) !important;
   }
   .hub-app-fill { transition: opacity .45s var(--ease-glass); }
-  .hub-app-art { opacity: calc(.05 + var(--on, 0) * .16) !important; transform: translateX(calc(var(--p, 0) * -34px)); transition: transform .35s var(--ease-glass), opacity .45s var(--ease-glass); right: -30px !important; bottom: -36px !important; }
+  .hub-app-art { opacity: calc(.05 + var(--on, 0) * .16) !important; transform: translateX(calc(var(--p, 0) * -34px)); transition: transform .35s var(--ease-glass), opacity .45s var(--ease-glass); right: -21px !important; bottom: -34px !important; }
+  .hub-app-art svg { width: 130px; height: 130px; }
   .hub-app-ic { width: 46px; height: 46px; border-radius: var(--r-md); background: rgba(255, 255, 255, .12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 0 0 1px rgba(255, 255, 255, .08); }
   .hub-app-txt b { font-size: var(--t-1) !important; letter-spacing: -.02em; }
   .hub-badge { border-radius: 99px; background: rgba(255, 255, 255, .16); -webkit-backdrop-filter: blur(13px); backdrop-filter: blur(13px); }
@@ -168,3 +178,12 @@ body.rv-page .rv-nebula b {
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .rv-page .gl, .rv-page :is(.rv-rail, .rv-side, .rv-crumbs, .rv-dock .rv-round, .rv-dock .rv-pill) { background: rgba(26, 26, 34, .92) !important; }
 }
+
+/* ── one set of corners everywhere: panes 21, controls 13 ─────────────── */
+body.rv-page :is(.rv-rail, .rv-side, .rv-promo, .ra-empty, .ra-aurora, .ra-banner, .ra-panel, .gl) { border-radius: var(--r-lg) !important; }
+body.rv-page :is(.rv-side-tool, .rv-side-item, .rv-promo-art, .rv-crumbs, .rv-top-actions .rv-btn) { border-radius: var(--r-md) !important; }
+@media (min-width: 1024px) { body.rv-page .rv-rail-app, body.rv-page .rv-rail-mark { border-radius: var(--r-md) !important; } }
+body.page-chart { --r-lg: 21px; --r-md: 13px; }
+body.page-chart :is(#chart-area, #bottom, #sidepanel, .popover, .ds-pop, #drawing-props, .rv-sheet, .modal) { border-radius: var(--r-lg) !important; }
+body.page-chart :is(#instrument-btn, #tf-group, #mode-switch, #legs, #replay-controls, #tabs, .home-link, .btn, button.on, .tf-group button, #mode-switch button, #tabs button) { border-radius: var(--r-md) !important; }
+body.page-chart :is(#btn-search, #btn-shot, #btn-layout, #btn-draw, #btn-indicators, #btn-sessions, #btn-panel, #btn-fullscreen, #btn-settings) { border-radius: var(--r-md) !important; }
