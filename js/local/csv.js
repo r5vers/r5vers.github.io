@@ -9,7 +9,7 @@
 // Where Python and JS disagree on the basics (what counts as whitespace, what
 // float() accepts, the Python `$` that also matches before a final newline)
 // the Python meaning is spelled out below.
-import { bucket, parseTf, DAY, HOUR, MINUTE, WEEK } from '../core/timeframes.js?v=bdf03b7dc4';
+import { bucket, parseTf, DAY, HOUR, MINUTE, WEEK } from '../core/timeframes.js?v=766e3a849f';
 
 export class CsvError extends Error {
   constructor(message) { super(message); this.name = 'CsvError'; this.status = 422; }

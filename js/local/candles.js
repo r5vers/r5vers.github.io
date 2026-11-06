@@ -1,9 +1,9 @@
 // The candle answers (bars, replay): plain functions over a database. They
 // run in the data worker (workers/data.worker.js), so a page never freezes
 // on years of candles, and here, on the page, where no worker can start.
-import { barRows } from './query.js?v=bdf03b7dc4';
-import { colsToRecords, toJsonColumns } from './rtc.js?v=bdf03b7dc4';
-import { deviceSource } from './series.js?v=bdf03b7dc4';
+import { barRows } from './query.js?v=766e3a849f';
+import { colsToRecords, toJsonColumns } from './rtc.js?v=766e3a849f';
+import { deviceSource } from './series.js?v=766e3a849f';
 
 export const MAX_BARS = 200_000;
 export const MAX_BIN_BARS = 6_000_000;
