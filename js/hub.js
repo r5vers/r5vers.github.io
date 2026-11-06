@@ -5,15 +5,15 @@
 // the actions, centred; then the apps as five equal tiles, the markets as
 // a three-by-two grid, the numbers as four equal tiles, and where you left
 // off beside your recents, in two equal halves.
-import { api } from './api.js?v=7df3338c30';
-import { SITE_TAG } from './local/site.js?v=7df3338c30';
-import * as F from './format.js?v=7df3338c30';
-import { brandMark, h, icon } from './ui/dom.js?v=7df3338c30';
-import { SESSION_SETS } from './chart/sessions.js?v=7df3338c30';
-import { nyOffset } from './core/timeframes.js?v=7df3338c30';
-import { openPalette, wirePalette } from './ui/palette.js?v=7df3338c30';
-import { wireTooltips } from './ui/tooltip.js?v=7df3338c30';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=7df3338c30';
+import { api } from './api.js?v=bdf03b7dc4';
+import { SITE_TAG } from './local/site.js?v=bdf03b7dc4';
+import * as F from './format.js?v=bdf03b7dc4';
+import { brandMark, h, icon } from './ui/dom.js?v=bdf03b7dc4';
+import { SESSION_SETS } from './chart/sessions.js?v=bdf03b7dc4';
+import { nyOffset } from './core/timeframes.js?v=bdf03b7dc4';
+import { openPalette, wirePalette } from './ui/palette.js?v=bdf03b7dc4';
+import { wireTooltips } from './ui/tooltip.js?v=bdf03b7dc4';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=bdf03b7dc4';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
@@ -122,14 +122,17 @@ function deskHero() {
   const tests = st.sessions.filter((x) => x.kind === 'backtest').length;
   const date = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz() }).format(new Date());
   return h('section.hub-hero', {},
-    h('span.hub-date', {}, date),
-    h('h1.rv-metal', {}, `${greeting()}, ${p.name}`),
-    sessionStrip(),
-    h('p.hub-lead', {}, st.loaded ? `${markets().length} piyasa hazır · ${replays().length} replay oturumu · ${tests} strateji testi` : 'Yükleniyor…'),
-    h('div.hub-hero-acts', {},
-      h('button.rv-btn.lg', { type: 'button', onclick: () => go(chartUrl({ new: 'replay' })) }, icon('plus', 17), 'Yeni oturum'),
-      h('button.rv-btn.ghost.lg', { type: 'button', onclick: () => go(chartUrl({ view: 'chart' })) }, icon('chart', 17), 'Grafiği aç'),
-      h('button.rv-btn.ghost.lg.hub-find', { type: 'button', onclick: () => openPalette(items) }, icon('search', 17), 'Ara', h('kbd', {}, 'Ctrl K'))));
+    h('div.hub-hero-txt', {},
+      h('span.hub-date', {}, date),
+      h('h1.rv-metal', {}, `${greeting()}, ${p.name}`),
+      sessionStrip(),
+      h('p.hub-lead', {}, st.loaded ? `${markets().length} piyasa hazır · ${replays().length} replay oturumu · ${tests} strateji testi` : 'Yükleniyor…'),
+      h('div.hub-hero-acts', {},
+        h('button.rv-btn.lg', { type: 'button', onclick: () => go(chartUrl({ new: 'replay' })) }, icon('plus', 17), 'Yeni oturum'),
+        h('button.rv-btn.ghost.lg', { type: 'button', onclick: () => go(chartUrl({ view: 'chart' })) }, icon('chart', 17), 'Grafiği aç'),
+        h('button.rv-btn.ghost.lg.hub-find', { type: 'button', onclick: () => openPalette(items) }, icon('search', 17), 'Ara', h('kbd', {}, 'Ctrl K')))),
+    // the mark in rings, as Replay's banner has its icon (shown by the main site's look)
+    h('div.hub-hero-art', { 'aria-hidden': 'true' }, h('i.r1'), h('i.r2'), h('i.r3'), h('span.hub-hero-core', {}, brandMark(52))));
 }
 
 // the markets' sessions right now (New York time, DST aware), as on RV's home

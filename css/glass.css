@@ -2,18 +2,14 @@
    replaced by this one in a main-site build, tools/build_site.py)
 
    - the lights behind drift and turn, with a living grain (no dot pattern)
-   - wide screens: the greeting sits in a banner panel lit as Replay's is;
-     the cards keep their surface and take a rim of light that is soft at
-     rest and sharpens while anything moves, and follows the pointer
-   - phones: no liquid glass; panels are frosted, see-through and blurred
+   - panels are see-through and blurred: no rim of light, nothing under the pointer
+   - wide screens: the greeting is a banner laid out as Replay's is, the
+     words on the left and the mark in rings on the right
+   - phones: the app cards are landscape, as in the test copy
    - the main buttons are flat, with an LED running round the edge
    - the new session dialog in four headed parts */
 
-@property --la { syntax: '<angle>'; inherits: true; initial-value: 315deg; }
-@property --ls { syntax: '<number>'; inherits: true; initial-value: 0; }
 @property --led { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
-:root { --ls: 0; transition: --ls .7s cubic-bezier(.23, 1, .32, 1); }
-:root.moving { --ls: 1; transition-duration: .22s; }
 body { --ease-glass: cubic-bezier(.23, 1, .32, 1); }
 
 /* ── the lights behind: five broad lights on prime-length loops, a caustic ─ */
@@ -42,47 +38,79 @@ body.rv-page .rv-nebula b {
 body.rv-page > .ambient::after { opacity: .1 !important; mix-blend-mode: overlay; inset: -50%; background-size: 180px 180px; animation: rv-grain .9s steps(6) infinite; }
 @keyframes rv-grain { 0% { transform: translate(0, 0); } 17% { transform: translate(-3%, 2%); } 33% { transform: translate(2%, -4%); } 50% { transform: translate(-4%, -1%); } 67% { transform: translate(3%, 3%); } 83% { transform: translate(-1%, 4%); } 100% { transform: translate(0, 0); } }
 
-/* ── wide screens ─────────────────────────────────────────────────────── */
+/* ── panels: see-through and blurred, a plain hairline, no light on them ── */
+.rv-page .gl:not(.ra-banner) {
+  background: rgba(20, 20, 28, .4);
+  -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 18px 40px -30px rgba(0, 0, 0, .8);
+}
+.rv-page :is(button, a).gl:not(.ra-banner):hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 42%, transparent), 0 20px 44px -28px rgba(0, 0, 0, .8); }
+.rv-page .gl::before, .rv-page .gl::after { content: none; }
+
+/* ── wide screens: the greeting as Replay's banner ─────────────────────── */
 @media (min-width: 1024px) {
-  /* the greeting in a banner, lit as Replay's banner is */
   .hub-wide .hub-hero {
-    position: relative; overflow: hidden; isolation: isolate; border-radius: var(--r-xl, 26px); padding: 56px 48px 52px !important;
-    background: radial-gradient(60% 90% at 78% 6%, color-mix(in srgb, var(--accent-2) 42%, transparent), transparent 65%),
-      radial-gradient(70% 90% at 96% 100%, color-mix(in srgb, var(--o2) 60%, transparent), transparent 70%),
-      linear-gradient(120deg, rgba(8, 9, 15, .9) 28%, color-mix(in srgb, var(--o1) 40%, transparent));
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 1px 0 rgba(255, 255, 255, .12), 0 30px 70px -34px rgba(0, 0, 0, .85);
+    display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; justify-items: stretch; text-align: left;
+    min-height: 340px; padding: 44px 48px !important; border-radius: 26px; overflow: hidden; isolation: isolate;
+    background: radial-gradient(60% 90% at 70% 10%, color-mix(in srgb, var(--accent-2) 55%, transparent), transparent 65%),
+      radial-gradient(70% 90% at 95% 100%, color-mix(in srgb, var(--o2) 70%, transparent), transparent 70%),
+      linear-gradient(120deg, rgba(8, 9, 15, .55) 25%, color-mix(in srgb, var(--o1) 40%, transparent));
+    -webkit-backdrop-filter: blur(24px) saturate(140%); backdrop-filter: blur(24px) saturate(140%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09), 0 30px 70px -34px rgba(0, 0, 0, .8);
   }
-  .hub-wide .hub-hero::before { z-index: 0 !important; }
-  .hub-wide .hub-hero > * { position: relative; z-index: 1; }
-  /* the cards: a rim of light, soft at rest, sharp while moving, and a sheen under the pointer */
-  .rv-page .gl::before {
-    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
-    background: conic-gradient(from var(--la) at 50% 50%,
-      rgba(255, 255, 255, calc(.3 + .45 * var(--ls))) 0deg, rgba(255, 255, 255, calc(.14 + .04 * var(--ls))) calc(58deg - 26deg * var(--ls)),
-      rgba(255, 255, 255, .04) calc(100deg - 20deg * var(--ls)), rgba(255, 255, 255, .03) 140deg, rgba(255, 255, 255, calc(.12 + .16 * var(--ls))) 180deg,
-      rgba(255, 255, 255, .03) 220deg, rgba(255, 255, 255, .04) calc(260deg + 20deg * var(--ls)), rgba(255, 255, 255, calc(.14 + .04 * var(--ls))) calc(302deg + 26deg * var(--ls)),
-      rgba(255, 255, 255, calc(.3 + .45 * var(--ls))) 360deg);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
-    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-    transition: --la .9s var(--ease-glass);
-  }
-  .rv-page .gl::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1; opacity: 0;
-    background: radial-gradient(42% 60% at var(--mx, 22%) var(--my, -10%), rgba(255, 255, 255, .1), transparent 72%); transition: opacity .5s var(--ease-glass); }
-  .rv-page .gl.lit::after { opacity: 1; }
+  .hub-wide .hub-hero::before { content: none; }
+  .hub-wide .hub-hero-txt { display: grid; justify-items: start; }
+  .hub-wide .hub-hero-txt > .hub-date { order: 0; }
+  .hub-wide .hub-hero-txt > h1 { order: 1; }
+  .hub-wide .hub-hero-txt > .hub-lead { order: 2; }
+  .hub-wide .hub-hero-txt > .hub-sessions { order: 3; }
+  .hub-wide .hub-hero-txt > .hub-hero-acts { order: 4; }
+  .hub-wide .hub-date { gap: 0; color: var(--accent-2); font: 600 12.5px/1 var(--rv-sans); letter-spacing: .1em; }
+  .hub-wide .hub-date::before, .hub-wide .hub-date::after { content: none; }
+  .hub-wide .hub-hero h1 { margin: 16px 0 14px; padding: 0 0 .06em; font: 700 clamp(44px, 3.7vw, 56px)/1.06 var(--rv-display); letter-spacing: -.035em; }
+  .hub-wide .hub-lead { margin: 0 0 20px; color: var(--t2); font-size: 17px; line-height: 1.5; }
+  .hub-wide .hub-sessions { justify-content: flex-start; }
+  .hub-wide .hub-hero-acts { justify-content: flex-start; margin-top: 28px; }
+  .hub-wide .hub-hero-acts .rv-btn { min-width: 0; border-radius: 999px; }
+  /* the mark in rings */
+  .hub-wide .hub-hero-art { position: relative; display: grid; place-items: center; height: 280px; }
+  .hub-hero-art i { position: absolute; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .18); }
+  .hub-hero-art .r1 { width: 160px; height: 160px; box-shadow: 0 0 60px color-mix(in srgb, var(--accent) 50%, transparent); }
+  .hub-hero-art .r2 { width: 250px; height: 250px; opacity: .55; border-style: dashed; animation: rv-turn 40s linear infinite; }
+  .hub-hero-art .r3 { width: 350px; height: 350px; opacity: .25; }
+  .hub-hero-core { position: relative; width: 112px; height: 112px; display: grid; place-items: center; border-radius: 32px; color: #fff; transform: rotate(-8deg);
+    background: linear-gradient(150deg, var(--accent-2), var(--accent) 55%, var(--o1));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 30px 70px -20px color-mix(in srgb, var(--accent) 90%, transparent); }
+  .hub-hero-core .mark { display: grid; place-items: center; color: #fff; }
+  .hub-hero-core svg { display: block; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .25)); }
+}
+@media (min-width: 1024px) and (max-width: 1360px) {
+  .hub-wide .hub-hero { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); padding: 40px 40px !important; }
+  .hub-wide .hub-hero-art { height: 240px; }
+  .hub-hero-art .r3 { width: 290px; height: 290px; }
+  .hub-wide .hub-hero-acts .rv-btn { padding: 0 20px; }
 }
 
-/* ── phones: frosted panels, no liquid glass ──────────────────────────── */
+/* ── phones: landscape app cards, as in the test copy ──────────────────── */
 @media (max-width: 1023px) {
-  .rv-page .gl:not(.hub-app) {
-    background: rgba(28, 28, 36, .42) !important;
-    -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 16px 34px -22px rgba(0, 0, 0, .7) !important;
+  .hub-apps { grid-auto-columns: min(72vw, 288px) !important; gap: 13px !important; padding: 8px 22px 24px !important; scroll-snap-type: x mandatory; perspective: 900px; }
+  .hub-app {
+    height: auto !important; aspect-ratio: 1.5 / 1 !important; padding: 21px !important; border-radius: 30px !important;
+    transform: translateZ(0) scale(calc(.9 + .1 * var(--on, 0))) rotateY(calc(var(--p, 0) * -5deg));
+    transform-origin: 50% 60%; transition: transform .35s var(--ease-glass), box-shadow .35s var(--ease-glass);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 12px 24px -16px color-mix(in srgb, var(--app) calc(var(--on, 0) * 55%), rgba(0, 0, 0, .5)) !important;
   }
-  .rv-page .hub-app { background: rgba(28, 28, 36, .38) !important; -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08) !important; }
-  .rv-page .gl::before, .rv-page .gl::after { content: none !important; }
-  .hub-dots { display: flex; justify-content: center; gap: 6px; margin-top: -6px; }
+  .hub-app-fill { transition: opacity .45s var(--ease-glass); opacity: calc(var(--on, 0) * .62) !important;
+    background: radial-gradient(90% 70% at 85% 0%, rgba(255, 255, 255, .22), transparent 70%), linear-gradient(155deg, color-mix(in srgb, var(--app) 70%, #fff 12%) 0%, color-mix(in srgb, var(--app) 62%, transparent) 55%, color-mix(in srgb, var(--app) 30%, transparent) 100%) !important;
+    box-shadow: none !important; }
+  .hub-app-art { opacity: calc(.05 + var(--on, 0) * .16) !important; transform: translateX(calc(var(--p, 0) * -34px)); transition: transform .35s var(--ease-glass), opacity .45s var(--ease-glass); right: -21px !important; bottom: -34px !important; }
+  .hub-app-art svg { width: 130px; height: 130px; }
+  .hub-app-ic { width: 46px; height: 46px; border-radius: 13px; background: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
+  .hub-app-txt b { font-size: 19px !important; letter-spacing: -.02em; }
+  .hub-badge { border-radius: 99px; background: rgba(255, 255, 255, .16); -webkit-backdrop-filter: blur(13px); backdrop-filter: blur(13px); }
+  .hub-dots { display: flex; justify-content: center; gap: 6px; margin-top: -8px; }
   .hub-dots i { width: 6px; height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .22); transition: width .35s var(--ease-glass), background .35s var(--ease-glass); }
-  .hub-dots i.on { width: 20px; background: rgba(255, 255, 255, .85); }
+  .hub-dots i.on { width: 21px; background: rgba(255, 255, 255, .85); }
 }
 @media (min-width: 1024px) { .hub-dots { display: none; } }
 
@@ -120,5 +148,6 @@ body.page-chart :is(.modal, #replay-controls) .btn.primary::before { opacity: .9
 @media (max-width: 640px) { .modal .ns-grid { grid-template-columns: minmax(0, 1fr); } }
 
 @media (prefers-reduced-motion: reduce) {
-  body.rv-page .rv-nebula i, body.rv-page .rv-nebula b, body.rv-page > .ambient::after, .rv-btn::before, .btn.primary::before { animation: none !important; }
+  body.rv-page .rv-nebula i, body.rv-page .rv-nebula b, body.rv-page > .ambient::after, .hub-hero-art .r2, .rv-btn::before, .btn.primary::before { animation: none !important; }
+  .hub-app { transform: none !important; }
 }

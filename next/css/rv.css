@@ -449,6 +449,8 @@ body.rv-page.leaving main { opacity: 0; transition: opacity .14s; }
 @media (min-width: 1024px) { body.rv-wide main.hub-wide { gap: 44px; } }
 .hub-wide .hub-hero { position: relative; display: grid; justify-items: center; text-align: center; padding: 6vh 0 4px; }
 .hub-wide .hub-hero > * { position: relative; z-index: 1; }
+.hub-wide .hub-hero-txt { display: grid; justify-items: center; }
+.hub-hero-art { display: none; }
 /* RV's orbit behind the greeting: hairline rings and the accent's light, centred on it */
 .hub-wide .hub-hero::before { content: ''; position: absolute; z-index: 0; left: 50%; top: 52%; width: 940px; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; pointer-events: none;
   background: repeating-radial-gradient(circle, transparent 0 77px, rgba(255, 255, 255, .055) 77px 78px), radial-gradient(closest-side, color-mix(in srgb, var(--accent) 15%, transparent), transparent 72%);
