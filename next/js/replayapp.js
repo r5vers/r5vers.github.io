@@ -4,15 +4,15 @@
 // screens: the app's sections in a sidebar, a banner, the sessions as a grid
 // of cards (P&L, day of the replay, progress). A session opens in a sheet
 // (a drawer on a wide screen).
-import { api } from './api.js?v=f3ff9f6e66';
-import { TEST_COPY } from './local/site.js?v=f3ff9f6e66';
-import * as F from './format.js?v=f3ff9f6e66';
-import { confirmBox, h, icon, toast } from './ui/dom.js?v=f3ff9f6e66';
-import { SESSION_SETS } from './chart/sessions.js?v=f3ff9f6e66';
-import { nyOffset } from './core/timeframes.js?v=f3ff9f6e66';
-import { wirePalette } from './ui/palette.js?v=f3ff9f6e66';
-import { settingsDialog } from './ui/dialogs.js?v=f3ff9f6e66';
-import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, relTime, ring, sheet, symbolBadge, tz } from './rvshell.js?v=f3ff9f6e66';
+import { api } from './api.js?v=b60488f141';
+import { TEST_COPY } from './local/site.js?v=b60488f141';
+import * as F from './format.js?v=b60488f141';
+import { confirmBox, h, icon, toast } from './ui/dom.js?v=b60488f141';
+import { SESSION_SETS } from './chart/sessions.js?v=b60488f141';
+import { nyOffset } from './core/timeframes.js?v=b60488f141';
+import { wirePalette } from './ui/palette.js?v=b60488f141';
+import { settingsDialog } from './ui/dialogs.js?v=b60488f141';
+import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, relTime, ring, sheet, symbolBadge, tz } from './rvshell.js?v=b60488f141';
 
 /** A replay's result: its balance against where it started (closed and open trades). */
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);

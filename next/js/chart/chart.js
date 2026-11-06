@@ -1,7 +1,7 @@
 // TradingView Lightweight Charts wrapper: candles, volume, indicators, markers
 // and the time <-> logical-index mapping drawings need.
-import { INDICATORS, computeIndicator } from './indicators.js?v=f3ff9f6e66';
-import { SessionsPrimitive } from './sessions.js?v=f3ff9f6e66';
+import { INDICATORS, computeIndicator } from './indicators.js?v=b60488f141';
+import { SessionsPrimitive } from './sessions.js?v=b60488f141';
 
 const LW = window.LightweightCharts;
 

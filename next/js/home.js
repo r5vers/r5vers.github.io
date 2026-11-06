@@ -1,19 +1,19 @@
 // Home screen: where everything starts after picking a profile. Markets,
 // the replay you left off, every saved replay session and strategy test with
 // its numbers, and one tap into the chart.
-import { EXTRA_WIDGETS, extraWidget, widgetSettings, refreshWidgetClocks } from './ui/homewidgets.js?v=f3ff9f6e66';
-import { api } from './api.js?v=f3ff9f6e66';
-import { LOCAL_NAMES } from './local/site.js?v=f3ff9f6e66';
-import * as F from './format.js?v=f3ff9f6e66';
-import { avatar, brandMark, confirmBox, flushStorage, h, icon, sparkline, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=f3ff9f6e66';
-import { SESSION_SETS, configureICT } from './chart/sessions.js?v=f3ff9f6e66';
-import { nyOffset } from './core/timeframes.js?v=f3ff9f6e66';
-import { settingsDialog } from './ui/dialogs.js?v=f3ff9f6e66';
-import { openPalette, wirePalette } from './ui/palette.js?v=f3ff9f6e66';
-import { wireTooltips } from './ui/tooltip.js?v=f3ff9f6e66';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance, metalPicker, normalizeAppearance, paintLastLook, revealPage, rimControls, titleControls } from './ui/look.js?v=f3ff9f6e66';
-import { modal } from './ui/dom.js?v=f3ff9f6e66';
-import { mountStickers, stickerSheet } from './ui/stickers.js?v=f3ff9f6e66';
+import { EXTRA_WIDGETS, extraWidget, widgetSettings, refreshWidgetClocks } from './ui/homewidgets.js?v=b60488f141';
+import { api } from './api.js?v=b60488f141';
+import { LOCAL_NAMES } from './local/site.js?v=b60488f141';
+import * as F from './format.js?v=b60488f141';
+import { avatar, brandMark, confirmBox, flushStorage, h, icon, sparkline, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=b60488f141';
+import { SESSION_SETS, configureICT } from './chart/sessions.js?v=b60488f141';
+import { nyOffset } from './core/timeframes.js?v=b60488f141';
+import { settingsDialog } from './ui/dialogs.js?v=b60488f141';
+import { openPalette, wirePalette } from './ui/palette.js?v=b60488f141';
+import { wireTooltips } from './ui/tooltip.js?v=b60488f141';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, PRESETS, applyAppearance, metalPicker, normalizeAppearance, paintLastLook, revealPage, rimControls, titleControls } from './ui/look.js?v=b60488f141';
+import { modal } from './ui/dom.js?v=b60488f141';
+import { mountStickers, stickerSheet } from './ui/stickers.js?v=b60488f141';
 
 const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'NASDAQ 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'NASDAQ 100', USA500IDXUSD: 'S&P 500' };
 const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
