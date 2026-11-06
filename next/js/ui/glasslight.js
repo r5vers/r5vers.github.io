@@ -2,15 +2,22 @@
 // angle (--la) and its sheen at a point (--mx / --my). The page has one
 // light, which turns as you scroll and, where the phone reports it, as you
 // tilt it; over a pane the pointer becomes its light: the rim brightens on
-// the side facing the pointer and the sheen sits under it. One write per
-// frame; reduced motion keeps the light where it rests.
+// the side facing the pointer and the sheen sits under it. While anything
+// moves the page is marked .moving and the rims sharpen; a moment after it
+// stops they soften again. One write per frame; reduced motion keeps the
+// light where it rests.
 const GLASS = '.gl, .hub-app, .rv-round, .rv-pill';
 const REST = 315;   // degrees: the light from the top left
 
 export function wireGlassLight(root = document) {
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   const page = document.documentElement;
-  let raf = 0, tilt = 0, pageAngle = REST;
+  let raf = 0, tilt = 0, pageAngle = REST, still = 0;
+  const stir = () => {
+    page.classList.add('moving');
+    clearTimeout(still);
+    still = setTimeout(() => page.classList.remove('moving'), 260);
+  };
   const turn = () => {
     raf = 0;
     // a full turn over about three screens of scrolling, plus the tilt
@@ -18,7 +25,7 @@ export function wireGlassLight(root = document) {
     pageAngle = REST + (window.scrollY / (window.innerHeight * 3)) * 360 + tilt;
     page.style.setProperty('--la', `${pageAngle.toFixed(1)}deg`);
   };
-  const queue = () => { if (!raf) raf = requestAnimationFrame(turn); };
+  const queue = () => { stir(); if (!raf) raf = requestAnimationFrame(turn); };
   window.addEventListener('scroll', queue, { passive: true });
   // Android and desktop report the tilt without asking; iPhone asks for a
   // permission we do not prompt for, so there the scroll alone turns it
@@ -48,6 +55,6 @@ export function wireGlassLight(root = document) {
     el.style.setProperty('--la', `${deg.toFixed(1)}deg`);
     el.classList.add('lit');
   };
-  root.addEventListener('pointermove', (e) => { ev = e; if (!praf) praf = requestAnimationFrame(paint); }, { passive: true });
+  root.addEventListener('pointermove', (e) => { ev = e; stir(); if (!praf) praf = requestAnimationFrame(paint); }, { passive: true });
   root.addEventListener('pointerleave', () => { lit?.classList.remove('lit'); lit?.style.removeProperty('--la'); lit = null; }, { passive: true });
 }

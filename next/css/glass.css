@@ -20,6 +20,10 @@
 
 /* the angle the light comes from, animatable */
 @property --la { syntax: '<angle>'; inherits: true; initial-value: 315deg; }
+/* how sharp the light is: 0 at rest (soft, spread), 1 while the page moves */
+@property --ls { syntax: '<number>'; inherits: true; initial-value: 0; }
+:root { --ls: 0; transition: --ls .7s cubic-bezier(.23, 1, .32, 1); }
+:root.moving { --ls: 1; transition-duration: .22s; }
 
 body.rv-page {
   --phi: 1.618;
@@ -80,9 +84,15 @@ body.rv-page .rv-nebula b {
    answer on the far side */
 .rv-page .gl::before {
   content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.2px; pointer-events: none; z-index: 2;
+  /* at rest a soft wide glow; moving, a bright narrow glint */
   background: conic-gradient(from var(--la) at 50% 50%,
-    rgba(255, 255, 255, .78) 0deg, rgba(255, 255, 255, .22) 34deg, rgba(255, 255, 255, .06) 80deg, rgba(255, 255, 255, .05) 140deg,
-    rgba(255, 255, 255, .34) 180deg, rgba(255, 255, 255, .05) 220deg, rgba(255, 255, 255, .06) 280deg, rgba(255, 255, 255, .22) 326deg, rgba(255, 255, 255, .78) 360deg);
+    rgba(255, 255, 255, calc(.4 + .45 * var(--ls))) 0deg,
+    rgba(255, 255, 255, calc(.2 + .02 * var(--ls))) calc(58deg - 26deg * var(--ls)),
+    rgba(255, 255, 255, .06) calc(100deg - 20deg * var(--ls)), rgba(255, 255, 255, .05) 140deg,
+    rgba(255, 255, 255, calc(.18 + .2 * var(--ls))) 180deg,
+    rgba(255, 255, 255, .05) 220deg, rgba(255, 255, 255, .06) calc(260deg + 20deg * var(--ls)),
+    rgba(255, 255, 255, calc(.2 + .02 * var(--ls))) calc(302deg + 26deg * var(--ls)),
+    rgba(255, 255, 255, calc(.4 + .45 * var(--ls))) 360deg);
   transition: --la .9s var(--ease-glass), opacity .5s var(--ease-glass);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
@@ -187,3 +197,104 @@ body.page-chart { --r-lg: 21px; --r-md: 13px; }
 body.page-chart :is(#chart-area, #bottom, #sidepanel, .popover, .ds-pop, #drawing-props, .rv-sheet, .modal) { border-radius: var(--r-lg) !important; }
 body.page-chart :is(#instrument-btn, #tf-group, #mode-switch, #legs, #replay-controls, #tabs, .home-link, .btn, button.on, .tf-group button, #mode-switch button, #tabs button) { border-radius: var(--r-md) !important; }
 body.page-chart :is(#btn-search, #btn-shot, #btn-layout, #btn-draw, #btn-indicators, #btn-sessions, #btn-panel, #btn-fullscreen, #btn-settings) { border-radius: var(--r-md) !important; }
+
+/* ── grain: a fine, living speckle over the lights ─────────────────────── */
+body.rv-page > .ambient::after {
+  opacity: .11 !important; mix-blend-mode: overlay; inset: -50%;
+  background-size: 180px 180px; animation: rv-grain .9s steps(6) infinite;
+}
+@keyframes rv-grain {
+  0% { transform: translate(0, 0); } 17% { transform: translate(-3%, 2%); } 33% { transform: translate(2%, -4%); }
+  50% { transform: translate(-4%, -1%); } 67% { transform: translate(3%, 3%); } 83% { transform: translate(-1%, 4%); } 100% { transform: translate(0, 0); }
+}
+@media (prefers-reduced-motion: reduce) { body.rv-page > .ambient::after { animation: none; } }
+
+/* ── phones: the greeting, large ───────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .rv-page .hub-hello { padding-top: var(--s3); }
+  .rv-page .hub-hello h1 { font-size: 56px !important; line-height: 1 !important; letter-spacing: -.045em !important; padding-bottom: .06em; }
+  .rv-page .hub-hello p { font-size: var(--t-4) !important; line-height: 1.05 !important; letter-spacing: -.035em !important; margin-top: 4px !important; }
+  /* the app cards: paler glass, a little shorter, corners drawn as a squircle */
+  .hub-apps { grid-auto-columns: min(72vw, 288px) !important; }
+  .hub-app { aspect-ratio: 1.5 / 1 !important; border-radius: 30px !important; corner-shape: squircle; }
+  .hub-app-fill { opacity: calc(var(--on, 0) * .62) !important;
+    background: radial-gradient(90% 70% at 85% 0%, rgba(255, 255, 255, .22), transparent 70%), linear-gradient(155deg, color-mix(in srgb, var(--app) 70%, #fff 12%) 0%, color-mix(in srgb, var(--app) 62%, transparent) 55%, color-mix(in srgb, var(--app) 30%, transparent) 100%) !important;
+    box-shadow: none !important; }
+  .hub-app { box-shadow: var(--pane-edge), 0 21px 55px -26px color-mix(in srgb, var(--app) calc(var(--on, 0) * 55%), rgba(0, 0, 0, .6)) !important; }
+}
+
+/* ── LEDs: a small light that wakes under the pointer ──────────────────── */
+@media (hover: hover) {
+  /* buttons: a light runs once along the top edge */
+  .rv-page .rv-btn, body.page-chart :is(#btn-search, #btn-shot, #btn-layout, #btn-draw, #btn-indicators, #btn-sessions, #btn-panel, #btn-fullscreen, #btn-settings, .home-link, #replay-controls .btn) { position: relative; overflow: hidden; }
+  .rv-page .rv-btn::after, body.page-chart :is(#btn-search, #btn-shot, #btn-layout, #btn-draw, #btn-indicators, #btn-sessions, #btn-panel, #btn-fullscreen, #btn-settings, .home-link, #replay-controls .btn)::after {
+    content: ''; position: absolute; top: 0; left: -40%; width: 40%; height: 1.5px; pointer-events: none; border-radius: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .95), transparent); opacity: 0;
+  }
+  .rv-page .rv-btn:hover::after, body.page-chart :is(#btn-search, #btn-shot, #btn-layout, #btn-draw, #btn-indicators, #btn-sessions, #btn-panel, #btn-fullscreen, #btn-settings, .home-link, #replay-controls .btn):hover::after { animation: rv-led .9s cubic-bezier(.23, 1, .32, 1) both; }
+  /* the session dots and the app tile's arrow light up */
+  .rv-page .hub-sess:hover i { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent), 0 0 12px var(--c); opacity: 1; }
+  .rv-page .hub-app:hover .hub-app-ic { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 0 21px -4px color-mix(in srgb, var(--app) 90%, #fff); }
+  .rv-page .rv-rail-app:hover svg, .rv-page .rv-side-item:hover .rv-side-ic { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 80%, transparent)); color: #fff; }
+}
+@keyframes rv-led { 0% { left: -40%; opacity: 0; } 20% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
+
+/* ── the chart: controls on glass, one set of sizes ────────────────────── */
+body.page-chart {
+  --pane: linear-gradient(150deg, rgba(255, 255, 255, .1) 0%, rgba(255, 255, 255, .04) 40%, rgba(255, 255, 255, .06) 100%);
+  --pane-blur: blur(22px) saturate(180%) brightness(1.05);
+  --pane-edge: inset 0 1px 0 rgba(255, 255, 255, .26), inset 0 -1px 0 rgba(255, 255, 255, .06), inset 0 0 0 1px rgba(255, 255, 255, .06);
+  --ease-glass: cubic-bezier(.23, 1, .32, 1);
+}
+/* the replay dock: a capsule of glass; the play key lit white */
+body.page-chart #replay-controls:not(:empty) {
+  background: var(--pane), rgba(16, 16, 22, .45) !important; -webkit-backdrop-filter: var(--pane-blur); backdrop-filter: var(--pane-blur);
+  box-shadow: var(--pane-edge), 0 13px 34px -13px rgba(0, 0, 0, .7) !important; border: 0 !important; padding: 5px !important; gap: 3px !important; border-radius: 21px !important;
+}
+body.page-chart #replay-controls .btn { height: 38px; min-width: 38px; border-radius: 13px !important; color: rgba(255, 255, 255, .78); transition: background .25s var(--ease-glass), color .25s var(--ease-glass), transform .15s var(--ease-glass); }
+body.page-chart #replay-controls .btn:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+body.page-chart #replay-controls .btn:active { transform: scale(.94); }
+body.page-chart #replay-controls .btn.play { min-width: 46px; background: linear-gradient(180deg, #fff, #e9e9ef) !important; color: #0b0b10 !important;
+  box-shadow: inset 0 1px 0 #fff, 0 6px 16px -6px rgba(255, 255, 255, .45), 0 1px 2px rgba(0, 0, 0, .4); }
+body.page-chart #replay-controls .btn.play:hover { box-shadow: inset 0 1px 0 #fff, 0 8px 21px -6px rgba(255, 255, 255, .6), 0 1px 2px rgba(0, 0, 0, .4); }
+body.page-chart #replay-controls :is(select.ctl, .ctl) { height: 38px; border-radius: 13px !important; background: rgba(255, 255, 255, .06) !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08) !important; border: 0 !important; }
+/* the bar's keys, the balance pill and the browse strip, all glass */
+body.page-chart :is(#btn-search, #btn-shot, #btn-layout, #btn-draw, #btn-indicators, #btn-sessions, #btn-panel, #btn-fullscreen, #btn-settings, .home-link, #instrument-btn, #tf-group, #mode-switch, #legs:not(:empty), #cs-right > *, .ctrl-strip .browse-dock, #tabs) {
+  background: var(--pane), rgba(16, 16, 22, .35) !important; -webkit-backdrop-filter: var(--pane-blur); backdrop-filter: var(--pane-blur);
+  box-shadow: var(--pane-edge), 0 8px 21px -13px rgba(0, 0, 0, .6) !important; border: 0 !important;
+  transition: background .3s var(--ease-glass), box-shadow .3s var(--ease-glass), transform .15s var(--ease-glass);
+}
+body.page-chart :is(#btn-search, #btn-shot, #btn-layout, #btn-draw, #btn-indicators, #btn-sessions, #btn-panel, #btn-fullscreen, #btn-settings, .home-link):hover { background: var(--pane), rgba(255, 255, 255, .1) !important; }
+body.page-chart :is(#btn-search, #btn-shot, #btn-layout, #btn-draw, #btn-indicators, #btn-sessions, #btn-panel, #btn-fullscreen, #btn-settings, .home-link):active { transform: scale(.95); }
+
+/* the controls of the panels (strategy test, data, dialogs): one height, one corner */
+body.page-chart :is(#tab-body, .modal, #sidepanel) :is(input.ctl, select.ctl) { height: 40px; padding: 0 13px; border-radius: 13px !important; border: 0 !important;
+  background: rgba(255, 255, 255, .05) !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09) !important; font-size: 14px; transition: box-shadow .2s var(--ease-glass), background .2s var(--ease-glass); }
+body.page-chart :is(#tab-body, .modal, #sidepanel) :is(input.ctl, select.ctl):focus { outline: none; background: rgba(255, 255, 255, .07) !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent), 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent) !important; }
+body.page-chart :is(#tab-body, .modal) .btn:not(.icon) { height: 40px; padding: 0 16px; border-radius: 13px !important; font-weight: 600; }
+body.page-chart :is(#tab-body, .modal) .btn.outline { background: rgba(255, 255, 255, .06) !important; border: 0 !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), inset 0 1px 0 rgba(255, 255, 255, .08) !important; }
+body.page-chart :is(#tab-body, .modal) .btn.primary { border: 0 !important; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, #fff), var(--accent) 55%, color-mix(in srgb, var(--accent) 86%, #000)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .38), 0 8px 21px -8px color-mix(in srgb, var(--accent) 75%, transparent) !important; }
+body.page-chart .strategy-layout { gap: 21px; }
+body.page-chart .strategy-layout .toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+body.page-chart .strategy-layout .editor { border-radius: 13px !important; border: 0 !important; background: rgba(0, 0, 0, .28) !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07) !important; padding: 16px !important; }
+
+/* the new session: four headed parts */
+.modal .ns { display: grid; gap: 21px; }
+.modal .ns-meta { margin: -8px 0 0; color: var(--t3, rgba(235, 235, 245, .5)); font-size: 13px; }
+.modal .ns-sec { display: grid; gap: 8px; }
+.modal .ns-sec > h4 { margin: 0; color: var(--t1, #fff); font: 600 13px/1.2 var(--rv-sans) !important; letter-spacing: 0; text-transform: none; }
+.modal .ns-sec > small { color: var(--t3, rgba(235, 235, 245, .5)); font-size: 12px; }
+.modal .ns-when { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.modal .ns-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.modal .ns-grid .f { display: grid; gap: 6px; color: var(--t2, rgba(235, 235, 245, .7)); font-size: 12.5px; margin: 0; }
+.modal .market-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.modal .market-chips .chip { height: 36px; padding: 0 13px; border-radius: 13px !important; border: 0 !important; background: rgba(255, 255, 255, .05) !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09) !important; font-weight: 600; }
+.modal .market-chips .chip.on { background: color-mix(in srgb, var(--accent) 22%, transparent) !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent) !important; color: #fff; }
+body.page-chart .modal { background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02) 30%), rgba(16, 16, 22, .72) !important;
+  -webkit-backdrop-filter: blur(34px) saturate(190%); backdrop-filter: blur(34px) saturate(190%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), inset 0 0 0 1px rgba(255, 255, 255, .07), 0 34px 89px -21px rgba(0, 0, 0, .8) !important; border: 0 !important; }
+@media (max-width: 640px) { .modal .ns-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* phones: start replay is a capsule */
+body.page-chart .m-pbtn.wide { border-radius: 999px !important; padding: 0 21px; }

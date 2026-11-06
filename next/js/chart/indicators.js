@@ -1,6 +1,6 @@
 // Chart indicator definitions: what to compute and how to draw it.
-import * as ta from '../core/indicators.js?v=6d94e77e9b';
-import { tradingDay } from '../core/timeframes.js?v=6d94e77e9b';
+import * as ta from '../core/indicators.js?v=f61656c330';
+import { tradingDay } from '../core/timeframes.js?v=f61656c330';
 
 const cols = (bars) => {
   const n = bars.length;

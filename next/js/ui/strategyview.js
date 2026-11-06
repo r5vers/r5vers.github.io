@@ -1,12 +1,12 @@
 // Strategy tester tab: code editor, templates, run in a worker, results.
-import { api } from '../api.js?v=6d94e77e9b';
-import { backtestRecord, resultFromRecord } from '../core/backtests.js?v=6d94e77e9b';
-import { autoFill, fillChoices } from '../core/fill.js?v=6d94e77e9b';
-import { parseTf } from '../core/timeframes.js?v=6d94e77e9b';
-import * as F from '../format.js?v=6d94e77e9b';
-import { confirmBox, h, icon, toast } from './dom.js?v=6d94e77e9b';
-import { renderHistory } from './panels.js?v=6d94e77e9b';
-import { StatsView } from './statsview.js?v=6d94e77e9b';
+import { api } from '../api.js?v=f61656c330';
+import { backtestRecord, resultFromRecord } from '../core/backtests.js?v=f61656c330';
+import { autoFill, fillChoices } from '../core/fill.js?v=f61656c330';
+import { parseTf } from '../core/timeframes.js?v=f61656c330';
+import * as F from '../format.js?v=f61656c330';
+import { confirmBox, h, icon, toast } from './dom.js?v=f61656c330';
+import { renderHistory } from './panels.js?v=f61656c330';
+import { StatsView } from './statsview.js?v=f61656c330';
 
 const DAY = 86400;
 /** `fn` once the browser has painted (a new frame, not the same task). */
@@ -165,7 +165,7 @@ export class StrategyView {
     if (!base.n) { this.out.replaceChildren(h('div.empty', {}, 'Bu aralıkta veri yok.')); this._runLabel(false); return; }
     this.out.replaceChildren(h('div.muted', {}, `${base.n.toLocaleString('tr-TR')} ${fillTf} bar üzerinde test ediliyor…`));
     const runInfo = {};
-    const worker = new Worker(new URL('../workers/backtest.worker.js?v=6d94e77e9b', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('../workers/backtest.worker.js?v=f61656c330', import.meta.url), { type: 'module' });
     this.worker = worker;
     const started = performance.now();
     worker.onmessage = (e) => {
