@@ -1,0 +1,243 @@
+/* RV · Desk
+   A plain working tool rather than a showpiece: a flat near-black page, panels
+   one step lighter with a hairline edge, small radii, no glows, no glass, no
+   gradients on surfaces. One accent, used for what you act on; green and red
+   only for money. Text in Inter with tabular figures; the greeting alone in
+   the RV metal. Wide screens: a sidebar with names, a thin top bar, tables.
+   Phones: a flat tab bar at the foot. Loaded after rv.css and overrides it. */
+
+body.rv-page {
+  --bg-0: #09090b;
+  --surf-1: #111114; --surf-2: #18181c; --surf-3: #222227;
+  --hair: #232328; --hair-2: #2e2e34;
+  --t1: #ededef; --t2: #a1a1aa; --t3: #6b6b74;
+  --frost: var(--surf-1); --frost-blur: none; --sheet: var(--surf-1);
+  --r-xl: 10px; --r-lg: 8px; --r-md: 6px;
+  --radius: 10px; --radius-sm: 8px; --radius-ctl: 8px;
+  --sh-card: none; --slab: none; --drop: 0 16px 48px -12px rgba(0, 0, 0, .7); --drop-sm: 0 8px 24px -8px rgba(0, 0, 0, .6);
+  --side-w: 224px; --top-h: 52px;
+  background: var(--bg-0) !important;
+  font-feature-settings: 'cv11', 'ss01', 'tnum';
+  letter-spacing: -.005em;
+}
+body.rv-page > .ambient { display: none !important; }
+.rv-page .num { font-variant-numeric: tabular-nums; }
+
+/* ── panels and buttons ───────────────────────────────────────────────── */
+.rv-page .gl, .rv-page .ov-card {
+  background: var(--surf-1) !important; border-radius: 10px !important;
+  box-shadow: inset 0 0 0 1px var(--hair) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+.rv-page :is(button, a).gl:hover { box-shadow: inset 0 0 0 1px var(--hair-2) !important; background: var(--surf-2) !important; transform: none !important; }
+.rv-page .rv-btn {
+  height: 36px; padding: 0 14px; gap: 7px; border-radius: 8px !important; font: 600 13.5px/1 var(--rv-sans);
+  box-shadow: none !important; background: var(--accent); color: #fff; transition: background .15s, box-shadow .15s;
+}
+.rv-page .rv-btn:hover { background: color-mix(in srgb, var(--accent) 88%, #fff); }
+.rv-page .rv-btn.ghost { background: var(--surf-2); color: var(--t1); box-shadow: inset 0 0 0 1px var(--hair) !important; }
+.rv-page .rv-btn.ghost:hover { background: var(--surf-3); }
+.rv-page .rv-btn.lg, .rv-page .rv-btn.xl { height: 40px; padding: 0 16px; font-size: 14px; }
+.rv-page .rv-btn kbd { margin-left: 2px; padding: 2px 5px; border-radius: 4px; background: var(--surf-3); color: var(--t3); font: 600 10.5px/1 var(--rv-sans); }
+.rv-page .rv-link { height: 28px; padding: 0 10px; border-radius: 6px; background: transparent; color: var(--t2); font: 550 12.5px/1 var(--rv-sans); box-shadow: inset 0 0 0 1px var(--hair); }
+.rv-page .rv-link:hover { color: var(--t1); background: var(--surf-2); }
+.rv-page .badge-num { border-radius: 4px; }
+
+/* ── wide: the sidebar, the top bar ───────────────────────────────────── */
+@media (min-width: 1024px) {
+  body.rv-wide { --side: 0px; padding-left: var(--side-w); padding-top: var(--top-h); }
+  body.rv-wide.rv-has-side { --side-w: 300px; }
+  .rv-rail {
+    left: 0 !important; top: 0 !important; bottom: 0 !important; width: 224px !important; border-radius: 0 !important;
+    padding: 12px 10px !important; align-items: stretch !important; gap: 2px !important;
+    background: var(--bg-0) !important; box-shadow: inset -1px 0 0 var(--hair) !important; backdrop-filter: none !important;
+  }
+  .rv-rail-mark { display: flex !important; align-items: center; gap: 10px; width: auto !important; height: 40px !important; padding: 0 10px; margin-bottom: 14px; border-radius: 6px; text-decoration: none; }
+  .rv-rail-word { color: var(--t1); font: 650 15px/1 var(--rv-sans); letter-spacing: -.02em; }
+  .rv-rail-apps { display: grid !important; gap: 2px !important; width: 100%; }
+  .rv-rail-foot { display: grid !important; gap: 2px !important; width: 100%; margin-top: auto; padding-top: 10px; box-shadow: inset 0 1px 0 var(--hair); }
+  .rv-rail-app, .rv-rail-me {
+    display: flex !important; align-items: center; justify-content: flex-start !important; gap: 10px; width: 100% !important; height: 34px !important;
+    padding: 0 10px !important; border: 0; border-radius: 6px !important; background: transparent !important; box-shadow: none !important;
+    color: var(--t2) !important; font: 550 13.5px/1 var(--rv-sans); text-decoration: none; cursor: pointer;
+  }
+  .rv-rail-me { height: 40px !important; }
+  .rv-rail-me .avatar { width: 24px !important; height: 24px !important; font-size: 11px; }
+  .rv-rail-app::before, .rv-rail-app::after { display: none !important; }
+  .rv-rail-app svg { width: 18px; height: 18px; color: var(--t3); flex: none; }
+  .rv-rail-app:hover, .rv-rail-me:hover { background: var(--surf-2) !important; color: var(--t1) !important; }
+  .rv-rail-app.on { background: var(--surf-2) !important; color: var(--t1) !important; box-shadow: inset 2px 0 0 var(--accent) !important; }
+  .rv-rail-app.on svg { color: var(--accent-2); }
+  .rv-rail-lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* with a section list beside it the sidebar keeps its icons only */
+  body.rv-has-side .rv-rail { width: 60px !important; }
+  body.rv-has-side .rv-rail-lbl { display: none; }
+  body.rv-has-side .rv-rail-app, body.rv-has-side .rv-rail-me, body.rv-has-side .rv-rail-mark { justify-content: center !important; padding: 0 !important; }
+  .rv-side {
+    left: 60px !important; top: 0 !important; bottom: 0 !important; width: 240px !important; border-radius: 0 !important;
+    background: var(--bg-0) !important; box-shadow: inset -1px 0 0 var(--hair) !important; backdrop-filter: none !important; padding: 12px 10px !important;
+  }
+  .rv-side-item { height: 34px; border-radius: 6px !important; font-size: 13.5px; }
+  .rv-side-item.on { background: var(--surf-2) !important; box-shadow: inset 2px 0 0 var(--accent) !important; }
+  .rv-side-tool { border-radius: 6px !important; background: var(--surf-1) !important; box-shadow: inset 0 0 0 1px var(--hair) !important; }
+  .rv-top {
+    left: var(--side-w) !important; top: 0 !important; right: 0 !important; height: var(--top-h) !important; padding: 0 24px 0 28px;
+    background: var(--bg-0); box-shadow: inset 0 -1px 0 var(--hair);
+  }
+  .rv-crumbs { height: auto !important; padding: 0 !important; background: none !important; box-shadow: none !important; backdrop-filter: none !important; font: 550 13.5px/1 var(--rv-sans) !important; }
+  .rv-top-actions .rv-btn { height: 32px !important; padding: 0 12px !important; font-size: 13px !important; border-radius: 7px !important; }
+  body.rv-wide main { max-width: 1240px !important; padding: 28px 32px 48px !important; gap: 20px !important; }
+}
+
+/* ── the desk (wide home) ─────────────────────────────────────────────── */
+.hub-wide.hub { gap: 20px !important; }
+.dk-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 6px 0 4px; }
+.dk-head-t { display: grid; gap: 8px; min-width: 0; }
+.dk-date { color: var(--t3); font: 600 11.5px/1 var(--rv-sans); letter-spacing: .08em; text-transform: uppercase; }
+.dk-head h1 { margin: 0 0 6px; padding-bottom: .06em; font: 650 28px/1.15 var(--rv-sans) !important; letter-spacing: -.025em; }
+.dk-head-acts { display: flex; gap: 8px; flex: none; }
+.dk-head .hub-sessions { gap: 6px; }
+.rv-page .hub-sess { height: 26px; padding: 0 10px; border-radius: 6px; font-size: 12px; background: var(--surf-1); box-shadow: inset 0 0 0 1px var(--hair); }
+.rv-page .hub-sess small { font-size: 11.5px; }
+.rv-page .hub-sess.on { background: color-mix(in srgb, var(--c) 10%, var(--surf-1)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 35%, transparent); }
+
+/* the numbers: one strip, split by hairlines */
+.rv-page .hub-kpis { gap: 0 !important; border-radius: 10px; background: var(--surf-1); box-shadow: inset 0 0 0 1px var(--hair); overflow: hidden; }
+.rv-page .hub-kpi { min-height: 76px !important; padding: 16px 20px !important; gap: 12px !important; background: none !important; box-shadow: inset -1px 0 0 var(--hair) !important; border-radius: 0 !important; }
+.rv-page .hub-kpi:last-child { box-shadow: none !important; }
+.rv-page .hub-kpi-ic { width: 32px; height: 32px; border-radius: 7px; background: var(--surf-2); box-shadow: inset 0 0 0 1px var(--hair); color: var(--t2); }
+.rv-page .hub-kpi-ic svg { width: 16px; height: 16px; }
+.rv-page .hub-kpi .rv-ring svg { width: 32px; height: 32px; }
+.rv-page .hub-kpi-t span { font-size: 12px; color: var(--t3); }
+.rv-page .hub-kpi-t b { font-size: 20px !important; font-weight: 650; }
+
+.dk-cols { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr); gap: 20px; align-items: start; }
+.dk-aside { display: grid; gap: 20px; min-width: 0; }
+.dk-panel { background: var(--surf-1); border-radius: 10px; box-shadow: inset 0 0 0 1px var(--hair); overflow: hidden; min-width: 0; }
+.dk-sec-head { display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 0 12px 0 16px; box-shadow: inset 0 -1px 0 var(--hair); }
+.dk-sec-head h2 { margin: 0; font: 600 14px/1 var(--rv-sans) !important; color: var(--t1); }
+.dk-empty { margin: 16px; color: var(--t2); }
+.dk-table { display: grid; }
+.dk-row {
+  display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.3fr) minmax(0, .9fr) minmax(0, .7fr) minmax(0, .55fr); align-items: center; gap: 16px;
+  min-height: 56px; padding: 8px 16px; border: 0; background: none; color: var(--t1); text-align: left; font: inherit; cursor: pointer;
+  box-shadow: inset 0 -1px 0 var(--hair);
+}
+.dk-row:last-child { box-shadow: none; }
+.dk-row:hover { background: var(--surf-2); }
+.dk-row.skel { min-height: 56px; border-radius: 0; }
+.dk-row-h { min-height: 34px; cursor: default; color: var(--t3); font: 600 11px/1 var(--rv-sans); letter-spacing: .06em; text-transform: uppercase; }
+.dk-row-h:hover { background: none; }
+.dk-row .r { text-align: right; justify-self: end; }
+.dk-sym { display: grid; gap: 4px; min-width: 0; }
+.dk-sym b { font: 650 14px/1 var(--rv-sans); }
+.dk-sym small { color: var(--t3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk-spark { display: block; height: 30px; color: var(--t3); }
+.dk-row.up .dk-spark { color: var(--pos); }
+.dk-row.down .dk-spark { color: var(--neg); }
+.dk-spark .hub-mk-spark { width: 100%; height: 30px; color: inherit; }
+.dk-px { font: 600 14.5px/1 var(--rv-sans); }
+.dk-chg { font: 600 13px/1 var(--rv-sans); color: var(--t2); }
+.dk-row.up .dk-chg { color: var(--pos); }
+.dk-row.down .dk-chg { color: var(--neg); }
+.dk-yrs { color: var(--t3); font-size: 12.5px; }
+
+/* where you left off, recents: panels of the aside */
+.dk-aside .ov-card { padding: 0 !important; gap: 0 !important; }
+.dk-aside .ov-head { height: 48px; padding: 0 12px 0 16px; box-shadow: inset 0 -1px 0 var(--hair); flex-wrap: nowrap; min-height: 0 !important; }
+.dk-aside .ov-head h3 { font: 600 14px/1 var(--rv-sans) !important; }
+.dk-aside .ov-head .muted { font-size: 12px; }
+.dk-aside .hub-last { grid-template-rows: none; }
+.dk-aside .hub-last > :not(.ov-head) { margin: 14px 16px 0; }
+.dk-aside .hub-last > :last-child { margin-bottom: 16px; }
+.dk-aside .hub-last-who b { font-size: 15px; }
+.dk-aside .hub-last-num { border-radius: 8px; background: var(--bg-0); box-shadow: inset 0 0 0 1px var(--hair); }
+.dk-aside .hub-last-num > span { padding: 12px 14px; gap: 7px; }
+.dk-aside .hub-last-num b { font-size: 18px !important; }
+.dk-aside .hub-last-acts .rv-btn { border-radius: 8px !important; }
+.dk-aside .rv-sym { width: 34px !important; height: 34px !important; font-size: 11px !important; border-radius: 8px; box-shadow: none; }
+.dk-aside .ov-rows { margin: 0; gap: 0; padding: 4px 0; }
+.dk-aside .ov-row { border-radius: 0; min-height: 52px; padding: 6px 16px; grid-template-columns: auto minmax(0, 1fr) auto !important; }
+.dk-aside .ov-row-time { display: none; }
+.dk-aside .ov-row:hover { background: var(--surf-2); }
+.rv-page .rv-row-ic { width: 30px; height: 30px; border-radius: 7px; background: var(--surf-2) !important; box-shadow: inset 0 0 0 1px var(--hair) !important; color: var(--t2) !important; }
+.dk-aside .ov-row.add .ov-row-add-ic { width: 30px; height: 30px; border-radius: 7px; }
+.rv-page .hub-foot { padding-top: 8px; color: var(--t3); opacity: 1; font-size: 11.5px; text-align: left; }
+@media (min-width: 1024px) and (max-width: 1280px) {
+  .dk-cols { grid-template-columns: minmax(0, 1fr); }
+  .dk-row { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, .9fr) minmax(0, .7fr); }
+  .dk-row > :last-child { display: none; }
+}
+
+/* the metal, quieter: only the greeting and the name carry it */
+body.rv-page :is(.rv-metal, .hub-hello h1, .hub-brand span, .ra-top h1, .ra-hero h2, .ra-banner h2) { animation-duration: 14s; }
+
+/* ── sheets, menus ────────────────────────────────────────────────────── */
+.rv-page .rv-sheet, body .rv-sheet { background: var(--surf-1) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: inset 0 0 0 1px var(--hair), var(--drop) !important; }
+.rv-page .rv-group { background: var(--surf-2) !important; border-radius: 10px !important; box-shadow: inset 0 0 0 1px var(--hair) !important; }
+.rv-page .rv-row { border-radius: 0; }
+.rv-page .rv-seg { border-radius: 8px !important; background: var(--surf-2) !important; box-shadow: inset 0 0 0 1px var(--hair) !important; }
+.rv-page .rv-seg button { border-radius: 6px !important; }
+
+/* ── the Replay app ───────────────────────────────────────────────────── */
+.rv-page .ra-banner { background: var(--surf-1) !important; min-height: 0 !important; padding: 28px 32px !important; }
+.rv-page .ra-banner::before, .rv-page .ra-banner::after, .rv-page .ra-banner-art { display: none !important; }
+.rv-page .ra-banner h2 { font-size: 26px !important; }
+.rv-page .ra-panel { padding: 0 !important; }
+.rv-page .ra-panel-head { padding: 14px 16px !important; box-shadow: inset 0 -1px 0 var(--hair); }
+.rv-page .ra-grid { padding: 16px !important; }
+.rv-page :is(.ra-card, .ra-row) { border-radius: 10px !important; background: var(--surf-2) !important; box-shadow: inset 0 0 0 1px var(--hair) !important; }
+.rv-page .chip, .rv-page .ra-chip { border-radius: 6px !important; }
+
+/* ── phones: flat cards, a flat tab bar at the foot ───────────────────── */
+@media (max-width: 1023px) {
+  .rv-page .hub-app { border-radius: 14px !important; }
+  .rv-page .hub-app-fill { box-shadow: none !important; background: linear-gradient(160deg, color-mix(in srgb, var(--app) 80%, #fff 8%), color-mix(in srgb, var(--app) 60%, #000)) !important; }
+  .rv-page .hub-market, .rv-page .hub-chart, .rv-page .hub-tile, .rv-page .hub-empty { border-radius: 12px !important; }
+  .rv-dock {
+    left: 0 !important; right: 0 !important; bottom: 0 !important; transform: none !important; width: auto !important; max-width: none !important;
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom)) !important; gap: 10px !important; border-radius: 0 !important;
+    background: var(--bg-0) !important; box-shadow: inset 0 1px 0 var(--hair) !important; backdrop-filter: none !important;
+  }
+  .rv-dock .rv-round { width: 44px !important; height: 44px !important; border-radius: 10px !important; background: var(--surf-1) !important; box-shadow: inset 0 0 0 1px var(--hair) !important; backdrop-filter: none !important; }
+  .rv-dock .rv-round.ghost { background: none !important; box-shadow: none !important; }
+  .rv-dock .rv-pill { height: 44px !important; border-radius: 10px !important; background: var(--surf-1) !important; box-shadow: inset 0 0 0 1px var(--hair) !important; backdrop-filter: none !important; }
+  .rv-dock .rv-tab.on .rv-tab-ic { background: var(--surf-3) !important; box-shadow: none !important; border-radius: 8px !important; }
+  .rv-page main { padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important; }
+}
+
+/* section icons and the sidebar's promo: plain, like the rest */
+.rv-page .rv-side-ic { width: 22px !important; height: 22px !important; background: none !important; box-shadow: none !important; color: var(--t3) !important; }
+.rv-page .rv-side-item.on .rv-side-ic { color: var(--accent-2) !important; }
+.rv-page .rv-promo { border-radius: 10px !important; background: var(--surf-1) !important; box-shadow: inset 0 0 0 1px var(--hair) !important; }
+.rv-page .rv-promo-art { height: 0 !important; min-height: 0 !important; padding: 0 !important; overflow: hidden; margin: 0 !important; }
+@media (min-width: 1024px) { body.rv-wide.rv-has-side main { padding-top: 24px !important; } }
+
+/* phones: a calmer head and smaller app cards */
+@media (max-width: 1023px) {
+  .rv-page .hub-hello { padding-top: 4px; }
+  .rv-page .hub-hello h1 { font: 650 26px/1.15 var(--rv-sans) !important; letter-spacing: -.02em; }
+  .rv-page .hub-hello p { font: 500 15px/1.3 var(--rv-sans) !important; color: var(--t3); margin-top: 4px; }
+  .rv-page .hub-brand { font-size: 17px; }
+  .rv-page .hub-h { font-size: 16px !important; }
+  .rv-page .hub-apps { grid-auto-columns: 168px !important; gap: 10px !important; }
+  .rv-page .hub-app { height: 150px !important; padding: 16px !important; }
+  .rv-page .hub-app-txt b { font-size: 16px !important; }
+  .rv-page .hub-app-art { display: none !important; }
+  .rv-page .hub-badge { padding: 5px 8px; border-radius: 6px; font-size: 11.5px; }
+  .rv-page main { gap: 28px !important; }
+}
+@media (min-width: 1024px) { body.rv-wide { padding-top: var(--top-h) !important; } }
+
+/* ── the chart, wide: the same flat desk ──────────────────────────────── */
+@media (min-width: 761px) {
+  body.page-chart { --hair: #232328; }
+  body.page-chart #app > header, body.page-chart #app .topbar { background: none !important; }
+  body.page-chart :is(#legs, #tf-group, #mode-switch, #cs-left, #cs-right, #replay-controls, #tabs, #sidepanel, #bottom) :is(button, .btn, select),
+  body.page-chart :is(#btn-search, #btn-shot, #btn-layout, #btn-draw, #btn-indicators, #btn-sessions, #btn-panel, #btn-fullscreen, #btn-settings, #instrument-btn, .home-link) {
+    border-radius: 7px !important;
+  }
+  body.page-chart :is(#legs, #tf-group, #mode-switch, #replay-controls, #tabs) { border-radius: 9px !important; box-shadow: inset 0 0 0 1px var(--hair) !important; backdrop-filter: none !important; }
+  body.page-chart :is(#btn-search, #btn-shot, #btn-layout, #btn-draw, #btn-indicators, #btn-sessions, #btn-panel, #btn-fullscreen, #btn-settings, .home-link) { box-shadow: inset 0 0 0 1px var(--hair) !important; backdrop-filter: none !important; }
+  body.page-chart :is(#sidepanel, #chart-area, #bottom) { border-radius: 10px !important; box-shadow: inset 0 0 0 1px var(--hair) !important; }
+  body.page-chart #sidepanel :is(.card, section, .panel) { border-radius: 8px !important; }
+}

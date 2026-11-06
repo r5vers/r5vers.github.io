@@ -5,15 +5,15 @@
 // the actions, centred; then the apps as five equal tiles, the markets as
 // a three-by-two grid, the numbers as four equal tiles, and where you left
 // off beside your recents, in two equal halves.
-import { api } from './api.js?v=d93fdedfec';
-import { SITE_TAG } from './local/site.js?v=d93fdedfec';
-import * as F from './format.js?v=d93fdedfec';
-import { brandMark, h, icon } from './ui/dom.js?v=d93fdedfec';
-import { SESSION_SETS } from './chart/sessions.js?v=d93fdedfec';
-import { nyOffset } from './core/timeframes.js?v=d93fdedfec';
-import { openPalette, wirePalette } from './ui/palette.js?v=d93fdedfec';
-import { wireTooltips } from './ui/tooltip.js?v=d93fdedfec';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=d93fdedfec';
+import { api } from './api.js?v=f3ff9f6e66';
+import { SITE_TAG } from './local/site.js?v=f3ff9f6e66';
+import * as F from './format.js?v=f3ff9f6e66';
+import { brandMark, h, icon } from './ui/dom.js?v=f3ff9f6e66';
+import { SESSION_SETS } from './chart/sessions.js?v=f3ff9f6e66';
+import { nyOffset } from './core/timeframes.js?v=f3ff9f6e66';
+import { openPalette, wirePalette } from './ui/palette.js?v=f3ff9f6e66';
+import { wireTooltips } from './ui/tooltip.js?v=f3ff9f6e66';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=f3ff9f6e66';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
@@ -59,7 +59,9 @@ function render() {
     appFrame({ current: 'home', crumbs: ['Ana ekran', 'Genel bakış'], actions: [
       h('button.rv-btn.ghost', { type: 'button', onclick: () => profileDrawer('look') }, icon('palette', 17), 'Görünüm')] });
     root.className = 'hub hub-wide';
-    root.replaceChildren(deskHero(), appRow(true), marketGrid(), overview(), foot());
+    root.replaceChildren(deskHead(), kpiStrip(), h('div.dk-cols', {},
+      h('div.dk-main', {}, marketTable()),
+      h('div.dk-aside', {}, lastCard(), recentCard())), foot());
     return;
   }
   appFrame({ current: 'home' });
@@ -105,6 +107,42 @@ function appRow(wide) {
   requestAnimationFrame(() => requestAnimationFrame(tint));
   if (!wide) return h('section.hub-sec', {}, h('h2.hub-h', {}, 'Uygulamaların'), row);
   return h('section.hub-sec', {}, row);
+}
+
+// ── wide (the desk): a plain head, the numbers in one strip, the markets
+// as a table beside where you left off and your recents ──────────────────
+function deskHead() {
+  const p = shell.me.profile;
+  const date = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz() }).format(new Date());
+  return h('header.dk-head', {},
+    h('div.dk-head-t', {}, h('span.dk-date', {}, date), h('h1.rv-metal', {}, `${greeting()}, ${p.name}`), sessionStrip()),
+    h('div.dk-head-acts', {},
+      h('button.rv-btn.ghost', { type: 'button', onclick: () => openPalette(items) }, icon('search', 16), 'Ara', h('kbd', {}, 'Ctrl K')),
+      h('button.rv-btn.ghost', { type: 'button', onclick: () => go(chartUrl({ view: 'chart' })) }, icon('chart', 16), 'Grafik'),
+      h('button.rv-btn', { type: 'button', onclick: () => go(chartUrl({ new: 'replay' })) }, icon('plus', 16), 'Yeni oturum')));
+}
+
+function marketTable() {
+  const list = markets();
+  const head = h('div.dk-sec-head', {}, h('h2', {}, 'Piyasalar'), h('button.rv-link', { type: 'button', onclick: () => go(chartUrl({ tab: 'data' })) }, 'Veri yönetimi'));
+  if (st.loaded && !list.length) {
+    return h('section.dk-panel', {}, head, h('p.dk-empty', {}, 'Bu cihazda piyasa verisi yok.'),
+      h('button.rv-btn', { type: 'button', onclick: () => go(chartUrl({ tab: 'data' })) }, icon('download', 16), 'Veri paketleri'));
+  }
+  const cols = h('div.dk-row.dk-row-h', {}, h('span', {}, 'Sembol'), h('span', {}, 'Son 90 gün'), h('span.r', {}, 'Fiyat'), h('span.r', {}, 'Günlük'), h('span.r', {}, 'Veri'));
+  const rows = (st.loaded ? list : [0, 1, 2, 3, 4, 5]).map((d) => {
+    if (!d.id) return h('div.dk-row.skel');
+    const q = st.quotes.get(d.id);
+    const chg = q && q.prev ? q.last / q.prev - 1 : null;
+    const years = d.first_ts && d.last_ts ? Math.round((d.last_ts - d.first_ts) / 31557600) : null;
+    return h(`button.dk-row${chg != null ? (chg >= 0 ? '.up' : '.down') : ''}`, { type: 'button', onclick: () => go(chartUrl({ ds: d.id })) },
+      h('span.dk-sym', {}, h('b', {}, d.symbol), h('small', {}, NAMES[d.symbol] || d.name || '')),
+      h('span.dk-spark', {}, q?.spark?.length > 1 ? areaSpark(q.spark) : null),
+      h('span.r.num.dk-px', {}, q ? F.price(q.last, d.decimals) : '—'),
+      h('span.r.num.dk-chg', {}, chg != null ? `${chg >= 0 ? '+' : ''}${F.pct(chg, 2)}` : '—'),
+      h('span.r.dk-yrs', {}, years ? `${years} yıl` : `${(d.bar_count || 0).toLocaleString('tr-TR')} bar`));
+  });
+  return h('section.dk-panel', {}, head, h('div.dk-table', {}, cols, ...rows));
 }
 
 // ── wide: the date, the greeting, the sessions, the actions, centred ───

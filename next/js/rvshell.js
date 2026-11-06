@@ -3,14 +3,14 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=d93fdedfec';
-import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=d93fdedfec';
-import * as F from './format.js?v=d93fdedfec';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=d93fdedfec';
-import { configureICT } from './chart/sessions.js?v=d93fdedfec';
-import { settingsDialog } from './ui/dialogs.js?v=d93fdedfec';
-import { openPalette } from './ui/palette.js?v=d93fdedfec';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=d93fdedfec';
+import { api } from './api.js?v=f3ff9f6e66';
+import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=f3ff9f6e66';
+import * as F from './format.js?v=f3ff9f6e66';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=f3ff9f6e66';
+import { configureICT } from './chart/sessions.js?v=f3ff9f6e66';
+import { settingsDialog } from './ui/dialogs.js?v=f3ff9f6e66';
+import { openPalette } from './ui/palette.js?v=f3ff9f6e66';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=f3ff9f6e66';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };
@@ -123,13 +123,14 @@ export function appFrame({ current, sections = null, section = null, crumbs = []
   if (!WIDE.matches) { rail?.remove(); document.getElementById('rv-side')?.remove(); document.getElementById('rv-top')?.remove(); return; }
   if (!rail) { rail = h('nav.rv-rail', { id: 'rv-rail', 'aria-label': 'Uygulamalar' }); document.body.append(rail); }
   const p = shell.me.profile;
-  const tile = (id, label, ic, href) => h(`a.rv-rail-app${id === current ? '.on' : ''}`, { href, title: label, 'aria-label': label, onclick: (e) => { e.preventDefault(); go(href); } }, icon(ic, 21));
+  // icon and name, as a desk app's sidebar; with a section list beside it the names fold away
+  const tile = (id, label, ic, href) => h(`a.rv-rail-app${id === current ? '.on' : ''}`, { href, title: label, 'aria-label': label, onclick: (e) => { e.preventDefault(); go(href); } }, icon(ic, 18), h('span.rv-rail-lbl', {}, label));
   rail.replaceChildren(
-    h('a.rv-rail-mark', { href: 'home.html', title: 'Ana ekran', 'aria-label': 'Ana ekran', onclick: (e) => { e.preventDefault(); go('home.html'); } }, brandMark(26)),
+    h('a.rv-rail-mark', { href: 'home.html', title: 'Ana ekran', 'aria-label': 'Ana ekran', onclick: (e) => { e.preventDefault(); go('home.html'); } }, brandMark(22), h('span.rv-rail-lbl.rv-rail-word', {}, 'ReplayView')),
     h('div.rv-rail-apps', {}, tile('home', 'Ana ekran', 'home', 'home.html'), ...APPS.map((a) => tile(a.id, a.name, a.icon, a.href))),
     h('div.rv-rail-foot', {},
-      h('button.rv-rail-app', { type: 'button', title: 'Görünüm', 'aria-label': 'Görünüm', onclick: () => profileDrawer('look') }, icon('palette', 20)),
-      h('button.rv-rail-me', { type: 'button', title: p.name, 'aria-label': 'Profil', onclick: () => profileDrawer('profile') }, avatar({ ...p, locked: false }, 'sm'))));
+      h('button.rv-rail-app', { type: 'button', title: 'Görünüm', 'aria-label': 'Görünüm', onclick: () => profileDrawer('look') }, icon('palette', 18), h('span.rv-rail-lbl', {}, 'Görünüm')),
+      h('button.rv-rail-me', { type: 'button', title: p.name, 'aria-label': 'Profil', onclick: () => profileDrawer('profile') }, avatar({ ...p, locked: false }, 'sm'), h('span.rv-rail-lbl', {}, p.name))));
 
   let side = document.getElementById('rv-side');
   if (sections) {
