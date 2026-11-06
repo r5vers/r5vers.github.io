@@ -9,7 +9,7 @@
 //   await db.nextId(name)               1, 2, 3, ... (per name)
 //   await db.tx(fn)                     run fn(db) - one transaction where possible
 
-import { LOCAL_NAMES } from './site.js?v=5e84c48433';
+import { LOCAL_NAMES } from './site.js?v=60be322688';
 
 // outbox: changes not yet sent to the cloud; stamps: when each synced thing last changed
 export const STORES = ['meta', 'datasets', 'chunks', 'aggs', 'profiles', 'photos', 'sessions', 'kv', 'strategies', 'settings', 'downloads', 'outbox', 'stamps'];
