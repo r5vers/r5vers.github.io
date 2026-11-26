@@ -2,18 +2,18 @@
 // as large cards, recents, markets, one market's chart, the floating bar.
 // Wide screens, after the original RV home and laid out on one axis: the
 // date, a large greeting in the metal, the markets' sessions right now and
-// the actions, centred; then the apps as six equal tiles, the markets as
+// the actions, centred; then the apps as five equal tiles, the markets as
 // a three-by-two grid, the numbers as four equal tiles, and where you left
 // off beside your recents, in two equal halves.
-import { api } from './api.js?v=ac0ce45574';
-import { SITE_TAG } from './local/site.js?v=ac0ce45574';
-import * as F from './format.js?v=ac0ce45574';
-import { brandMark, h, icon } from './ui/dom.js?v=ac0ce45574';
-import { SESSION_SETS } from './chart/sessions.js?v=ac0ce45574';
-import { nyOffset } from './core/timeframes.js?v=ac0ce45574';
-import { openPalette, wirePalette } from './ui/palette.js?v=ac0ce45574';
-import { wireTooltips } from './ui/tooltip.js?v=ac0ce45574';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=ac0ce45574';
+import { api } from './api.js?v=fb1de5ff64';
+import { SITE_TAG } from './local/site.js?v=fb1de5ff64';
+import * as F from './format.js?v=fb1de5ff64';
+import { brandMark, h, icon } from './ui/dom.js?v=fb1de5ff64';
+import { SESSION_SETS } from './chart/sessions.js?v=fb1de5ff64';
+import { nyOffset } from './core/timeframes.js?v=fb1de5ff64';
+import { openPalette, wirePalette } from './ui/palette.js?v=fb1de5ff64';
+import { wireTooltips } from './ui/tooltip.js?v=fb1de5ff64';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=fb1de5ff64';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
@@ -92,7 +92,8 @@ const foot = () => h('footer.hub-foot', {}, `${SITE_TAG} · veriler Dukascopy (g
 
 // ── the apps: large cards (phone), a row of tiles (wide) ────────────────
 function appRow(wide) {
-  const row = h(`div.hub-apps${wide ? '.wide' : ''}`, {}, APPS.map((a) => h(`a.hub-app.gl.app-${a.id}`, { href: a.href, onclick: (e) => { e.preventDefault(); go(a.href); } },
+  // the strategy test opens from the rail and the search; it has no card here
+  const row = h(`div.hub-apps${wide ? '.wide' : ''}`, {}, APPS.filter((a) => a.id !== 'strategy').map((a) => h(`a.hub-app.gl.app-${a.id}`, { href: a.href, onclick: (e) => { e.preventDefault(); go(a.href); } },
     h('span.hub-app-fill', { 'aria-hidden': 'true' }), h('span.hub-app-art', { 'aria-hidden': 'true' }, icon(a.icon, wide ? 150 : 140)),
     h('span.hub-app-top', {}, h('span.hub-app-ic', {}, icon(a.icon, wide ? 24 : 26)),
       wide ? h('span.hub-app-go', { 'aria-hidden': 'true' }, icon('arrow', 16)) : a.badge ? h('span.hub-badge', {}, a.badge) : null),

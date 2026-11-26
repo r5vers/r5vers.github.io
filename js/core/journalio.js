@@ -8,9 +8,9 @@
 // A report's times are the wall clock of where it was made; `zone` says
 // whose: 'server' (MetaTrader servers, FTMO's among them: New York time plus
 // seven hours, GMT+2 in winter and GMT+3 in summer), 'UTC' or a time zone.
-import { nyOffset } from './timeframes.js?v=ac0ce45574';
-import { tzOffset } from '../format.js?v=ac0ce45574';
-import { normalizeSymbol } from './journal.js?v=ac0ce45574';
+import { nyOffset } from './timeframes.js?v=fb1de5ff64';
+import { tzOffset } from '../format.js?v=fb1de5ff64';
+import { normalizeSymbol } from './journal.js?v=fb1de5ff64';
 
 // ── files ───────────────────────────────────────────────────────────────────
 /** A file's text, whatever its encoding (MetaTrader writes its HTML in UTF-16). */
@@ -59,7 +59,7 @@ export function htmlRows(text) {
 
 /** The rows of the first sheet of an Excel file (fflate unzips it). */
 export async function xlsxRows(buf) {
-  const { unzipSync, strFromU8 } = await import('../../vendor/fflate.js?v=ac0ce45574');
+  const { unzipSync, strFromU8 } = await import('../../vendor/fflate.js?v=fb1de5ff64');
   const files = unzipSync(new Uint8Array(buf));
   const read = (name) => (files[name] ? strFromU8(files[name]) : null);
   const xml = (s) => new DOMParser().parseFromString(s, 'application/xml');

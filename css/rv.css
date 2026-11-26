@@ -472,8 +472,8 @@ body.rv-page.leaving main { opacity: 0; transition: opacity .14s; }
 .hub-wide .hub-hero-acts { display: flex; justify-content: center; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
 .hub-wide .hub-hero-acts .rv-btn { min-width: 176px; border-radius: 20px; }
 .hub-find kbd { margin-left: 4px; padding: 3px 7px; border-radius: 7px; border: 0; background: rgba(255, 255, 255, .08); color: var(--t3); font: 600 11px/1 var(--rv-sans); }
-/* the apps: six equal tiles; only the one under the pointer takes its colour */
-.hub-apps.wide { display: grid; grid-auto-flow: row; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; overflow: visible; margin: 0; padding: 0; }
+/* the apps: five equal tiles; only the one under the pointer takes its colour */
+.hub-apps.wide { display: grid; grid-auto-flow: row; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; overflow: visible; margin: 0; padding: 0; }
 .hub-apps.wide .hub-app { height: auto; min-height: 172px; flex-direction: column; justify-content: space-between; gap: 24px; padding: 20px; border-radius: 24px; }
 .hub-apps.wide .hub-app-top { display: flex; align-items: center; justify-content: space-between; }
 .hub-apps.wide .hub-app-art { right: -34px; bottom: -42px; opacity: 0; }
@@ -531,7 +531,7 @@ body.rv-page.leaving main { opacity: 0; transition: opacity .14s; }
 .hub-last-acts .rv-btn { border-radius: 18px; }
 @media (min-width: 1024px) and (max-width: 1300px) {
   .hub-mkts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .hub-apps.wide { gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hub-apps.wide { gap: 12px; }
   .hub-apps.wide .hub-app { padding: 18px; }
   .hub-kpis { gap: 12px; }
   .hub-kpi { gap: 12px; padding: 18px; }

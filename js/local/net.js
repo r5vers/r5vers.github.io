@@ -63,7 +63,7 @@ export function getBytes(url, { fetchFn = null, fresh = false, onProgress = null
  *  stream in between that a browser could stall. */
 let fflate = null;
 export async function gunzip(buf) {
-  fflate ||= await import('../../vendor/fflate.js?v=ac0ce45574');
+  fflate ||= await import('../../vendor/fflate.js?v=fb1de5ff64');
   const out = fflate.gunzipSync(new Uint8Array(buf));
   return out.byteOffset === 0 && out.byteLength === out.buffer.byteLength ? out.buffer : out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
 }
