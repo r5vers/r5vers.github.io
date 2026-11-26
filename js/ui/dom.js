@@ -1,7 +1,7 @@
 // Small DOM helpers: element builder, toasts, modals, icons.
-import '../local/boot.js?v=c56af299a5';
-import { LOCAL_NAMES } from '../local/site.js?v=c56af299a5';
-import { escapeHtml } from '../format.js?v=c56af299a5';
+import '../local/boot.js?v=ac0ce45574';
+import { LOCAL_NAMES } from '../local/site.js?v=ac0ce45574';
+import { escapeHtml } from '../format.js?v=ac0ce45574';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -272,6 +272,8 @@ const ICONS = {
   layouts: '<rect x="4" y="5" width="7" height="6" rx="1.5"/><rect x="13" y="5" width="7" height="6" rx="1.5"/><rect x="4" y="13" width="16" height="6" rx="1.5"/>',
   news: '<rect x="4.5" y="4.5" width="15" height="15" rx="2.5"/><path d="M8 9h8M8 12.5h8M8 16h5"/>',
   shield: '<path d="M12 3.5l7 2.6v5.2c0 4.4-3 7.8-7 9.2-4-1.4-7-4.8-7-9.2V6.1z"/><path d="M9 12l2.2 2.2L15.5 10"/>',
+  journal: '<rect x="5" y="3.5" width="14" height="17" rx="2.4"/><path d="M9 3.5v17"/><path d="M12 8.5h4M12 12h4M12 15.5h2.5"/>',
+  calendar: '<rect x="4" y="5.5" width="16" height="14.5" rx="2.6"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/><path d="M8 13.6h.01M12 13.6h.01M16 13.6h.01M8 16.9h.01M12 16.9h.01" stroke-width="2.3"/>',
 };
 
 export function icon(name, size = 18) {

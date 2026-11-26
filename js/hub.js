@@ -1,19 +1,19 @@
-// Home of the test copy. Phones: your name and the time of day, your apps
+// Home of the test copy. Phones: the time of day and your name, your apps
 // as large cards, recents, markets, one market's chart, the floating bar.
 // Wide screens, after the original RV home and laid out on one axis: the
 // date, a large greeting in the metal, the markets' sessions right now and
-// the actions, centred; then the apps as five equal tiles, the markets as
+// the actions, centred; then the apps as six equal tiles, the markets as
 // a three-by-two grid, the numbers as four equal tiles, and where you left
 // off beside your recents, in two equal halves.
-import { api } from './api.js?v=c56af299a5';
-import { SITE_TAG } from './local/site.js?v=c56af299a5';
-import * as F from './format.js?v=c56af299a5';
-import { brandMark, h, icon } from './ui/dom.js?v=c56af299a5';
-import { SESSION_SETS } from './chart/sessions.js?v=c56af299a5';
-import { nyOffset } from './core/timeframes.js?v=c56af299a5';
-import { openPalette, wirePalette } from './ui/palette.js?v=c56af299a5';
-import { wireTooltips } from './ui/tooltip.js?v=c56af299a5';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=c56af299a5';
+import { api } from './api.js?v=ac0ce45574';
+import { SITE_TAG } from './local/site.js?v=ac0ce45574';
+import * as F from './format.js?v=ac0ce45574';
+import { brandMark, h, icon } from './ui/dom.js?v=ac0ce45574';
+import { SESSION_SETS } from './chart/sessions.js?v=ac0ce45574';
+import { nyOffset } from './core/timeframes.js?v=ac0ce45574';
+import { openPalette, wirePalette } from './ui/palette.js?v=ac0ce45574';
+import { wireTooltips } from './ui/tooltip.js?v=ac0ce45574';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=ac0ce45574';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
@@ -63,11 +63,10 @@ function render() {
     return;
   }
   appFrame({ current: 'home' });
-  const p = shell.me.profile;
   root.className = 'hub';
   root.replaceChildren(
     h('header.hub-top', {}, h('a.hub-brand', { href: 'home.html' }, brandMark(24), h('span', {}, 'ReplayView')), avatarButton()),
-    h('section.hub-hello', {}, h('h1', {}, p.name), h('p', {}, greeting())),
+    phoneHello(),
     appRow(false),
     recents(),
     marketStrip(),
@@ -75,6 +74,18 @@ function render() {
     tiles(),
     foot());
   dock({ left: markButton('home'), center: searchPill(items), right: { icon: 'plus', label: 'Yeni replay oturumu', onclick: () => go(chartUrl({ new: 'replay' })) } });
+}
+
+/** Phones: the greeting as the desk's banner has it, in small: the date,
+ *  the time of day before your name, the markets' sessions right now. */
+function phoneHello() {
+  const date = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz() }).format(new Date());
+  return h('section.hub-hello', {},
+    h('span.hub-date', {}, date),
+    h('p.hub-greet', {}, `${greeting()},`),
+    h('h1', {}, shell.me.profile.name),
+    sessionStrip(),
+    h('p.hub-lead', {}, st.loaded ? `${markets().length} piyasa hazır · ${replays().length} replay oturumu` : 'Yükleniyor…'));
 }
 
 const foot = () => h('footer.hub-foot', {}, `${SITE_TAG} · veriler Dukascopy (geçmiş), OANDA / Binance (canlı)`);

@@ -1,8 +1,8 @@
 // Appearance: themes, page background, glass and light, type, chart and
 // candle styling. All of it is per profile (kept in the profile's settings).
-import { DEFAULT_LOOK } from '../chart/chart.js?v=c56af299a5';
-import { field, h, icon } from './dom.js?v=c56af299a5';
-import { LOCAL_NAMES, TEST_COPY } from '../local/site.js?v=c56af299a5';
+import { DEFAULT_LOOK } from '../chart/chart.js?v=ac0ce45574';
+import { field, h, icon } from './dom.js?v=ac0ce45574';
+import { LOCAL_NAMES, TEST_COPY } from '../local/site.js?v=ac0ce45574';
 
 // The saved look's format. Looks older than MIN_APPEARANCE_VERSION start
 // from the defaults; newer ones are kept and only completed with new fields.

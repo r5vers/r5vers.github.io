@@ -13,10 +13,10 @@
 // bar, so peeking at the future is impossible. Market orders fill at the next
 // bar's open.
 
-import { Broker, lotsForRisk } from './broker.js?v=c56af299a5';
-import * as ta from './indicators.js?v=c56af299a5';
-import { computeStats } from './stats.js?v=c56af299a5';
-import { bucket } from './timeframes.js?v=c56af299a5';
+import { Broker, lotsForRisk } from './broker.js?v=ac0ce45574';
+import * as ta from './indicators.js?v=ac0ce45574';
+import { computeStats } from './stats.js?v=ac0ce45574';
+import { bucket } from './timeframes.js?v=ac0ce45574';
 
 export function compileStrategy(code) {
   // eslint-disable-next-line no-new-func

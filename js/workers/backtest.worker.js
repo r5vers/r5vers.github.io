@@ -1,7 +1,7 @@
 // Runs a strategy test off the UI thread. The page can terminate() it to stop
 // runaway user code.
-import { runStrategy } from '../core/strategy.js?v=c56af299a5';
-import { parseTf } from '../core/timeframes.js?v=c56af299a5';
+import { runStrategy } from '../core/strategy.js?v=ac0ce45574';
+import { parseTf } from '../core/timeframes.js?v=ac0ce45574';
 
 /** At most `max` points, the highest and lowest of each stretch kept: the
  *  curve looks the same at any width, without one point per bar. */

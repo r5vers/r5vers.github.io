@@ -1,32 +1,32 @@
 // Replay Terminal - application controller.
-import { api } from './api.js?v=c56af299a5';
-import { LOCAL_NAMES, TEST_COPY } from './local/site.js?v=c56af299a5';
-import { columnsToBars } from './core/aggregate.js?v=c56af299a5';
-import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=c56af299a5';
-import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=c56af299a5';
-import { computeStats } from './core/stats.js?v=c56af299a5';
-import { bucket, parseTf } from './core/timeframes.js?v=c56af299a5';
-import { TradingChart } from './chart/chart.js?v=c56af299a5';
-import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=c56af299a5';
-import { configureICT } from './chart/sessions.js?v=c56af299a5';
-import { INDICATORS } from './chart/indicators.js?v=c56af299a5';
-import { TradeLines } from './chart/tradelines.js?v=c56af299a5';
-import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=c56af299a5';
-import * as F from './format.js?v=c56af299a5';
-import { appearanceSheet } from './rvshell.js?v=c56af299a5';
-import { ReplayEngine } from './replay.js?v=c56af299a5';
-import * as D from './ui/dialogs.js?v=c56af299a5';
-import { DataView } from './ui/dataview.js?v=c56af299a5';
-import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=c56af299a5';
-import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=c56af299a5';
-import { openPalette, wirePalette } from './ui/palette.js?v=c56af299a5';
-import { wireTooltips } from './ui/tooltip.js?v=c56af299a5';
-import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=c56af299a5';
-import { scrubWheel } from './ui/scrubwheel.js?v=c56af299a5';
-import { StatsView } from './ui/statsview.js?v=c56af299a5';
-import { StrategyView } from './ui/strategyview.js?v=c56af299a5';
-import { Ticket } from './ui/ticket.js?v=c56af299a5';
-import { SidePane } from './ui/sidepane.js?v=c56af299a5';
+import { api } from './api.js?v=ac0ce45574';
+import { LOCAL_NAMES, TEST_COPY } from './local/site.js?v=ac0ce45574';
+import { columnsToBars } from './core/aggregate.js?v=ac0ce45574';
+import { Broker, lotsForRisk, shareAccount } from './core/broker.js?v=ac0ce45574';
+import { checkpoint, checkpointFor, replayTo, restoreBroker, thinCheckpoints } from './core/rewind.js?v=ac0ce45574';
+import { computeStats } from './core/stats.js?v=ac0ce45574';
+import { bucket, parseTf } from './core/timeframes.js?v=ac0ce45574';
+import { TradingChart } from './chart/chart.js?v=ac0ce45574';
+import { DrawingManager, TOOL_NAMES, FIB_LEVELS, FILLED, POSITION_COLORS, drawingStylePatch } from './chart/drawings.js?v=ac0ce45574';
+import { configureICT } from './chart/sessions.js?v=ac0ce45574';
+import { INDICATORS } from './chart/indicators.js?v=ac0ce45574';
+import { TradeLines } from './chart/tradelines.js?v=ac0ce45574';
+import { OrderLayer, PlusButton } from './chart/orderlayer.js?v=ac0ce45574';
+import * as F from './format.js?v=ac0ce45574';
+import { appearanceSheet } from './rvshell.js?v=ac0ce45574';
+import { ReplayEngine } from './replay.js?v=ac0ce45574';
+import * as D from './ui/dialogs.js?v=ac0ce45574';
+import { DataView } from './ui/dataview.js?v=ac0ce45574';
+import { $, $$, avatar, brandMark, confirmBox, flushStorage, h, icon, modal, storage, store, toast, useProfileStorage, wirePointerLight } from './ui/dom.js?v=ac0ce45574';
+import { DEFAULT_APPEARANCE, FONT_PAIRS, PRESETS, applyAppearance, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=ac0ce45574';
+import { openPalette, wirePalette } from './ui/palette.js?v=ac0ce45574';
+import { wireTooltips } from './ui/tooltip.js?v=ac0ce45574';
+import { labelTables, renderHistory, renderOrders, renderPositions } from './ui/panels.js?v=ac0ce45574';
+import { scrubWheel } from './ui/scrubwheel.js?v=ac0ce45574';
+import { StatsView } from './ui/statsview.js?v=ac0ce45574';
+import { StrategyView } from './ui/strategyview.js?v=ac0ce45574';
+import { Ticket } from './ui/ticket.js?v=ac0ce45574';
+import { SidePane } from './ui/sidepane.js?v=ac0ce45574';
 
 // the page that starts this device over (the test copy's starts it from the main site)
 const RESET_LABEL = TEST_COPY ? 'Test sürümünü sıfırla' : 'Cihazı sıfırla';
@@ -307,6 +307,8 @@ class App {
     try {
       if (q.get('session')) { await this.openSession(q.get('session')); return; }
       if (q.get('backtest')) { await this.openBacktest(q.get('backtest')); return; }
+      // a trade from the journal: the chart where it was taken
+      if (Number(q.get('at')) > 0) { await this.showTrade({ entryTime: Number(q.get('at')), exitTime: Number(q.get('to')) || Number(q.get('at')) }); return; }
       if (TABS.some(([id]) => id === q.get('tab'))) this.openTab(q.get('tab'));
       if (q.get('new') === 'replay') { this.newSessionDialog(); return; }
       if (q.get('mode') === 'live') { this.switchMode('live'); return; }

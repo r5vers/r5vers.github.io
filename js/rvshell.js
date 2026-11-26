@@ -3,15 +3,15 @@
 // that rise from it. Wide screens (Alltra's desktop): a rail of the apps, an
 // optional sidebar of the app's sections, a top bar with the path, and a
 // drawer from the right for the profile and the look.
-import { api } from './api.js?v=c56af299a5';
-import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=c56af299a5';
-import * as F from './format.js?v=c56af299a5';
-import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=c56af299a5';
-import { configureICT } from './chart/sessions.js?v=c56af299a5';
-import { settingsDialog } from './ui/dialogs.js?v=c56af299a5';
-import { openPalette } from './ui/palette.js?v=c56af299a5';
-import { wireGlassLight } from './ui/glasslight.js?v=c56af299a5';
-import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=c56af299a5';
+import { api } from './api.js?v=ac0ce45574';
+import { LOCAL_NAMES, SITE_TAG, TEST_COPY } from './local/site.js?v=ac0ce45574';
+import * as F from './format.js?v=ac0ce45574';
+import { avatar, brandMark, flushStorage, h, icon, storage, store, toast, useProfileStorage } from './ui/dom.js?v=ac0ce45574';
+import { configureICT } from './chart/sessions.js?v=ac0ce45574';
+import { settingsDialog } from './ui/dialogs.js?v=ac0ce45574';
+import { openPalette } from './ui/palette.js?v=ac0ce45574';
+import { wireGlassLight } from './ui/glasslight.js?v=ac0ce45574';
+import { BACKGROUNDS, DEFAULT_APPEARANCE, FONT_PAIRS, METALS, PRESETS, RV_FONTS, SCENES, applyAppearance, metalCss, sceneSvg, normalizeAppearance, paintLastLook, revealPage } from './ui/look.js?v=ac0ce45574';
 
 export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 export const NAMES = { EURUSD: 'Euro / Dolar', NAS100: 'Nasdaq 100', XAUUSD: 'Altın / Dolar', GBPUSD: 'Sterlin / Dolar', USDCAD: 'Dolar / Kanada doları', SPX500: 'S&P 500', USATECHIDXUSD: 'Nasdaq 100', USA500IDXUSD: 'S&P 500' };
@@ -82,6 +82,14 @@ export const chartUrl = (params = {}) => {
 };
 /** Another page, after the profile's storage is written. */
 export async function go(url) {
+  // the same page under another section (replay.html#analiz from replay.html):
+  // the page follows the address, nothing to leave
+  const to = new URL(url, location.href);
+  if (to.pathname === location.pathname && to.search === location.search && to.hash) {
+    if (to.hash !== location.hash) location.hash = to.hash;
+    else window.dispatchEvent(new HashChangeEvent('hashchange'));
+    return;
+  }
   document.body.classList.add('leaving');
   await Promise.all([flushStorage(), new Promise((r) => setTimeout(r, 140))]);
   window.location.href = url;
@@ -90,6 +98,7 @@ export async function go(url) {
 export const APPS = [
   { id: 'replay', name: 'Replay', sub: 'Geçmişi bar bar yeniden yaşa, gerçek gibi işlem aç', icon: 'replay', href: 'replay.html', badge: 'Yeni' },
   { id: 'chart', name: 'Grafik', sub: 'Son baktığın piyasa', icon: 'chart', href: chartUrl({ view: 'chart' }) },
+  { id: 'journal', name: 'Günlük', sub: 'İşlemlerini kaydet, neyin kazandırdığını gör', icon: 'journal', href: 'journal.html' },
   { id: 'analytics', name: 'Analiz', sub: 'Seans, gün ve saat dağılımın', icon: 'indicator', href: 'replay.html#analiz' },
   { id: 'strategy', name: 'Strateji', sub: 'Kuralını yaz, yıllarca veride sına', icon: 'flask', href: chartUrl({ tab: 'strategy' }) },
   { id: 'data', name: 'Veri', sub: '15 yıllık piyasa paketleri', icon: 'data', href: chartUrl({ tab: 'data' }) },
@@ -447,6 +456,8 @@ export function baseItems() {
   add('Uygulamalar', 'Replay', () => go('replay.html'), { icon: 'replay' });
   add('Uygulamalar', 'Yeni replay oturumu', () => go(chartUrl({ new: 'replay' })), { icon: 'play', keys: 'başlat yeni' });
   add('Uygulamalar', 'Grafik', () => go(chartUrl({ view: 'chart' })), { icon: 'chart' });
+  add('Uygulamalar', 'Günlük', () => go('journal.html'), { icon: 'journal', keys: 'işlem günlüğü journal takvim' });
+  add('Uygulamalar', 'Yeni işlem kaydı', () => go('journal.html#yeni'), { icon: 'plus', keys: 'günlük işlem ekle kaydet' });
   add('Uygulamalar', 'Analiz', () => go('replay.html#analiz'), { icon: 'indicator' });
   add('Uygulamalar', 'Strateji testi', () => go(chartUrl({ tab: 'strategy' })), { icon: 'flask', keys: 'backtest' });
   add('Uygulamalar', 'Veri paketleri', () => go(chartUrl({ tab: 'data' })), { icon: 'data' });
