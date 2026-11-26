@@ -4,7 +4,7 @@
 // trade being its own key, two devices adding trades at the same time never
 // overwrite each other in the group's cloud; a change made on another device
 // arrives with the cloud's next sync ("rv-synced") and the page repaints.
-import { normalizePrefs } from './core/journal.js?v=fb1de5ff64';
+import { normalizePrefs } from './core/journal.js?v=0d69337149';
 
 const T = 'rt:jr:t:', D = 'rt:jr:d:', P = 'rt:jr:prefs';
 

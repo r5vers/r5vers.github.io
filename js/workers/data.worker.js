@@ -2,8 +2,8 @@
 // timeframes happen here, so the chart and the backtest never wait frozen.
 // The page sends { id, op, ds, q, light } (local/server.js) and gets the
 // answer local/candles.js gives.
-import { IdbDb, MemoryDb } from '../local/db.js?v=fb1de5ff64';
-import { barsAnswer, replayAnswer } from '../local/candles.js?v=fb1de5ff64';
+import { IdbDb, MemoryDb } from '../local/db.js?v=0d69337149';
+import { barsAnswer, replayAnswer } from '../local/candles.js?v=0d69337149';
 
 let dbp = null;
 const light = () => Object.assign(new MemoryDb(), { light: true });

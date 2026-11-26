@@ -9,15 +9,15 @@
 // A trade goes in from one line ("EURUSD long TP 2R A+ FVG"), from taps
 // (market, side, result, setup, grade), from a template or the last trade,
 // or comes in whole from the replay sessions, a MetaTrader report or a CSV.
-import { api } from './api.js?v=fb1de5ff64';
-import * as F from './format.js?v=fb1de5ff64';
-import { confirmBox, download, h, icon, toast } from './ui/dom.js?v=fb1de5ff64';
-import { wirePalette } from './ui/palette.js?v=fb1de5ff64';
-import { settingsDialog } from './ui/dialogs.js?v=fb1de5ff64';
-import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, closeSheet, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, ring, sheet, shell, symbolBadge, tz } from './rvshell.js?v=fb1de5ff64';
-import * as J from './core/journal.js?v=fb1de5ff64';
-import * as IO from './core/journalio.js?v=fb1de5ff64';
-import { deleteEntries, jr, loadJournal, mergeBackup, onJournalChange, putDay, putEntries, putEntry, savePrefs } from './journalstore.js?v=fb1de5ff64';
+import { api } from './api.js?v=0d69337149';
+import * as F from './format.js?v=0d69337149';
+import { confirmBox, download, h, icon, toast } from './ui/dom.js?v=0d69337149';
+import { wirePalette } from './ui/palette.js?v=0d69337149';
+import { settingsDialog } from './ui/dialogs.js?v=0d69337149';
+import { WIDE, appFrame, appearanceSheet, avatarButton, baseItems, bootShell, chartUrl, closeSheet, dock, go, group, homeLook, host, markButton, pillTab, profileDrawer, ring, sheet, shell, symbolBadge, tz } from './rvshell.js?v=0d69337149';
+import * as J from './core/journal.js?v=0d69337149';
+import * as IO from './core/journalio.js?v=0d69337149';
+import { deleteEntries, jr, loadJournal, mergeBackup, onJournalChange, putDay, putEntries, putEntry, savePrefs } from './journalstore.js?v=0d69337149';
 
 const st = { view: 'trades', filter: 'all', account: 'all', period: 'all', unit: null, month: null, sessions: [], datasets: [], error: null };
 const VIEWS = { takvim: 'calendar', analiz: 'analytics', diger: 'more' };

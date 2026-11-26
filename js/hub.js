@@ -5,15 +5,15 @@
 // the actions, centred; then the apps as five equal tiles, the markets as
 // a three-by-two grid, the numbers as four equal tiles, and where you left
 // off beside your recents, in two equal halves.
-import { api } from './api.js?v=fb1de5ff64';
-import { SITE_TAG } from './local/site.js?v=fb1de5ff64';
-import * as F from './format.js?v=fb1de5ff64';
-import { brandMark, h, icon } from './ui/dom.js?v=fb1de5ff64';
-import { SESSION_SETS } from './chart/sessions.js?v=fb1de5ff64';
-import { nyOffset } from './core/timeframes.js?v=fb1de5ff64';
-import { openPalette, wirePalette } from './ui/palette.js?v=fb1de5ff64';
-import { wireTooltips } from './ui/tooltip.js?v=fb1de5ff64';
-import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=fb1de5ff64';
+import { api } from './api.js?v=0d69337149';
+import { SITE_TAG } from './local/site.js?v=0d69337149';
+import * as F from './format.js?v=0d69337149';
+import { brandMark, h, icon } from './ui/dom.js?v=0d69337149';
+import { SESSION_SETS } from './chart/sessions.js?v=0d69337149';
+import { nyOffset } from './core/timeframes.js?v=0d69337149';
+import { openPalette, wirePalette } from './ui/palette.js?v=0d69337149';
+import { wireTooltips } from './ui/tooltip.js?v=0d69337149';
+import { APPS, NAMES, WIDE, appFrame, avatarButton, baseItems, bootShell, chartUrl, dock, go, greeting, markButton, profileDrawer, relTime, ring, searchPill, shell, symbolBadge, tz } from './rvshell.js?v=0d69337149';
 
 const netOf = (sm = {}) => (sm.balance != null && sm.initial != null ? sm.balance - sm.initial : sm.net ?? 0);
 
